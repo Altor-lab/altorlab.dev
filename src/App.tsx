@@ -782,13 +782,13 @@ function LiveSearchDemo() {
     >
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
-          <div className="mb-12">
+          <div className="text-center mb-12">
             <SectionLabel>Live demo</SectionLabel>
             <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-3">
               Try it.{" "}
               <span className="italic text-altor">Right here.</span>
             </h2>
-            <p className="text-text-secondary max-w-lg">
+            <p className="text-text-secondary max-w-lg mx-auto">
               This search runs on the actual altor-vec WASM module — loaded
               into your browser right now. No server is contacted.
             </p>
@@ -796,9 +796,9 @@ function LiveSearchDemo() {
         </Reveal>
 
         <Reveal delay={80}>
-          <div className="max-w-2xl">
+          <div className="max-w-2xl mx-auto">
             {/* Engine status bar */}
-            <div className="flex items-center gap-2 mb-5 h-6">
+            <div className="flex items-center justify-center gap-2 mb-5 h-6">
               {engineState === "loading" && (
                 <span className="text-xs font-mono text-text-muted flex items-center gap-2">
                   <div className="live-dot opacity-50" />
@@ -819,7 +819,7 @@ function LiveSearchDemo() {
             </div>
 
             {/* Sample queries — always visible */}
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-4 justify-center">
               {DEMO_QUERIES.map((dq) => (
                 <button
                   key={dq.query}
@@ -1227,13 +1227,13 @@ const bytes = engine.to_bytes();
     >
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
-          <div className="mb-4">
+          <div className="text-center mb-12">
             <SectionLabel>Integration</SectionLabel>
             <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-3">
               Integrate in{" "}
               <span className="italic text-altor">minutes.</span>
             </h2>
-            <p className="text-text-secondary max-w-lg">
+            <p className="text-text-secondary max-w-lg mx-auto">
               One package. Full TypeScript types. No native dependencies.
               Works in any browser or Node.js environment.
             </p>
@@ -1241,9 +1241,9 @@ const bytes = engine.to_bytes();
         </Reveal>
 
         <Reveal delay={80}>
-          <div className="mt-10">
+          <div className="max-w-3xl mx-auto mt-10">
             {/* Tab bar */}
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
               {tabs.map((t, i) => (
                 <button
                   key={i}
@@ -1259,7 +1259,7 @@ const bytes = engine.to_bytes();
             <CodeBlock filename={tabs[tab].filename} copyText={tabs[tab].copyText} code={tabs[tab].code} />
 
             {/* API table */}
-            <div className="mt-8 bg-surface-raised border border-surface-border rounded-2xl overflow-hidden">
+            <div className="mt-8 max-w-4xl mx-auto bg-surface-raised border border-surface-border rounded-2xl overflow-hidden">
               <div className="px-6 py-4 border-b border-surface-border">
                 <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
                   API Reference
@@ -1499,17 +1499,17 @@ function Benchmarks() {
           </div>
         </Reveal>
 
-        <div className="space-y-12">
+        <div className="max-w-3xl mx-auto space-y-12">
           {comparisons.map((comp, ci) => (
             <Reveal key={ci} delay={ci * 100 + 120}>
               <div>
-                <h3 className="text-xs font-mono text-text-muted uppercase tracking-wider mb-5">
+                <h3 className="text-xs font-mono text-text-muted uppercase tracking-wider mb-5 text-center">
                   {comp.label}
                 </h3>
                 <div className="space-y-3">
                   {comp.items.map((item, ii) => (
                     <div key={ii} className="flex items-center gap-4">
-                      <span className="text-sm text-text-secondary w-20 text-right font-medium">
+                      <span className="text-sm text-text-secondary w-20 text-right font-medium flex-shrink-0">
                         {item.name}
                       </span>
                       <div className="flex-1 h-7 bg-surface-raised rounded-lg overflow-hidden border border-surface-border">
@@ -1538,7 +1538,7 @@ function Benchmarks() {
                   ))}
                 </div>
                 {ci === 1 && (
-                  <p className="text-xs text-text-muted mt-3">
+                  <p className="text-xs text-text-muted mt-3 text-center">
                     * Orama 2KB = keyword search only; vector search adds
                     significant size.
                   </p>
