@@ -294,7 +294,7 @@ function Nav() {
 /* ------------------------------------------------------------------ */
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 hero-grid" />
       <div
         className="glow blob-morph"
@@ -302,7 +302,7 @@ function Hero() {
           width: 700,
           height: 700,
           top: "-15%",
-          left: "45%",
+          left: "50%",
           transform: "translateX(-50%)",
           background:
             "radial-gradient(circle, rgba(110,231,183,0.06) 0%, transparent 65%)",
@@ -314,13 +314,13 @@ function Hero() {
           width: 400,
           height: 400,
           bottom: "10%",
-          left: "-5%",
+          right: "-5%",
           background:
             "radial-gradient(circle, rgba(52,211,153,0.04) 0%, transparent 70%)",
         }}
       />
 
-      <div className="relative max-w-4xl mx-auto px-6 pt-32 pb-24 w-full text-center">
+      <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
         <Reveal>
           <a
             href="https://github.com/altor-lab/altor-vec"
@@ -393,7 +393,7 @@ function Hero() {
 
         {/* Code preview — centered below */}
         <Reveal delay={280}>
-          <div className="max-w-xl mx-auto text-left">
+          <div className="max-w-lg mx-auto text-left">
             <CodeBlock
               filename="quickstart.js"
               copyText={`import init, { WasmSearchEngine } from 'altor-vec';
