@@ -191,7 +191,7 @@ function Nav() {
           : ""
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-[60px] flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-6 h-[60px] flex items-center justify-between">
         <a
           href="#"
           className="flex items-center gap-2"
@@ -466,7 +466,7 @@ const results = JSON.parse(
 function OpenSourceSection() {
   return (
     <section className="py-20 border-t border-surface-border">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-12">
             <SectionLabel>Open source</SectionLabel>
@@ -646,7 +646,7 @@ function WhyAltorVec() {
       id="why"
       className="py-24 md:py-32 border-t border-surface-border"
     >
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-16">
             <SectionLabel>Why altor-vec</SectionLabel>
@@ -777,7 +777,7 @@ function LiveSearchDemo() {
       id="demo"
       className="py-24 md:py-32 border-t border-surface-border bg-surface/40"
     >
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-12">
             <SectionLabel>Live demo</SectionLabel>
@@ -1222,7 +1222,7 @@ const bytes = engine.to_bytes();
       id="integrate"
       className="py-24 md:py-32 border-t border-surface-border"
     >
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-12">
             <SectionLabel>Integration</SectionLabel>
@@ -1447,7 +1447,7 @@ function Benchmarks() {
       id="benchmarks"
       className="py-24 md:py-32 border-t border-surface-border"
     >
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-16">
             <SectionLabel>Performance</SectionLabel>
@@ -1582,7 +1582,7 @@ function UseCases() {
 
   return (
     <section className="py-24 md:py-32 border-t border-surface-border">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-16">
             <SectionLabel>Use cases</SectionLabel>
@@ -1712,7 +1712,7 @@ function GetStarted() {
       id="get-started"
       className="py-24 md:py-32 border-t border-surface-border"
     >
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <Reveal>
           <div className="relative bg-surface-raised border border-surface-border rounded-3xl p-10 md:p-16 text-center overflow-hidden">
             <div
@@ -1883,7 +1883,7 @@ function ConsultingCTA() {
 function Footer() {
   return (
     <footer className="border-t border-surface-border py-10">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="flex items-center gap-3">
             <span className="font-mono text-base font-bold text-altor">
