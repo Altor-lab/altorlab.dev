@@ -320,83 +320,80 @@ function Hero() {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-24 w-full">
-        <div className="grid md:grid-cols-2 gap-16 items-center">
-          {/* Left column */}
-          <div>
-            <Reveal>
-              <a
-                href="https://github.com/altor-lab/altor-vec"
-                target="_blank"
-                rel="noopener"
-                className="inline-flex items-center gap-2 bg-altor-glow border border-altor/10 rounded-full px-3.5 py-1 mb-7 hover:bg-altor-glow-strong transition-colors"
-              >
-                <Github size={11} className="text-altor" />
-                <span className="text-[11px] font-mono font-medium text-text-secondary tracking-wide">
-                  Open source &middot; MIT license &middot; Built with Rust
-                </span>
-                <ExternalLink size={10} className="text-text-muted" />
-              </a>
-            </Reveal>
+      <div className="relative max-w-4xl mx-auto px-6 pt-32 pb-24 w-full text-center">
+        <Reveal>
+          <a
+            href="https://github.com/altor-lab/altor-vec"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-2 bg-altor-glow border border-altor/10 rounded-full px-3.5 py-1 mb-7 hover:bg-altor-glow-strong transition-colors"
+          >
+            <Github size={11} className="text-altor" />
+            <span className="text-[11px] font-mono font-medium text-text-secondary tracking-wide">
+              Open source &middot; MIT license &middot; Built with Rust
+            </span>
+            <ExternalLink size={10} className="text-text-muted" />
+          </a>
+        </Reveal>
 
-            <Reveal delay={60}>
-              <h1 className="font-display text-[clamp(2.6rem,5.5vw,4.6rem)] leading-[1.05] tracking-[-0.01em] mb-6">
-                Stop paying
-                <br />
-                <span className="italic text-altor">per search query.</span>
-              </h1>
-            </Reveal>
+        <Reveal delay={60}>
+          <h1 className="font-display text-[clamp(2.8rem,6vw,5rem)] leading-[1.05] tracking-[-0.02em] mb-6">
+            Stop paying
+            <br />
+            <span className="italic text-altor">per search query.</span>
+          </h1>
+        </Reveal>
 
-            <Reveal delay={120}>
-              <p className="text-lg text-text-secondary max-w-xl leading-relaxed mb-8">
-                <span className="text-text-primary font-medium">altor-vec</span>{" "}
-                is an HNSW vector search engine compiled to{" "}
-                <span className="text-text-primary font-medium">
-                  54KB of WebAssembly
-                </span>
-                . Search 10,000 vectors in under 1ms — entirely in the browser.
-                No server. No API keys. No per-query billing.
-              </p>
-            </Reveal>
+        <Reveal delay={120}>
+          <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed mb-10">
+            <span className="text-text-primary font-medium">altor-vec</span>{" "}
+            is an HNSW vector search engine compiled to{" "}
+            <span className="text-text-primary font-medium">
+              54KB of WebAssembly
+            </span>
+            . Search 10,000 vectors in under 1ms — entirely in the browser.
+            No server. No API keys. No per-query billing.
+          </p>
+        </Reveal>
 
-            <Reveal delay={180}>
-              <div className="flex flex-col sm:flex-row items-start gap-3.5 mb-8">
-                <CopyButton text="npm install altor-vec" />
-                <a
-                  href="https://github.com/altor-lab/altor-vec"
-                  target="_blank"
-                  rel="noopener"
-                  className="flex items-center gap-2 border border-surface-border text-text-primary font-semibold text-sm px-6 py-3 rounded-xl hover:border-surface-border-hover hover:text-altor transition"
-                >
-                  <Github size={14} />
-                  View on GitHub
-                  <ArrowRight size={13} />
-                </a>
-              </div>
-            </Reveal>
-
-            <Reveal delay={240}>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                {[
-                  "54 KB gzipped",
-                  "< 1ms search",
-                  "Zero server costs",
-                  "Data never leaves browser",
-                ].map((t) => (
-                  <span
-                    key={t}
-                    className="flex items-center gap-1.5 text-[13px] text-text-muted"
-                  >
-                    <Check size={13} className="text-altor" />
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </Reveal>
+        <Reveal delay={180}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
+            <CopyButton text="npm install altor-vec" />
+            <a
+              href="https://github.com/altor-lab/altor-vec"
+              target="_blank"
+              rel="noopener"
+              className="flex items-center gap-2 border border-surface-border text-text-primary font-semibold text-sm px-6 py-3 rounded-xl hover:border-surface-border-hover hover:text-altor transition"
+            >
+              <Github size={14} />
+              View on GitHub
+              <ArrowRight size={13} />
+            </a>
           </div>
+        </Reveal>
 
-          {/* Right column — code preview */}
-          <Reveal delay={100}>
+        <Reveal delay={240}>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-12">
+            {[
+              "54 KB gzipped",
+              "< 1ms search",
+              "Zero server costs",
+              "Data never leaves browser",
+            ].map((t) => (
+              <span
+                key={t}
+                className="flex items-center gap-1.5 text-[13px] text-text-muted"
+              >
+                <Check size={13} className="text-altor" />
+                {t}
+              </span>
+            ))}
+          </div>
+        </Reveal>
+
+        {/* Code preview — centered below */}
+        <Reveal delay={280}>
+          <div className="max-w-xl mx-auto text-left">
             <CodeBlock
               filename="quickstart.js"
               copyText={`import init, { WasmSearchEngine } from 'altor-vec';
@@ -456,8 +453,8 @@ const results = JSON.parse(
                 </>
               }
             />
-          </Reveal>
-        </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -516,7 +513,7 @@ function OpenSourceSection() {
         </div>
 
         {/* Architecture + links */}
-        <div className="grid md:grid-cols-2 gap-8 items-start">
+        <div className="grid md:grid-cols-2 gap-8 items-start max-w-4xl mx-auto">
           <Reveal>
             <div>
               <p className="text-sm font-mono text-text-muted uppercase tracking-wider mb-4">
@@ -1323,7 +1320,7 @@ function HonestComparison() {
 
   return (
     <section className="py-24 md:py-32 border-t border-surface-border">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           <Reveal>
             <div>
@@ -1786,7 +1783,7 @@ function ConsultingCTA() {
       id="contact"
       className="py-24 md:py-32 border-t border-surface-border"
     >
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <Reveal>
             <div>
