@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import init, { WasmSearchEngine } from "altor-vec";
+import { DEMO_DOCS, DEMO_QUERIES } from "./demo-data";
 import {
   Search,
   ArrowRight,
@@ -17,10 +19,11 @@ import {
   Code2,
   Mail,
   ExternalLink,
-  Star,
   Clock,
   Lock,
   Server,
+  Terminal,
+  Cpu,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -72,9 +75,95 @@ function Reveal({
 /* ------------------------------------------------------------------ */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-block font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-moss-dim mb-4">
+    <span className="inline-block font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-altor-dim mb-4">
       {children}
     </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Code Block                                                         */
+/* ------------------------------------------------------------------ */
+function CodeBlock({
+  code,
+  filename,
+  copyText,
+}: {
+  code: React.ReactNode;
+  filename?: string;
+  copyText?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copy = useCallback(() => {
+    if (!copyText) return;
+    navigator.clipboard.writeText(copyText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [copyText]);
+
+  return (
+    <div className="code-block">
+      <div className="code-block-header">
+        <div className="code-block-dot bg-red-500/60" />
+        <div className="code-block-dot bg-amber/60" />
+        <div className="code-block-dot bg-altor-deep/80" />
+        {filename && (
+          <span className="ml-2 font-mono text-[11px] text-text-muted flex-1">
+            {filename}
+          </span>
+        )}
+        {copyText && (
+          <button
+            onClick={copy}
+            className="ml-auto text-text-muted hover:text-altor transition-colors p-0.5"
+            title="Copy code"
+          >
+            {copied ? (
+              <Check size={13} className="text-altor" />
+            ) : (
+              <Copy size={13} />
+            )}
+          </button>
+        )}
+      </div>
+      <pre className="font-mono text-[13px] leading-relaxed p-5 overflow-x-auto text-text-secondary whitespace-pre">
+        {code}
+      </pre>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  CopyButton                                                         */
+/* ------------------------------------------------------------------ */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = useCallback(() => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [text]);
+
+  return (
+    <div
+      className="copy-trigger group flex items-center bg-surface-raised border border-surface-border rounded-xl px-5 py-3 cursor-pointer hover:border-surface-border-hover transition"
+      onClick={copy}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && copy()}
+    >
+      <span className="font-mono text-sm text-text-muted mr-2 select-none">
+        $
+      </span>
+      <span className="font-mono text-sm text-text-primary">{text}</span>
+      <span className="copy-icon ml-4 text-text-muted hover:text-altor transition-colors">
+        {copied ? (
+          <Check size={14} className="text-altor" />
+        ) : (
+          <Copy size={14} />
+        )}
+      </span>
+    </div>
   );
 }
 
@@ -111,24 +200,37 @@ function Nav() {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
-          <span className="text-moss text-base">&#x1F33F;</span>
-          <span className="font-display text-[22px] text-text-primary italic">
-            moss
+          <span className="font-mono text-[18px] font-bold text-altor tracking-tight">
+            altor-vec
           </span>
         </a>
 
         <div className="hidden md:flex items-center gap-7">
           <a href="#why" className={linkClass}>
-            Why moss
+            Why altor-vec
           </a>
           <a href="#demo" className={linkClass}>
             Demo
           </a>
-          <a href="#pricing" className={linkClass}>
-            Pricing
+          <a
+            href="https://github.com/altor-lab/altor-vec#readme"
+            target="_blank"
+            rel="noopener"
+            className={linkClass}
+          >
+            Docs
           </a>
           <a
-            href="https://github.com/AltorLab/altor-vec"
+            href="https://www.npmjs.com/package/altor-vec"
+            target="_blank"
+            rel="noopener"
+            className={`${linkClass} flex items-center gap-1.5`}
+          >
+            <Package size={13} />
+            npm
+          </a>
+          <a
+            href="https://github.com/altor-lab/altor-vec"
             target="_blank"
             rel="noopener"
             className={`${linkClass} flex items-center gap-1.5`}
@@ -138,7 +240,7 @@ function Nav() {
           </a>
           <a
             href="#get-started"
-            className="text-[13px] font-semibold bg-moss text-bg px-4 py-2 rounded-lg hover:brightness-110 transition"
+            className="text-[13px] font-semibold bg-altor text-bg px-4 py-2 rounded-lg hover:brightness-110 transition"
           >
             Get Started
           </a>
@@ -155,10 +257,10 @@ function Nav() {
 
       {open && (
         <div className="md:hidden bg-surface border-b border-surface-border px-6 pb-5 pt-1 flex flex-col gap-3.5">
-          {["Why moss", "Demo", "Pricing"].map((t) => (
+          {["Why altor-vec", "Demo", "Docs"].map((t) => (
             <a
               key={t}
-              href={`#${t.toLowerCase().replace(" ", "-")}`}
+              href={`#${t.toLowerCase().replace(/ /g, "-")}`}
               className="text-sm text-text-secondary"
               onClick={() => setOpen(false)}
             >
@@ -166,8 +268,17 @@ function Nav() {
             </a>
           ))}
           <a
+            href="https://github.com/altor-lab/altor-vec"
+            target="_blank"
+            rel="noopener"
+            className="text-sm text-text-secondary flex items-center gap-1.5"
+            onClick={() => setOpen(false)}
+          >
+            <Github size={13} /> GitHub
+          </a>
+          <a
             href="#get-started"
-            className="text-sm font-semibold text-moss"
+            className="text-sm font-semibold text-altor"
             onClick={() => setOpen(false)}
           >
             Get Started
@@ -182,17 +293,8 @@ function Nav() {
 /*  Hero                                                               */
 /* ------------------------------------------------------------------ */
 function Hero() {
-  const [copied, setCopied] = useState(false);
-
-  const copy = useCallback(() => {
-    navigator.clipboard.writeText("npm install moss-search");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, []);
-
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 hero-grid" />
       <div
         className="glow blob-morph"
@@ -219,88 +321,299 @@ function Hero() {
       />
 
       <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-24 w-full">
-        <div className="max-w-3xl">
-          {/* Pill */}
-          <Reveal>
-            <div className="inline-flex items-center gap-2 bg-moss-glow border border-moss/10 rounded-full px-3.5 py-1 mb-7">
-              <Star size={12} className="text-amber" />
-              <span className="text-[11px] font-mono font-medium text-text-secondary tracking-wide">
-                Open source &middot; MIT license &middot; Production-ready
-              </span>
-            </div>
-          </Reveal>
-
-          {/* Headline — customer problem first */}
-          <Reveal delay={60}>
-            <h1 className="font-display text-[clamp(2.8rem,6.5vw,5.2rem)] leading-[1.05] tracking-[-0.01em] mb-6">
-              Stop paying
-              <br />
-              <span className="italic text-moss">per search query.</span>
-            </h1>
-          </Reveal>
-
-          <Reveal delay={120}>
-            <p className="text-lg md:text-xl text-text-secondary max-w-xl leading-relaxed mb-10">
-              moss is a drop-in search engine that runs{" "}
-              <span className="text-text-primary font-medium">
-                entirely in your users' browser
-              </span>
-              . One script tag. 54 KB. Sub-millisecond results. No server to
-              manage, no per-query bills, no third-party data sharing.
-            </p>
-          </Reveal>
-
-          {/* CTAs */}
-          <Reveal delay={180}>
-            <div className="flex flex-col sm:flex-row items-start gap-3.5">
-              <div
-                className="copy-trigger group flex items-center bg-surface-raised border border-surface-border rounded-xl px-5 py-3 cursor-pointer hover:border-surface-border-hover transition"
-                onClick={copy}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && copy()}
-              >
-                <span className="font-mono text-sm text-text-muted mr-2 select-none">
-                  $
-                </span>
-                <span className="font-mono text-sm text-text-primary">
-                  npm install moss-search
-                </span>
-                <span className="copy-icon ml-4 text-text-muted hover:text-moss transition-colors">
-                  {copied ? (
-                    <Check size={14} className="text-moss" />
-                  ) : (
-                    <Copy size={14} />
-                  )}
-                </span>
-              </div>
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          {/* Left column */}
+          <div>
+            <Reveal>
               <a
-                href="#demo"
-                className="flex items-center gap-2 bg-moss text-bg font-semibold text-sm px-6 py-3 rounded-xl hover:brightness-110 transition"
+                href="https://github.com/altor-lab/altor-vec"
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-2 bg-altor-glow border border-altor/10 rounded-full px-3.5 py-1 mb-7 hover:bg-altor-glow-strong transition-colors"
               >
-                See it live
-                <ArrowRight size={14} />
+                <Github size={11} className="text-altor" />
+                <span className="text-[11px] font-mono font-medium text-text-secondary tracking-wide">
+                  Open source &middot; MIT license &middot; Built with Rust
+                </span>
+                <ExternalLink size={10} className="text-text-muted" />
               </a>
+            </Reveal>
+
+            <Reveal delay={60}>
+              <h1 className="font-display text-[clamp(2.6rem,5.5vw,4.6rem)] leading-[1.05] tracking-[-0.01em] mb-6">
+                Stop paying
+                <br />
+                <span className="italic text-altor">per search query.</span>
+              </h1>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <p className="text-lg text-text-secondary max-w-xl leading-relaxed mb-8">
+                <span className="text-text-primary font-medium">altor-vec</span>{" "}
+                is an HNSW vector search engine compiled to{" "}
+                <span className="text-text-primary font-medium">
+                  54KB of WebAssembly
+                </span>
+                . Search 10,000 vectors in under 1ms — entirely in the browser.
+                No server. No API keys. No per-query billing.
+              </p>
+            </Reveal>
+
+            <Reveal delay={180}>
+              <div className="flex flex-col sm:flex-row items-start gap-3.5 mb-8">
+                <CopyButton text="npm install altor-vec" />
+                <a
+                  href="https://github.com/altor-lab/altor-vec"
+                  target="_blank"
+                  rel="noopener"
+                  className="flex items-center gap-2 border border-surface-border text-text-primary font-semibold text-sm px-6 py-3 rounded-xl hover:border-surface-border-hover hover:text-altor transition"
+                >
+                  <Github size={14} />
+                  View on GitHub
+                  <ArrowRight size={13} />
+                </a>
+              </div>
+            </Reveal>
+
+            <Reveal delay={240}>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                {[
+                  "54 KB gzipped",
+                  "< 1ms search",
+                  "Zero server costs",
+                  "Data never leaves browser",
+                ].map((t) => (
+                  <span
+                    key={t}
+                    className="flex items-center gap-1.5 text-[13px] text-text-muted"
+                  >
+                    <Check size={13} className="text-altor" />
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+
+          {/* Right column — code preview */}
+          <Reveal delay={100}>
+            <CodeBlock
+              filename="quickstart.js"
+              copyText={`import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const resp = await fetch('/index.bin');
+const engine = new WasmSearchEngine(
+  new Uint8Array(await resp.arrayBuffer())
+);
+
+const results = JSON.parse(
+  engine.search(queryVector, 5)
+);
+// => [[id, distance], ...] in <1ms`}
+              code={
+                <>
+                  <span className="text-text-muted">
+                    {"// 5 lines. No server. No API key.\n"}
+                  </span>
+                  <span style={{ color: "#c792ea" }}>{"import "}</span>
+                  <span style={{ color: "#82aaff" }}>{"init"}</span>
+                  <span style={{ color: "#c792ea" }}>{", { "}</span>
+                  <span style={{ color: "#6ee7b7" }}>{"WasmSearchEngine"}</span>
+                  <span style={{ color: "#c792ea" }}>{" } "}</span>
+                  <span style={{ color: "#c792ea" }}>{"from "}</span>
+                  <span style={{ color: "#c3e88d" }}>{`'altor-vec';\n\n`}</span>
+                  <span style={{ color: "#c792ea" }}>{"await "}</span>
+                  <span style={{ color: "#82aaff" }}>{"init"}</span>
+                  {"();\n"}
+                  <span style={{ color: "#c792ea" }}>{"const "}</span>
+                  {"resp "}
+                  <span style={{ color: "#c792ea" }}>{"= await "}</span>
+                  <span style={{ color: "#82aaff" }}>{"fetch"}</span>
+                  {"("}
+                  <span style={{ color: "#c3e88d" }}>{`'/index.bin'`}</span>
+                  {");\n"}
+                  <span style={{ color: "#c792ea" }}>{"const "}</span>
+                  {"engine "}
+                  <span style={{ color: "#c792ea" }}>{"= new "}</span>
+                  <span style={{ color: "#6ee7b7" }}>{"WasmSearchEngine"}</span>
+                  {
+                    "(\n  new Uint8Array(await resp.arrayBuffer())\n);\n\n"
+                  }
+                  <span style={{ color: "#c792ea" }}>{"const "}</span>
+                  {"results "}
+                  <span style={{ color: "#c792ea" }}>{"= "}</span>
+                  {"JSON."}
+                  <span style={{ color: "#82aaff" }}>{"parse"}</span>
+                  {"(\n  engine."}
+                  <span style={{ color: "#82aaff" }}>{"search"}</span>
+                  {"(queryVector, "}
+                  <span style={{ color: "#f78c6c" }}>{"5"}</span>
+                  {")\n);\n"}
+                  <span className="text-text-muted">
+                    {"// => [[id, distance], ...] in <1ms"}
+                  </span>
+                </>
+              }
+            />
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Open Source Credibility                                            */
+/* ------------------------------------------------------------------ */
+function OpenSourceSection() {
+  return (
+    <section className="py-20 border-t border-surface-border">
+      <div className="max-w-6xl mx-auto px-6">
+        <Reveal>
+          <div className="text-center mb-12">
+            <SectionLabel>Open source</SectionLabel>
+            <h2 className="font-display text-3xl md:text-[2.6rem] leading-[1.1]">
+              Open source. Built in Rust.{" "}
+              <span className="italic text-altor">Ships as WASM.</span>
+            </h2>
+          </div>
+        </Reveal>
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-14">
+          {[
+            {
+              val: "54KB",
+              label: "gzipped WASM",
+              sub: "117KB raw .wasm binary",
+            },
+            {
+              val: "< 1ms",
+              label: "p95 latency",
+              sub: "10K vectors, Chrome",
+            },
+            {
+              val: "$0/query",
+              label: "per-query cost",
+              sub: "forever, no server",
+            },
+          ].map((s, i) => (
+            <Reveal key={i} delay={i * 60}>
+              <div className="stat-card">
+                <div className="font-display text-3xl md:text-4xl italic text-altor mb-2">
+                  {s.val}
+                </div>
+                <div className="text-sm font-semibold text-text-primary">
+                  {s.label}
+                </div>
+                <div className="text-xs text-text-muted font-mono mt-1">
+                  {s.sub}
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* Architecture + links */}
+        <div className="grid md:grid-cols-2 gap-8 items-start">
+          <Reveal>
+            <div>
+              <p className="text-sm font-mono text-text-muted uppercase tracking-wider mb-4">
+                Source architecture
+              </p>
+              <CodeBlock
+                filename="src/"
+                code={
+                  <>
+                    <span className="text-text-muted">{"src/\n"}</span>
+                    <span style={{ color: "#c792ea" }}>{"├── "}</span>
+                    <span style={{ color: "#82aaff" }}>{"lib.rs"}</span>
+                    <span className="text-text-muted">
+                      {"              # Public API re-exports\n"}
+                    </span>
+                    <span style={{ color: "#c792ea" }}>{"├── "}</span>
+                    <span style={{ color: "#82aaff" }}>{"distance.rs"}</span>
+                    <span className="text-text-muted">
+                      {"       # Dot product, auto-vectorizes SIMD\n"}
+                    </span>
+                    <span style={{ color: "#c792ea" }}>{"└── "}</span>
+                    <span style={{ color: "#6ee7b7" }}>{"hnsw/"}</span>
+                    {"\n"}
+                    <span style={{ color: "#c792ea" }}>{"    ├── "}</span>
+                    <span style={{ color: "#82aaff" }}>{"mod.rs"}</span>
+                    <span className="text-text-muted">
+                      {"          # API + serialization\n"}
+                    </span>
+                    <span style={{ color: "#c792ea" }}>{"    ├── "}</span>
+                    <span style={{ color: "#82aaff" }}>{"graph.rs"}</span>
+                    <span className="text-text-muted">
+                      {"        # Layered graph structure\n"}
+                    </span>
+                    <span style={{ color: "#c792ea" }}>{"    ├── "}</span>
+                    <span style={{ color: "#82aaff" }}>{"search.rs"}</span>
+                    <span className="text-text-muted">
+                      {"       # Greedy beam search\n"}
+                    </span>
+                    <span style={{ color: "#c792ea" }}>{"    └── "}</span>
+                    <span style={{ color: "#82aaff" }}>{"construction.rs"}</span>
+                    <span className="text-text-muted">
+                      {"  # Insert + layer selection\n"}
+                    </span>
+                    {"\n"}
+                    <span className="text-text-muted">{"wasm/\n"}</span>
+                    <span style={{ color: "#c792ea" }}>{"└── "}</span>
+                    <span style={{ color: "#82aaff" }}>{"src/lib.rs"}</span>
+                    <span className="text-text-muted">
+                      {"       # wasm-bindgen wrapper"}
+                    </span>
+                  </>
+                }
+              />
             </div>
           </Reveal>
 
-          {/* Quick proof */}
-          <Reveal delay={240}>
-            <div className="flex flex-wrap gap-x-7 gap-y-2 mt-10">
-              {[
-                "54 KB gzipped",
-                "< 1ms search",
-                "Zero server costs",
-                "Data never leaves the browser",
-              ].map((t) => (
-                <span
-                  key={t}
-                  className="flex items-center gap-1.5 text-[13px] text-text-muted"
-                >
-                  <Check size={13} className="text-moss" />
-                  {t}
-                </span>
-              ))}
+          <Reveal delay={80}>
+            <div className="space-y-5">
+              <div className="bg-surface-raised border border-surface-border rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <Cpu size={18} className="text-altor" />
+                  <span className="font-semibold text-text-primary text-sm">
+                    Why Rust + WASM?
+                  </span>
+                </div>
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  Rust compiles to highly optimized WASM with SIMD distance
+                  calculations. The same HNSW algorithm used by Pinecone,
+                  Weaviate, and pgvector — now running at near-native speed
+                  inside your users' browsers.
+                </p>
+              </div>
+
+              <div className="bg-surface-raised border border-surface-border rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <Shield size={18} className="text-altor" />
+                  <span className="font-semibold text-text-primary text-sm">
+                    Zero data egress
+                  </span>
+                </div>
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  Search runs entirely locally. No query is ever sent to a
+                  server. No third-party SDK. No cookie banners. No DPAs.
+                  Perfect for privacy-sensitive content.
+                </p>
+              </div>
+
+              <a
+                href="https://github.com/altor-lab/altor-vec"
+                target="_blank"
+                rel="noopener"
+                className="flex items-center gap-2 text-sm font-semibold text-altor hover:text-altor-dim transition-colors"
+              >
+                <Github size={15} />
+                Read the source on GitHub
+                <ArrowRight size={13} />
+              </a>
             </div>
           </Reveal>
         </div>
@@ -310,15 +623,703 @@ function Hero() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Cost Savings Calculator                                            */
+/*  Why altor-vec — 3 value props                                     */
 /* ------------------------------------------------------------------ */
-function CostSavings() {
-  const [queries, setQueries] = useState(100); // thousands per month
+function WhyAltorVec() {
+  const cards = [
+    {
+      icon: DollarSign,
+      title: "Zero per-query costs",
+      body: "Search runs in the browser using WASM — no server roundtrips. Whether you get 100 or 1,000,000 searches/month, your cost doesn't change. Self-host for free or use our managed pipeline.",
+    },
+    {
+      icon: Lock,
+      title: "Your users' data stays private",
+      body: "Every search query runs locally. Nothing is sent to a third-party server. Ideal for sensitive docs, internal tools, and privacy-conscious products. No cookie banners, no DPAs, no compliance headaches.",
+    },
+    {
+      icon: Zap,
+      title: "Sub-millisecond results",
+      body: "HNSW compiled to 54KB of WASM. Semantic search that understands intent, not just keywords. p95 query time: 0.6ms in Chrome — faster than a network roundtrip could ever be.",
+    },
+  ];
 
-  const algoliaMonthly = queries * 0.75; // $0.75 per 1K searches (mid-range)
+  return (
+    <section
+      id="why"
+      className="py-24 md:py-32 border-t border-surface-border"
+    >
+      <div className="max-w-6xl mx-auto px-6">
+        <Reveal>
+          <div className="text-center mb-16">
+            <SectionLabel>Why altor-vec</SectionLabel>
+            <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1]">
+              Better search.{" "}
+              <span className="italic text-altor">Lower costs.</span>
+            </h2>
+          </div>
+        </Reveal>
+
+        <div className="grid md:grid-cols-3 gap-5">
+          {cards.map((c, i) => (
+            <Reveal key={i} delay={i * 80}>
+              <div className="group bg-surface-raised border border-surface-border rounded-2xl p-8 h-full hover:border-surface-border-hover transition-colors">
+                <div className="w-11 h-11 rounded-xl bg-altor-glow border border-altor/10 flex items-center justify-center mb-6 group-hover:bg-altor-glow-strong transition-colors">
+                  <c.icon size={20} className="text-altor" />
+                </div>
+                <h3 className="font-body font-bold text-lg text-text-primary mb-3">
+                  {c.title}
+                </h3>
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  {c.body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Live WASM Search Demo                                              */
+/* ------------------------------------------------------------------ */
+function LiveSearchDemo() {
+  const [engineState, setEngineState] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
+  const [engine, setEngine] = useState<WasmSearchEngine | null>(null);
+  const [query, setQuery] = useState("");
+  const [activeQuery, setActiveQuery] = useState("");
+  const [results, setResults] = useState<
+    { title: string; snippet: string; distance: number }[]
+  >([]);
+  const [latency, setLatency] = useState<number | null>(null);
+  const engineRef = useRef<WasmSearchEngine | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-load on mount — no button needed
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        await init();
+        const resp = await fetch("/demo-index.bin");
+        if (!resp.ok) throw new Error("Failed to fetch index");
+        const bytes = new Uint8Array(await resp.arrayBuffer());
+        const eng = new WasmSearchEngine(bytes);
+        if (cancelled) { eng.free(); return; }
+        engineRef.current = eng;
+        setEngine(eng);
+        setEngineState("ready");
+      } catch (e) {
+        console.error("altor-vec init failed:", e);
+        if (!cancelled) setEngineState("error");
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Auto-focus input when engine becomes ready
+  useEffect(() => {
+    if (engineState === "ready") {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [engineState]);
+
+  // Find the closest pre-computed query vector by cosine similarity
+  const findClosestQuery = useCallback((typed: string): number[] | null => {
+    if (!typed.trim()) return null;
+    const lower = typed.toLowerCase();
+    // Exact match first
+    const exact = DEMO_QUERIES.find(
+      (dq) => dq.query.toLowerCase() === lower
+    );
+    if (exact) return exact.vector;
+    // Keyword overlap fallback
+    const words = lower.split(/\s+/).filter((w) => w.length > 2);
+    let best: { score: number; vec: number[] } | null = null;
+    for (const dq of DEMO_QUERIES) {
+      const score = words.filter((w) => dq.query.toLowerCase().includes(w)).length;
+      if (!best || score > best.score) best = { score, vec: dq.vector };
+    }
+    return best && best.score > 0 ? best.vec : DEMO_QUERIES[0].vector;
+  }, []);
+
+  const runQuery = useCallback(
+    (q: string, precomputed?: number[]) => {
+      const eng = engineRef.current;
+      if (!eng || !q.trim()) return;
+
+      const vec = precomputed ?? findClosestQuery(q);
+      if (!vec) return;
+
+      const t0 = performance.now();
+      const raw: [number, number][] = JSON.parse(
+        eng.search(new Float32Array(vec), 4)
+      );
+      const ms = performance.now() - t0;
+
+      setLatency(ms);
+      setActiveQuery(q);
+      setResults(
+        raw.map(([id, distance]) => ({
+          title: DEMO_DOCS[id]?.title ?? `Document ${id}`,
+          snippet: DEMO_DOCS[id]?.snippet ?? "",
+          distance,
+        }))
+      );
+    },
+    [findClosestQuery]
+  );
+
+  return (
+    <section
+      id="demo"
+      className="py-24 md:py-32 border-t border-surface-border bg-surface/40"
+    >
+      <div className="max-w-6xl mx-auto px-6">
+        <Reveal>
+          <div className="mb-12">
+            <SectionLabel>Live demo</SectionLabel>
+            <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-3">
+              Try it.{" "}
+              <span className="italic text-altor">Right here.</span>
+            </h2>
+            <p className="text-text-secondary max-w-lg">
+              This search runs on the actual altor-vec WASM module — loaded
+              into your browser right now. No server is contacted.
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal delay={80}>
+          <div className="max-w-2xl">
+            {/* Engine status bar */}
+            <div className="flex items-center gap-2 mb-5 h-6">
+              {engineState === "loading" && (
+                <span className="text-xs font-mono text-text-muted flex items-center gap-2">
+                  <div className="live-dot opacity-50" />
+                  Loading WASM engine...
+                </span>
+              )}
+              {engineState === "ready" && (
+                <span className="text-xs font-mono text-altor flex items-center gap-2">
+                  <div className="live-dot" />
+                  WASM engine running — {engine?.len()} vectors in memory
+                </span>
+              )}
+              {engineState === "error" && (
+                <span className="text-xs font-mono text-red-400">
+                  Failed to load engine. Try refreshing.
+                </span>
+              )}
+            </div>
+
+            {/* Sample queries — always visible */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {DEMO_QUERIES.map((dq) => (
+                <button
+                  key={dq.query}
+                  disabled={engineState !== "ready"}
+                  onClick={() => {
+                    setQuery(dq.query);
+                    runQuery(dq.query, dq.vector);
+                  }}
+                  className={`tab-btn disabled:opacity-40 disabled:cursor-not-allowed ${
+                    activeQuery === dq.query ? "active" : ""
+                  }`}
+                >
+                  {dq.query}
+                </button>
+              ))}
+            </div>
+
+            {/* Search box */}
+            <div className="bg-surface-raised border border-surface-border rounded-2xl overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-border">
+                <Search
+                  size={18}
+                  className="text-text-muted flex-shrink-0"
+                />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && engineState === "ready") {
+                      runQuery(query);
+                    }
+                  }}
+                  placeholder="Type a query and press Enter, or click a suggestion..."
+                  disabled={engineState !== "ready"}
+                  className="flex-1 bg-transparent font-body text-[15px] text-text-primary outline-none placeholder:text-text-muted disabled:opacity-40"
+                />
+                {latency !== null && (
+                  <span className="font-mono text-xs text-text-muted flex items-center gap-1 flex-shrink-0">
+                    <Clock size={11} />
+                    {latency < 0.1
+                      ? "< 0.1ms"
+                      : `${latency.toFixed(2)}ms`}
+                  </span>
+                )}
+              </div>
+
+              <div className="divide-y divide-surface-border">
+                {results.length === 0 && (
+                  <div className="px-5 py-10 text-center text-sm text-text-muted">
+                    <Search
+                      size={24}
+                      className="mx-auto mb-2 text-surface-border-hover"
+                    />
+                    {engineState === "ready"
+                      ? "Click a sample query or type your own and press Enter"
+                      : "Loading WASM engine..."}
+                  </div>
+                )}
+                {results.map((r, i) => (
+                  <div
+                    key={i}
+                    className="px-5 py-4 hover:bg-surface-overlay/40 transition-colors"
+                    style={{
+                      animation: "fadeSlideIn 0.3s ease both",
+                      animationDelay: `${i * 60}ms`,
+                    }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="font-mono text-xs font-semibold text-altor bg-altor-glow border border-altor/10 rounded px-1.5 py-0.5 mt-0.5 flex-shrink-0">
+                        {(1 - r.distance).toFixed(2)}
+                      </span>
+                      <div>
+                        <div className="text-sm font-semibold text-text-primary mb-1">
+                          {r.title}
+                        </div>
+                        <div className="text-xs text-text-muted leading-relaxed">
+                          {r.snippet}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {results.length > 0 && (
+                <div className="px-5 py-3 border-t border-surface-border bg-surface/50 flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-text-muted">
+                    {results.length} results &middot; WASM search:{" "}
+                    {latency !== null
+                      ? latency < 0.1
+                        ? "< 0.1ms"
+                        : `${latency.toFixed(2)}ms`
+                      : "—"}
+                  </span>
+                  <span className="text-[11px] font-mono text-altor flex items-center gap-1">
+                    <Shield size={10} />
+                    100% client-side — no server contacted
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </Reveal>
+      </div>
+
+      <style>{`
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Integrate in Minutes — tabbed code examples                       */
+/* ------------------------------------------------------------------ */
+function IntegrateInMinutes() {
+  const [tab, setTab] = useState(0);
+
+  const tabs = [
+    {
+      label: "Quick Start",
+      filename: "main.js",
+      copyText: `import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+
+// Load a pre-built index
+const resp = await fetch('/index.bin');
+const engine = new WasmSearchEngine(
+  new Uint8Array(await resp.arrayBuffer())
+);
+
+// Search returns in < 1ms
+const results = JSON.parse(
+  engine.search(queryVector, 5)
+);
+// => [[nodeId, distance], ...]`,
+      code: (
+        <>
+          <span style={{ color: "#c792ea" }}>{"import "}</span>
+          <span style={{ color: "#82aaff" }}>{"init"}</span>
+          <span style={{ color: "#c792ea" }}>{", { "}</span>
+          <span style={{ color: "#6ee7b7" }}>{"WasmSearchEngine"}</span>
+          <span style={{ color: "#c792ea" }}>{" } "}</span>
+          <span style={{ color: "#c792ea" }}>{"from "}</span>
+          <span style={{ color: "#c3e88d" }}>{`'altor-vec';\n\n`}</span>
+          <span style={{ color: "#c792ea" }}>{"await "}</span>
+          <span style={{ color: "#82aaff" }}>{"init"}</span>
+          {"();\n\n"}
+          <span className="text-text-muted">{"// Load a pre-built index\n"}</span>
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"resp "}
+          <span style={{ color: "#c792ea" }}>{"= await "}</span>
+          <span style={{ color: "#82aaff" }}>{"fetch"}</span>
+          {"("}
+          <span style={{ color: "#c3e88d" }}>{`'/index.bin'`}</span>
+          {");\n"}
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"engine "}
+          <span style={{ color: "#c792ea" }}>{"= new "}</span>
+          <span style={{ color: "#6ee7b7" }}>{"WasmSearchEngine"}</span>
+          {"(\n  new Uint8Array(await resp."}
+          <span style={{ color: "#82aaff" }}>{"arrayBuffer"}</span>
+          {"())\n);\n\n"}
+          <span className="text-text-muted">{"// Search returns in < 1ms\n"}</span>
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"results "}
+          <span style={{ color: "#c792ea" }}>{"= "}</span>
+          {"JSON."}
+          <span style={{ color: "#82aaff" }}>{"parse"}</span>
+          {"(\n  engine."}
+          <span style={{ color: "#82aaff" }}>{"search"}</span>
+          {"(queryVector, "}
+          <span style={{ color: "#f78c6c" }}>{"5"}</span>
+          {")\n);\n"}
+          <span className="text-text-muted">{"// => [[nodeId, distance], ...]"}</span>
+        </>
+      ),
+    },
+    {
+      label: "Web Worker",
+      filename: "worker.js",
+      copyText: `import init, { WasmSearchEngine } from 'altor-vec';
+
+let engine;
+self.onmessage = async (e) => {
+  if (e.data.type === 'init') {
+    await init();
+    const resp = await fetch(e.data.indexUrl);
+    engine = new WasmSearchEngine(
+      new Uint8Array(await resp.arrayBuffer())
+    );
+    postMessage({ type: 'ready', count: engine.len() });
+  }
+  if (e.data.type === 'search') {
+    const results = JSON.parse(
+      engine.search(new Float32Array(e.data.query), e.data.topK)
+    );
+    postMessage({ type: 'results', results });
+  }
+};`,
+      code: (
+        <>
+          <span style={{ color: "#c792ea" }}>{"import "}</span>
+          <span style={{ color: "#82aaff" }}>{"init"}</span>
+          <span style={{ color: "#c792ea" }}>{", { "}</span>
+          <span style={{ color: "#6ee7b7" }}>{"WasmSearchEngine"}</span>
+          <span style={{ color: "#c792ea" }}>{" } "}</span>
+          <span style={{ color: "#c792ea" }}>{"from "}</span>
+          <span style={{ color: "#c3e88d" }}>{`'altor-vec';\n\n`}</span>
+          <span style={{ color: "#c792ea" }}>{"let "}</span>
+          {"engine;\n"}
+          {"self."}
+          <span style={{ color: "#82aaff" }}>{"onmessage"}</span>
+          {" = "}
+          <span style={{ color: "#c792ea" }}>{"async "}</span>
+          {"(e) => {\n"}
+          {"  "}
+          <span style={{ color: "#c792ea" }}>{"if "}</span>
+          {"(e.data.type === "}
+          <span style={{ color: "#c3e88d" }}>{`'init'`}</span>
+          {") {\n"}
+          {"    "}
+          <span style={{ color: "#c792ea" }}>{"await "}</span>
+          <span style={{ color: "#82aaff" }}>{"init"}</span>
+          {"();\n"}
+          {"    "}
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"resp "}
+          <span style={{ color: "#c792ea" }}>{"= await "}</span>
+          <span style={{ color: "#82aaff" }}>{"fetch"}</span>
+          {"(e.data.indexUrl);\n"}
+          {"    engine "}
+          <span style={{ color: "#c792ea" }}>{"= new "}</span>
+          <span style={{ color: "#6ee7b7" }}>{"WasmSearchEngine"}</span>
+          {"(\n      new Uint8Array(await resp."}
+          <span style={{ color: "#82aaff" }}>{"arrayBuffer"}</span>
+          {"())\n    );\n"}
+          {"    "}
+          <span style={{ color: "#82aaff" }}>{"postMessage"}</span>
+          {"({ type: "}
+          <span style={{ color: "#c3e88d" }}>{`'ready'`}</span>
+          {", count: engine."}
+          <span style={{ color: "#82aaff" }}>{"len"}</span>
+          {"() });\n  }\n"}
+          {"  "}
+          <span style={{ color: "#c792ea" }}>{"if "}</span>
+          {"(e.data.type === "}
+          <span style={{ color: "#c3e88d" }}>{`'search'`}</span>
+          {") {\n"}
+          {"    "}
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"results "}
+          <span style={{ color: "#c792ea" }}>{"= "}</span>
+          {"JSON."}
+          <span style={{ color: "#82aaff" }}>{"parse"}</span>
+          {"(\n      engine."}
+          <span style={{ color: "#82aaff" }}>{"search"}</span>
+          {"("}
+          <span style={{ color: "#c792ea" }}>{"new "}</span>
+          {"Float32Array(e.data.query), e.data.topK)\n    );\n"}
+          {"    "}
+          <span style={{ color: "#82aaff" }}>{"postMessage"}</span>
+          {"({ type: "}
+          <span style={{ color: "#c3e88d" }}>{`'results'`}</span>
+          {", results });\n  }\n};"}
+        </>
+      ),
+    },
+    {
+      label: "With Transformers.js",
+      filename: "search.js",
+      copyText: `import { pipeline } from '@huggingface/transformers';
+
+// Fully client-side — zero API calls
+const embed = await pipeline(
+  'feature-extraction',
+  'Xenova/all-MiniLM-L6-v2'
+);
+
+const output = await embed(yourQuery, {
+  pooling: 'mean',
+  normalize: true
+});
+
+const results = JSON.parse(
+  engine.search(new Float32Array(output.data), 5)
+);
+// Embeddings + retrieval — both in the browser`,
+      code: (
+        <>
+          <span style={{ color: "#c792ea" }}>{"import "}</span>
+          {"{ "}
+          <span style={{ color: "#82aaff" }}>{"pipeline"}</span>
+          {" } "}
+          <span style={{ color: "#c792ea" }}>{"from "}</span>
+          <span style={{ color: "#c3e88d" }}>{`'@huggingface/transformers';\n\n`}</span>
+          <span className="text-text-muted">{"// Fully client-side — zero API calls\n"}</span>
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"embed "}
+          <span style={{ color: "#c792ea" }}>{"= await "}</span>
+          <span style={{ color: "#82aaff" }}>{"pipeline"}</span>
+          {"(\n  "}
+          <span style={{ color: "#c3e88d" }}>{`'feature-extraction'`}</span>
+          {",\n  "}
+          <span style={{ color: "#c3e88d" }}>{`'Xenova/all-MiniLM-L6-v2'`}</span>
+          {"\n);\n\n"}
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"output "}
+          <span style={{ color: "#c792ea" }}>{"= await "}</span>
+          <span style={{ color: "#82aaff" }}>{"embed"}</span>
+          {"(yourQuery, {\n  pooling: "}
+          <span style={{ color: "#c3e88d" }}>{`'mean'`}</span>
+          {",\n  normalize: "}
+          <span style={{ color: "#f78c6c" }}>{"true"}</span>
+          {"\n});\n\n"}
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"results "}
+          <span style={{ color: "#c792ea" }}>{"= "}</span>
+          {"JSON."}
+          <span style={{ color: "#82aaff" }}>{"parse"}</span>
+          {"(\n  engine."}
+          <span style={{ color: "#82aaff" }}>{"search"}</span>
+          {"("}
+          <span style={{ color: "#c792ea" }}>{"new "}</span>
+          {"Float32Array(output.data), "}
+          <span style={{ color: "#f78c6c" }}>{"5"}</span>
+          {")\n);\n"}
+          <span className="text-text-muted">
+            {"// Embeddings + retrieval — both in the browser"}
+          </span>
+        </>
+      ),
+    },
+    {
+      label: "Build Index",
+      filename: "build.js",
+      copyText: `// Build an index from your vectors
+const engine = WasmSearchEngine.from_vectors(
+  flatVectors,   // Float32Array of all vectors
+  384,           // dimensions
+  16,            // M (connections per node)
+  200,           // ef_construction
+  50             // ef_search
+);
+
+// Serialize for later use
+const bytes = engine.to_bytes();
+// Save as index.bin — deploy to your CDN`,
+      code: (
+        <>
+          <span className="text-text-muted">{"// Build an index from your vectors\n"}</span>
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"engine "}
+          <span style={{ color: "#c792ea" }}>{"= "}</span>
+          <span style={{ color: "#6ee7b7" }}>{"WasmSearchEngine"}</span>
+          {"."}
+          <span style={{ color: "#82aaff" }}>{"from_vectors"}</span>
+          {"(\n  flatVectors,"}
+          <span className="text-text-muted">{"  // Float32Array of all vectors\n"}</span>
+          {"  "}
+          <span style={{ color: "#f78c6c" }}>{"384"}</span>
+          {","}
+          <span className="text-text-muted">{"        // dimensions\n"}</span>
+          {"  "}
+          <span style={{ color: "#f78c6c" }}>{"16"}</span>
+          {","}
+          <span className="text-text-muted">
+            {"         // M (connections per node)\n"}
+          </span>
+          {"  "}
+          <span style={{ color: "#f78c6c" }}>{"200"}</span>
+          {","}
+          <span className="text-text-muted">{"        // ef_construction\n"}</span>
+          {"  "}
+          <span style={{ color: "#f78c6c" }}>{"50"}</span>
+          <span className="text-text-muted">{"          // ef_search\n"}</span>
+          {");\n\n"}
+          <span className="text-text-muted">{"// Serialize for later use\n"}</span>
+          <span style={{ color: "#c792ea" }}>{"const "}</span>
+          {"bytes "}
+          <span style={{ color: "#c792ea" }}>{"= "}</span>
+          {"engine."}
+          <span style={{ color: "#82aaff" }}>{"to_bytes"}</span>
+          {"();\n"}
+          <span className="text-text-muted">
+            {"// Save as index.bin — deploy to your CDN"}
+          </span>
+        </>
+      ),
+    },
+  ];
+
+  return (
+    <section
+      id="integrate"
+      className="py-24 md:py-32 border-t border-surface-border"
+    >
+      <div className="max-w-6xl mx-auto px-6">
+        <Reveal>
+          <div className="mb-4">
+            <SectionLabel>Integration</SectionLabel>
+            <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-3">
+              Integrate in{" "}
+              <span className="italic text-altor">minutes.</span>
+            </h2>
+            <p className="text-text-secondary max-w-lg">
+              One package. Full TypeScript types. No native dependencies.
+              Works in any browser or Node.js environment.
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal delay={80}>
+          <div className="mt-10">
+            {/* Tab bar */}
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              {tabs.map((t, i) => (
+                <button
+                  key={i}
+                  onClick={() => setTab(i)}
+                  className={`tab-btn ${tab === i ? "active" : ""}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Code block */}
+            <CodeBlock filename={tabs[tab].filename} copyText={tabs[tab].copyText} code={tabs[tab].code} />
+
+            {/* API table */}
+            <div className="mt-8 bg-surface-raised border border-surface-border rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-surface-border">
+                <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
+                  API Reference
+                </span>
+              </div>
+              <div className="divide-y divide-surface-border">
+                {[
+                  {
+                    method: "new WasmSearchEngine(bytes)",
+                    desc: "Load a serialized index from a Uint8Array",
+                  },
+                  {
+                    method: ".from_vectors(flat, dims, m, ef_c, ef_s)",
+                    desc: "Build a new index from a flat Float32Array",
+                  },
+                  {
+                    method: ".search(query, topK)",
+                    desc: "Returns JSON [[id, distance], ...] in < 1ms",
+                  },
+                  {
+                    method: ".add_vectors(flat, dims)",
+                    desc: "Add vectors to an existing index",
+                  },
+                  {
+                    method: ".to_bytes()",
+                    desc: "Serialize the index to a Uint8Array",
+                  },
+                  { method: ".len()", desc: "Number of vectors in the index" },
+                  { method: ".free()", desc: "Free WASM memory" },
+                ].map((row, i) => (
+                  <div
+                    key={i}
+                    className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6 px-6 py-3"
+                  >
+                    <span className="font-mono text-xs text-altor font-medium min-w-0 sm:min-w-[320px]">
+                      {row.method}
+                    </span>
+                    <span className="text-sm text-text-secondary">
+                      {row.desc}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Honest Comparison                                                  */
+/* ------------------------------------------------------------------ */
+function HonestComparison() {
+  const [queries, setQueries] = useState(100);
+
+  const algoliaMonthly = queries * 0.75;
   const algoliaYearly = algoliaMonthly * 12;
-  const mossCost = queries <= 10 ? 0 : queries <= 50 ? 29 : queries <= 200 ? 99 : 249;
-  const saved = algoliaYearly - mossCost * 12;
+  const altorCost = 0;
 
   return (
     <section className="py-24 md:py-32 border-t border-surface-border">
@@ -326,31 +1327,37 @@ function CostSavings() {
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           <Reveal>
             <div>
-              <SectionLabel>The real cost of search</SectionLabel>
+              <SectionLabel>The cost of static content search</SectionLabel>
               <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-5">
-                Algolia charges you
+                If you just need semantic search,
                 <br />
-                <span className="italic text-moss">every single query.</span>
+                <span className="italic text-altor">
+                  you don't need a $600/yr platform.
+                </span>
               </h2>
+              <p className="text-text-secondary leading-relaxed mb-4">
+                Algolia is excellent for real-time faceted search over
+                structured data. But for docs sites, blogs, and help centers
+                with static content — altor-vec does it in the browser, for
+                free, with better semantic relevance.
+              </p>
               <p className="text-text-secondary leading-relaxed mb-6">
-                At $0.50–$1.75 per 1,000 search requests, costs scale with
-                traffic. A docs site with 100K monthly searches pays{" "}
+                At $0.50–$1.75 per 1,000 requests, a docs site with 100K
+                monthly searches pays{" "}
                 <span className="text-text-primary font-medium">
                   $600–$2,100/year
                 </span>{" "}
-                just for search. With moss, search runs in the browser — your
-                cost is flat, regardless of traffic.
+                just for search. With altor-vec, that cost is flat at $0.
               </p>
               <div className="flex items-center gap-3 text-sm text-text-muted">
-                <DollarSign size={15} className="text-moss-dim" />
-                Drag the slider to see your savings
+                <DollarSign size={15} className="text-altor-dim" />
+                Drag the slider to see your estimated savings
               </div>
             </div>
           </Reveal>
 
           <Reveal delay={100}>
             <div className="bg-surface-raised border border-surface-border rounded-2xl p-8">
-              {/* Slider */}
               <label className="block text-xs font-mono text-text-muted uppercase tracking-wider mb-3">
                 Monthly search queries
               </label>
@@ -369,7 +1376,6 @@ function CostSavings() {
                 </span>
               </div>
 
-              {/* Comparison */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -384,24 +1390,23 @@ function CostSavings() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm bg-moss" />
-                    <span className="text-sm text-text-secondary">moss</span>
+                    <div className="w-3 h-3 rounded-sm bg-altor" />
+                    <span className="text-sm text-text-secondary">
+                      altor-vec
+                    </span>
                   </div>
-                  <span className="font-mono text-lg font-bold text-moss">
-                    {mossCost === 0
-                      ? "Free"
-                      : `$${(mossCost * 12).toLocaleString()}/yr`}
+                  <span className="font-mono text-lg font-bold text-altor">
+                    {altorCost === 0 ? "Free" : `$${altorCost}/yr`}
                   </span>
                 </div>
               </div>
 
-              {/* Savings */}
               <div className="mt-6 pt-6 border-t border-surface-border text-center">
                 <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">
                   You save
                 </div>
-                <div className="font-display text-4xl italic text-moss">
-                  ${saved > 0 ? saved.toLocaleString() : 0}
+                <div className="font-display text-4xl italic text-altor">
+                  ${algoliaYearly.toLocaleString()}
                   <span className="text-xl text-text-muted not-italic">
                     /year
                   </span>
@@ -416,335 +1421,26 @@ function CostSavings() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Why Moss — 3 customer pain points solved                           */
+/*  Benchmarks                                                         */
 /* ------------------------------------------------------------------ */
-function WhyMoss() {
-  const cards = [
-    {
-      icon: DollarSign,
-      title: "Zero per-query costs",
-      body: "Search runs in the browser using WASM — no server roundtrips. Whether you get 100 or 100,000 searches/month, your cost doesn't change. Replace Algolia's per-query billing with a flat monthly price (or self-host for free).",
-    },
-    {
-      icon: Lock,
-      title: "Your users' data stays private",
-      body: "Every search query runs locally. Nothing is sent to a third-party server. Ideal for sensitive docs, internal tools, and privacy-conscious products. No cookie banners, no DPAs, no compliance headaches.",
-    },
-    {
-      icon: Zap,
-      title: "Sub-millisecond results",
-      body: "HNSW (the same algorithm powering Pinecone and pgvector) compiled to 54KB of WASM. Semantic search that understands intent, not just keywords. Average query time: 0.4ms — faster than a server roundtrip could ever be.",
-    },
-  ];
-
-  return (
-    <section id="why" className="py-24 md:py-32 border-t border-surface-border">
-      <div className="max-w-6xl mx-auto px-6">
-        <Reveal>
-          <div className="text-center mb-16">
-            <SectionLabel>Why moss</SectionLabel>
-            <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1]">
-              Better search.{" "}
-              <span className="italic text-moss">Lower costs.</span>
-            </h2>
-          </div>
-        </Reveal>
-
-        <div className="grid md:grid-cols-3 gap-5">
-          {cards.map((c, i) => (
-            <Reveal key={i} delay={i * 80}>
-              <div className="group bg-surface-raised border border-surface-border rounded-2xl p-8 h-full hover:border-surface-border-hover transition-colors">
-                <div className="w-11 h-11 rounded-xl bg-moss-glow border border-moss/10 flex items-center justify-center mb-6 group-hover:bg-moss-glow-strong transition-colors">
-                  <c.icon size={20} className="text-moss" />
-                </div>
-                <h3 className="font-body font-bold text-lg text-text-primary mb-3">
-                  {c.title}
-                </h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  {c.body}
-                </p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Interactive Search Demo                                            */
-/* ------------------------------------------------------------------ */
-const DEMO_RESULTS: Record<string, { score: number; title: string; snippet: string }[]> = {
-  "": [],
-  "how to configure webhooks": [
-    { score: 0.73, title: "Setting Up Webhook Endpoints", snippet: "Configure webhook URLs, set up authentication headers, and handle retry logic for failed deliveries..." },
-    { score: 0.68, title: "Webhook Events Reference", snippet: "A complete list of events that trigger webhooks, including payload schemas and example responses..." },
-    { score: 0.61, title: "Debugging Failed Deliveries", snippet: "Use the webhook logs dashboard to inspect failed deliveries, replay events, and set up monitoring alerts..." },
-  ],
-  "authentication": [
-    { score: 0.81, title: "Authentication Overview", snippet: "moss supports API key, OAuth 2.0, and JWT bearer token authentication. Choose the method that fits your stack..." },
-    { score: 0.74, title: "OAuth 2.0 Integration Guide", snippet: "Step-by-step guide to implementing OAuth 2.0 with PKCE flow for single-page applications..." },
-    { score: 0.65, title: "Managing API Keys", snippet: "Create, rotate, and revoke API keys from the dashboard. Set per-key rate limits and scope restrictions..." },
-  ],
-  "rate limiting": [
-    { score: 0.77, title: "Rate Limiting & Quotas", snippet: "Default rate limits are 1,000 req/min for free plans and 10,000 req/min for paid. Custom limits available on Enterprise..." },
-    { score: 0.69, title: "Handling 429 Errors", snippet: "When you hit a rate limit, the response includes Retry-After and X-RateLimit-Reset headers..." },
-    { score: 0.58, title: "Burst Traffic Best Practices", snippet: "Use exponential backoff with jitter. Queue non-urgent requests. Cache responses when possible..." },
-  ],
-};
-
-const DEMO_QUERIES = Object.keys(DEMO_RESULTS).filter(Boolean);
-
-function SearchDemo() {
-  const [query, setQuery] = useState("");
-  const [typedQuery, setTypedQuery] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [results, setResults] = useState<typeof DEMO_RESULTS[""]>([]);
-  const [searchTime, setSearchTime] = useState<number | null>(null);
-
-  const runDemo = useCallback((q: string) => {
-    setQuery(q);
-    setTypedQuery("");
-    setResults([]);
-    setSearchTime(null);
-    setIsTyping(true);
-
-    // Simulate typing
-    let i = 0;
-    const interval = setInterval(() => {
-      i++;
-      setTypedQuery(q.slice(0, i));
-      if (i >= q.length) {
-        clearInterval(interval);
-        setIsTyping(false);
-        // Simulate search
-        setTimeout(() => {
-          setResults(DEMO_RESULTS[q] || []);
-          setSearchTime(Math.random() * 0.4 + 0.2);
-        }, 150);
-      }
-    }, 45);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <section id="demo" className="py-24 md:py-32 border-t border-surface-border">
-      <div className="max-w-6xl mx-auto px-6">
-        <Reveal>
-          <div className="text-center mb-12">
-            <SectionLabel>Live demo</SectionLabel>
-            <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-3">
-              Try it. <span className="italic text-moss">Right here.</span>
-            </h2>
-            <p className="text-text-secondary max-w-lg mx-auto">
-              This is what your users see — instant, relevant results. Click a
-              sample query or type your own.
-            </p>
-          </div>
-        </Reveal>
-
-        <Reveal delay={80}>
-          <div className="max-w-2xl mx-auto">
-            {/* Sample queries */}
-            <div className="flex flex-wrap gap-2 mb-4 justify-center">
-              {DEMO_QUERIES.map((q) => (
-                <button
-                  key={q}
-                  onClick={() => runDemo(q)}
-                  className={`text-xs font-mono px-3 py-1.5 rounded-lg border transition-colors ${
-                    query === q
-                      ? "bg-moss/10 border-moss/30 text-moss"
-                      : "bg-surface-raised border-surface-border text-text-muted hover:text-text-secondary hover:border-surface-border-hover"
-                  }`}
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-
-            {/* Search box */}
-            <div className="bg-surface-raised border border-surface-border rounded-2xl overflow-hidden">
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-border">
-                <Search size={18} className="text-text-muted flex-shrink-0" />
-                <div className="flex-1 font-body text-[15px] text-text-primary min-h-[24px]">
-                  {typedQuery || (
-                    <span className="text-text-muted">
-                      Click a query above...
-                    </span>
-                  )}
-                  {isTyping && (
-                    <span className="typing-cursor ml-0.5">&nbsp;</span>
-                  )}
-                </div>
-                {searchTime !== null && (
-                  <span className="font-mono text-xs text-text-muted flex items-center gap-1">
-                    <Clock size={11} />
-                    {searchTime.toFixed(1)}ms
-                  </span>
-                )}
-              </div>
-
-              {/* Results */}
-              <div className="divide-y divide-surface-border">
-                {results.length === 0 && !isTyping && query && (
-                  <div className="px-5 py-8 text-center text-sm text-text-muted">
-                    Searching...
-                  </div>
-                )}
-                {results.map((r, i) => (
-                  <div
-                    key={i}
-                    className="px-5 py-4 hover:bg-surface-overlay/40 transition-colors"
-                    style={{
-                      animation: `fadeSlideIn 0.3s ease both`,
-                      animationDelay: `${i * 80}ms`,
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="font-mono text-xs font-semibold text-moss bg-moss-glow border border-moss/10 rounded px-1.5 py-0.5 mt-0.5 flex-shrink-0">
-                        {r.score.toFixed(2)}
-                      </span>
-                      <div>
-                        <div className="text-sm font-semibold text-text-primary mb-1">
-                          {r.title}
-                        </div>
-                        <div className="text-xs text-text-muted leading-relaxed">
-                          {r.snippet}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {results.length === 0 && !query && (
-                  <div className="px-5 py-10 text-center text-sm text-text-muted">
-                    <Search
-                      size={24}
-                      className="mx-auto mb-2 text-surface-border-hover"
-                    />
-                    Click a sample query to see instant results
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              {results.length > 0 && (
-                <div className="px-5 py-3 border-t border-surface-border bg-surface/50 flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-text-muted">
-                    {results.length} results &middot; WASM search:{" "}
-                    {searchTime?.toFixed(1)}ms &middot; 100% client-side
-                  </span>
-                  <span className="text-[11px] font-mono text-moss flex items-center gap-1">
-                    <Shield size={10} />
-                    No data sent to server
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        </Reveal>
-      </div>
-
-      {/* CSS for result animation */}
-      <style>{`
-        @keyframes fadeSlideIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  How It Works — customer-oriented                                   */
-/* ------------------------------------------------------------------ */
-function HowItWorks() {
-  const steps = [
-    {
-      num: "1",
-      title: "Install the package",
-      desc: "One npm install. TypeScript types included. No native dependencies, no build plugins — it's just WASM.",
-      code: "npm install moss-search",
-    },
-    {
-      num: "2",
-      title: "Build your search index",
-      desc: "Point our CLI at your content. We generate embeddings and build an optimized HNSW index. One command.",
-      code: "npx moss-search build ./docs",
-    },
-    {
-      num: "3",
-      title: "Add one script tag",
-      desc: "Drop the embed script into your HTML. Your users get instant semantic search. You get zero server bills.",
-      code: '<script src="cdn.moss/embed.js"\n  data-index="/index.bin" />',
-    },
-  ];
-
-  return (
-    <section className="py-24 md:py-32 border-t border-surface-border">
-      <div className="max-w-6xl mx-auto px-6">
-        <Reveal>
-          <div className="text-center mb-16">
-            <SectionLabel>Integration</SectionLabel>
-            <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1]">
-              Add search in{" "}
-              <span className="italic text-moss">three minutes.</span>
-            </h2>
-          </div>
-        </Reveal>
-
-        <div className="grid md:grid-cols-3 gap-5">
-          {steps.map((s, i) => (
-            <Reveal key={i} delay={i * 80}>
-              <div className="bg-surface-raised border border-surface-border rounded-2xl p-7 h-full flex flex-col">
-                <div className="flex items-center gap-3 mb-5">
-                  <span className="w-8 h-8 rounded-full bg-moss/10 border border-moss/20 flex items-center justify-center font-mono text-sm font-bold text-moss">
-                    {s.num}
-                  </span>
-                  <h3 className="font-body font-bold text-base text-text-primary">
-                    {s.title}
-                  </h3>
-                </div>
-                <p className="text-sm text-text-secondary leading-relaxed mb-5 flex-1">
-                  {s.desc}
-                </p>
-                <div className="bg-bg rounded-lg px-4 py-3 border border-surface-border">
-                  <pre className="font-mono text-xs text-moss whitespace-pre-wrap">
-                    {s.code}
-                  </pre>
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Visual Benchmarks                                                  */
-/* ------------------------------------------------------------------ */
-function VisualBenchmarks() {
+function Benchmarks() {
   const comparisons = [
     {
-      label: "Search latency",
+      label: "Search latency (10K vectors, 384d)",
       items: [
-        { name: "moss", value: 0.4, display: "0.4ms", pct: 2 },
-        { name: "Voy", value: 3, display: "~3ms", pct: 15 },
-        { name: "Orama", value: 5, display: "~5ms", pct: 25 },
-        { name: "Algolia", value: 125, display: "50–200ms", pct: 65 },
+        { name: "altor-vec", display: "0.6ms", pct: 3 },
+        { name: "Voy", display: "~2ms", pct: 10 },
+        { name: "Orama", display: "~5ms", pct: 25 },
+        { name: "Algolia", display: "50–200ms", pct: 65 },
       ],
     },
     {
       label: "Bundle size (gzipped)",
       items: [
-        { name: "moss", value: 54, display: "54 KB", pct: 27 },
-        { name: "Voy", value: 75, display: "75 KB", pct: 38 },
-        { name: "Orama", value: 2, display: "<2 KB", pct: 1 },
-        { name: "Algolia", value: 0, display: "N/A (SaaS)", pct: 0 },
+        { name: "altor-vec", display: "54 KB", pct: 27 },
+        { name: "Voy", display: "75 KB", pct: 38 },
+        { name: "Orama", display: "<2 KB*", pct: 1 },
+        { name: "Algolia", display: "N/A (SaaS)", pct: 0 },
       ],
     },
   ];
@@ -760,29 +1456,36 @@ function VisualBenchmarks() {
             <SectionLabel>Performance</SectionLabel>
             <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-3">
               Measured, not{" "}
-              <span className="italic text-moss">marketed.</span>
+              <span className="italic text-altor">marketed.</span>
             </h2>
             <p className="text-text-secondary max-w-lg mx-auto">
               Real benchmarks on 10,000 documents with 384-dimension embeddings.
-              All numbers independently reproducible.
+              All numbers independently reproducible.{" "}
+              <a
+                href="https://github.com/altor-lab/altor-vec/tree/main/benches"
+                target="_blank"
+                rel="noopener"
+                className="text-altor hover:underline"
+              >
+                See the bench code.
+              </a>
             </p>
           </div>
         </Reveal>
 
-        {/* Key stats */}
         <Reveal delay={60}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
             {[
-              { val: "0.4ms", label: "p95 latency", sub: "WASM, Chrome" },
+              { val: "0.6ms", label: "p95 latency", sub: "WASM, Chrome" },
               { val: "54 KB", label: "gzipped", sub: ".wasm binary" },
               { val: "95.4%", label: "recall@10", sub: "10K vectors" },
-              { val: "19/20", label: "relevant", sub: "real queries" },
+              { val: "117KB", label: "raw .wasm", sub: "before gzip" },
             ].map((s, i) => (
               <div
                 key={i}
                 className="bg-surface-raised border border-surface-border rounded-xl p-5 text-center"
               >
-                <div className="font-display text-2xl md:text-3xl italic text-moss mb-1">
+                <div className="font-display text-2xl md:text-3xl italic text-altor mb-1">
                   {s.val}
                 </div>
                 <div className="text-sm font-semibold text-text-primary">
@@ -796,7 +1499,6 @@ function VisualBenchmarks() {
           </div>
         </Reveal>
 
-        {/* Bar comparisons */}
         <div className="space-y-12">
           {comparisons.map((comp, ci) => (
             <Reveal key={ci} delay={ci * 100 + 120}>
@@ -807,14 +1509,14 @@ function VisualBenchmarks() {
                 <div className="space-y-3">
                   {comp.items.map((item, ii) => (
                     <div key={ii} className="flex items-center gap-4">
-                      <span className="text-sm text-text-secondary w-16 text-right font-medium">
+                      <span className="text-sm text-text-secondary w-20 text-right font-medium">
                         {item.name}
                       </span>
                       <div className="flex-1 h-7 bg-surface-raised rounded-lg overflow-hidden border border-surface-border">
                         {item.pct > 0 && (
                           <div
                             className={`h-full rounded-lg bar-animate ${
-                              ii === 0 ? "bg-moss/40" : "bg-surface-overlay"
+                              ii === 0 ? "bg-altor/40" : "bg-surface-overlay"
                             }`}
                             style={{
                               width: `${Math.max(item.pct, 3)}%`,
@@ -824,9 +1526,9 @@ function VisualBenchmarks() {
                         )}
                       </div>
                       <span
-                        className={`font-mono text-sm min-w-[80px] ${
+                        className={`font-mono text-sm min-w-[90px] ${
                           ii === 0
-                            ? "font-bold text-moss"
+                            ? "font-bold text-altor"
                             : "text-text-muted"
                         }`}
                       >
@@ -835,6 +1537,12 @@ function VisualBenchmarks() {
                     </div>
                   ))}
                 </div>
+                {ci === 1 && (
+                  <p className="text-xs text-text-muted mt-3">
+                    * Orama 2KB = keyword search only; vector search adds
+                    significant size.
+                  </p>
+                )}
               </div>
             </Reveal>
           ))}
@@ -845,26 +1553,26 @@ function VisualBenchmarks() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Who It's For                                                       */
+/*  Use Cases                                                          */
 /* ------------------------------------------------------------------ */
-function WhoItsFor() {
+function UseCases() {
   const segments = [
     {
       icon: BookOpen,
       title: "Documentation sites",
-      desc: "Docusaurus, GitBook, Nextra, ReadTheDocs — replace your keyword search with semantic understanding. Users find answers, not just matching strings.",
+      desc: "Docusaurus, GitBook, Nextra, ReadTheDocs — replace keyword search with semantic understanding. Users find answers, not just matching strings.",
       tag: "Most popular",
     },
     {
       icon: FileText,
-      title: "Technical blogs",
-      desc: "100+ articles and growing? Give readers instant, relevant results across your entire archive. Works with any static site generator.",
+      title: "Help centers",
+      desc: "Reduce support tickets by helping users find their own answers. All queries stay local — zero PII leaves the browser. No compliance risk.",
       tag: null,
     },
     {
       icon: Code2,
-      title: "SaaS help centers",
-      desc: "Reduce support tickets by helping users find their own answers. No PII leaves the browser — zero compliance risk.",
+      title: "Technical blogs",
+      desc: "100+ articles and growing? Give readers instant, relevant results across your entire archive. Works with any static site generator.",
       tag: null,
     },
     {
@@ -883,7 +1591,7 @@ function WhoItsFor() {
             <SectionLabel>Use cases</SectionLabel>
             <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1]">
               Built for teams that{" "}
-              <span className="italic text-moss">ship docs.</span>
+              <span className="italic text-altor">ship content.</span>
             </h2>
           </div>
         </Reveal>
@@ -893,7 +1601,7 @@ function WhoItsFor() {
             <Reveal key={i} delay={i * 60}>
               <div className="bg-surface-raised border border-surface-border rounded-2xl p-7 hover:border-surface-border-hover transition-colors h-full">
                 <div className="flex items-start justify-between mb-4">
-                  <s.icon size={22} className="text-moss" />
+                  <s.icon size={22} className="text-altor" />
                   {s.tag && (
                     <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber bg-amber/10 border border-amber/20 px-2 py-0.5 rounded-full">
                       {s.tag}
@@ -916,169 +1624,6 @@ function WhoItsFor() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Pricing                                                            */
-/* ------------------------------------------------------------------ */
-function Pricing() {
-  const tiers = [
-    {
-      name: "Open Source",
-      price: "Free",
-      period: "",
-      desc: "Self-host everything. You bring the embeddings, we provide the engine.",
-      features: [
-        "Full WASM search engine",
-        "Up to 1K pages",
-        "Bring your own embeddings",
-        "Community support on GitHub",
-        "MIT license",
-      ],
-      cta: "npm install",
-      href: "#get-started",
-      primary: false,
-      popular: false,
-    },
-    {
-      name: "Starter",
-      price: "$29",
-      period: "/mo",
-      desc: "We handle the pipeline. You paste one script tag.",
-      features: [
-        "Up to 10K pages",
-        "Managed embed + index pipeline",
-        "CDN-hosted assets",
-        "One script tag integration",
-        "Email support",
-      ],
-      cta: "Start free trial",
-      href: "#get-started",
-      primary: true,
-      popular: false,
-    },
-    {
-      name: "Pro",
-      price: "$99",
-      period: "/mo",
-      desc: "For growing teams with custom branding needs.",
-      features: [
-        "Up to 50K pages",
-        "Custom search UI styling",
-        "Priority email support",
-        "Analytics dashboard",
-        "Auto re-indexing on content change",
-      ],
-      cta: "Start free trial",
-      href: "#get-started",
-      primary: true,
-      popular: true,
-    },
-    {
-      name: "Enterprise",
-      price: "$249",
-      period: "/mo",
-      desc: "SLA-backed search for large-scale deployments.",
-      features: [
-        "Up to 200K pages",
-        "99.9% uptime SLA",
-        "Dedicated Slack channel",
-        "Custom embedding model",
-        "On-prem deployment option",
-      ],
-      cta: "Talk to us",
-      href: "#contact",
-      primary: false,
-      popular: false,
-    },
-  ];
-
-  return (
-    <section
-      id="pricing"
-      className="py-24 md:py-32 border-t border-surface-border"
-    >
-      <div className="max-w-6xl mx-auto px-6">
-        <Reveal>
-          <div className="text-center mb-16">
-            <SectionLabel>Pricing</SectionLabel>
-            <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-3">
-              Flat pricing.{" "}
-              <span className="italic text-moss">No surprises.</span>
-            </h2>
-            <p className="text-text-secondary max-w-lg mx-auto">
-              The core search engine is free and open source. Managed hosting
-              starts at $29/mo — still cheaper than one month of Algolia for
-              most sites.
-            </p>
-          </div>
-        </Reveal>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {tiers.map((t, i) => (
-            <Reveal key={i} delay={i * 60}>
-              <div
-                className={`relative flex flex-col rounded-2xl p-7 h-full transition-colors ${
-                  t.popular
-                    ? "pricing-glow bg-surface-raised border-transparent"
-                    : "bg-surface-raised border border-surface-border hover:border-surface-border-hover"
-                }`}
-              >
-                {t.popular && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-mono font-bold uppercase tracking-widest bg-moss text-bg px-3 py-1 rounded-full whitespace-nowrap">
-                    Most popular
-                  </span>
-                )}
-
-                <div className="mb-6">
-                  <h3 className="font-body font-bold text-lg text-text-primary">
-                    {t.name}
-                  </h3>
-                  <div className="flex items-baseline gap-1 mt-2">
-                    <span className="font-display text-3xl italic text-text-primary">
-                      {t.price}
-                    </span>
-                    {t.period && (
-                      <span className="text-sm text-text-muted">{t.period}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-text-secondary mt-2.5 leading-relaxed">
-                    {t.desc}
-                  </p>
-                </div>
-
-                <ul className="flex-1 space-y-2.5 mb-7">
-                  {t.features.map((f, fi) => (
-                    <li
-                      key={fi}
-                      className="flex items-start gap-2 text-sm text-text-secondary"
-                    >
-                      <Check
-                        size={14}
-                        className="text-moss mt-0.5 flex-shrink-0"
-                      />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-
-                <a
-                  href={t.href}
-                  className={`block text-center text-sm font-semibold py-2.5 rounded-xl transition ${
-                    t.primary
-                      ? "bg-moss text-bg hover:brightness-110"
-                      : "bg-surface-overlay border border-surface-border text-text-primary hover:border-surface-border-hover"
-                  }`}
-                >
-                  {t.cta}
-                </a>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  FAQ                                                                */
 /* ------------------------------------------------------------------ */
 function FAQ() {
@@ -1087,31 +1632,31 @@ function FAQ() {
   const items = [
     {
       q: "Is this as good as Algolia?",
-      a: "For semantic (vector) search over documentation and static content — yes, often better. moss uses HNSW, the same algorithm used by Pinecone, Weaviate, and pgvector. Our benchmarks show 95.4% recall on 10K documents. Algolia excels at real-time indexing and faceted search over structured data — if you need those, Algolia may still be the better fit.",
+      a: "For semantic (vector) search over documentation and static content — yes, often better. altor-vec uses HNSW, the same algorithm used by Pinecone, Weaviate, and pgvector. Our benchmarks show 95.4% recall@10 on 10K documents. Algolia excels at real-time indexing and faceted search over structured data — if you need those, Algolia is still the right choice.",
     },
     {
       q: "Do I need to know Rust?",
-      a: "No. moss is an npm package with TypeScript types. You install it with npm, configure it in JavaScript, and embed it with a script tag. Rust is only used internally to compile the WASM binary — you never touch it.",
-    },
-    {
-      q: "How do I handle real-time content updates?",
-      a: "On the managed plans, we automatically re-index when your content changes (via webhook or scheduled crawl). On the free plan, you re-run `npx moss-search build` and re-deploy the index file. The index is a single .bin file that sits alongside your static assets.",
+      a: "No. altor-vec is an npm package with TypeScript types. You install it with npm and call it from JavaScript. Rust is used internally to compile the WASM binary — you never touch it.",
     },
     {
       q: "What embedding model do you use?",
-      a: "By default, all-MiniLM-L6-v2 (384 dimensions) — a widely-used sentence transformer that balances quality and size. On Enterprise plans, you can use any embedding model including OpenAI, Cohere, or a custom fine-tuned model.",
+      a: "altor-vec is model-agnostic — it stores and searches any Float32Array vectors. Recommended models: all-MiniLM-L6-v2 (384 dims, runs in the browser via Transformers.js), text-embedding-3-small (1536 dims, OpenAI API), or embed-english-v3 (1024 dims, Cohere).",
     },
     {
       q: "How big is the index file?",
-      a: "For 10K documents at 384 dimensions, the index is about 17 MB. For a typical docs site with 500–2,000 pages, expect 2–5 MB. The WASM binary itself is 54 KB gzipped. Together, they're smaller than most hero images.",
+      a: "For 10K documents at 384 dimensions, the index is about 17MB. For a typical docs site with 500–2,000 pages, expect 2–5MB. The WASM binary is 54KB gzipped. Together, smaller than most hero images.",
+    },
+    {
+      q: "How do I build an index?",
+      a: "Get your document embeddings as a Float32Array, then call WasmSearchEngine.from_vectors(flat, dims, 16, 200, 50). Serialize with engine.to_bytes() and deploy the .bin file alongside your WASM. See the GitHub README for a full example.",
     },
     {
       q: "Does search work offline?",
       a: "Yes. Once the WASM binary and index are loaded, search is fully local. If your site is a PWA or installed as an app, search works with no internet connection.",
     },
     {
-      q: "What about SEO for search pages?",
-      a: "moss is a UI search widget — it doesn't replace your content pages. Search results link to your existing pages, which are already indexed by Google. No SEO impact.",
+      q: "What about SEO?",
+      a: "altor-vec is a UI search widget — it doesn't replace your content pages. Search results link to your existing pages, which are already indexed by Google. No SEO impact.",
     },
   ];
 
@@ -1135,7 +1680,7 @@ function FAQ() {
                   className="w-full flex items-center justify-between py-5 text-left group"
                   onClick={() => setOpenIdx(openIdx === i ? null : i)}
                 >
-                  <span className="text-[15px] font-semibold text-text-primary group-hover:text-moss transition-colors pr-4">
+                  <span className="text-[15px] font-semibold text-text-primary group-hover:text-altor transition-colors pr-4">
                     {item.q}
                   </span>
                   <ChevronDown
@@ -1165,16 +1710,11 @@ function FAQ() {
 /*  Get Started                                                        */
 /* ------------------------------------------------------------------ */
 function GetStarted() {
-  const [copied, setCopied] = useState(false);
-
-  const copy = useCallback(() => {
-    navigator.clipboard.writeText("npm install moss-search");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, []);
-
   return (
-    <section id="get-started" className="py-24 md:py-32 border-t border-surface-border">
+    <section
+      id="get-started"
+      className="py-24 md:py-32 border-t border-surface-border"
+    >
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="relative bg-surface-raised border border-surface-border rounded-3xl p-10 md:p-16 text-center overflow-hidden">
@@ -1193,52 +1733,42 @@ function GetStarted() {
 
             <div className="relative">
               <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-4">
-                Ready to{" "}
-                <span className="italic text-moss">stop overpaying?</span>
+                Free. Open source.{" "}
+                <span className="italic text-altor">Works today.</span>
               </h2>
               <p className="text-text-secondary max-w-lg mx-auto mb-8 leading-relaxed">
-                Install moss in under 3 minutes. Free for small sites. No
-                credit card required.
+                The full altor-vec WASM search engine — MIT licensed, no
+                limitations, no account required.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-                <div
-                  className="copy-trigger group flex items-center bg-bg border border-surface-border rounded-xl px-5 py-3 cursor-pointer hover:border-surface-border-hover transition"
-                  onClick={copy}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && copy()}
-                >
-                  <span className="font-mono text-sm text-text-muted mr-2 select-none">
-                    $
-                  </span>
-                  <span className="font-mono text-sm text-text-primary">
-                    npm install moss-search
-                  </span>
-                  <span className="copy-icon ml-4 text-text-muted hover:text-moss transition-colors">
-                    {copied ? (
-                      <Check size={14} className="text-moss" />
-                    ) : (
-                      <Copy size={14} />
-                    )}
-                  </span>
-                </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                <CopyButton text="npm install altor-vec" />
                 <a
-                  href="https://github.com/AltorLab/altor-vec"
+                  href="https://github.com/altor-lab/altor-vec"
                   target="_blank"
                   rel="noopener"
-                  className="flex items-center gap-2 text-sm font-semibold text-text-primary hover:text-moss transition-colors"
+                  className="flex items-center gap-2 text-sm font-semibold text-text-primary hover:text-altor transition-colors"
                 >
                   <Github size={15} />
-                  Star on GitHub
+                  View on GitHub
                   <ExternalLink size={12} />
                 </a>
               </div>
 
-              <p className="text-xs text-text-muted">
-                MIT licensed &middot; TypeScript types included &middot; Zero
-                runtime dependencies
-              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-xs text-text-muted">
+                <a
+                  href="https://www.npmjs.com/package/altor-vec"
+                  target="_blank"
+                  rel="noopener"
+                  className="flex items-center gap-1.5 hover:text-altor transition-colors"
+                >
+                  <Package size={12} />
+                  npm package
+                </a>
+                <span>MIT licensed</span>
+                <span>TypeScript types included</span>
+                <span>Zero runtime dependencies</span>
+              </div>
             </div>
           </div>
         </Reveal>
@@ -1252,21 +1782,25 @@ function GetStarted() {
 /* ------------------------------------------------------------------ */
 function ConsultingCTA() {
   return (
-    <section id="contact" className="py-24 md:py-32 border-t border-surface-border">
+    <section
+      id="contact"
+      className="py-24 md:py-32 border-t border-surface-border"
+    >
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <Reveal>
             <div>
-              <SectionLabel>Custom integration</SectionLabel>
+              <SectionLabel>Custom work</SectionLabel>
               <h2 className="font-display text-3xl md:text-[2.7rem] leading-[1.1] mb-5">
                 Need something{" "}
-                <span className="italic text-moss">bespoke?</span>
+                <span className="italic text-altor">bespoke?</span>
               </h2>
               <p className="text-text-secondary leading-relaxed mb-6">
-                We built moss from scratch in Rust — HNSW, WASM compilation,
-                Web Workers, the embedding pipeline. If you need custom vector
-                search, performance optimization, or a full integration build,
-                we can help.
+                We built altor-vec from scratch in Rust — HNSW graph
+                construction, SIMD-optimized distance calculations, WASM
+                compilation, Web Worker integration, the embedding pipeline.
+                If you need custom vector search, performance tuning, or a
+                full integration, we can help.
               </p>
               <ul className="space-y-3 mb-8">
                 {[
@@ -1274,6 +1808,7 @@ function ConsultingCTA() {
                   "On-premise deployment for air-gapped environments",
                   "Migration from Algolia, Elasticsearch, or Typesense",
                   "Performance tuning for large-scale indexes",
+                  "Managed search pipeline (coming soon)",
                 ].map((t) => (
                   <li
                     key={t}
@@ -1281,60 +1816,59 @@ function ConsultingCTA() {
                   >
                     <Check
                       size={14}
-                      className="text-moss mt-0.5 flex-shrink-0"
+                      className="text-altor mt-0.5 flex-shrink-0"
                     />
                     {t}
                   </li>
                 ))}
               </ul>
               <a
-                href="mailto:hello@altorlab.dev"
-                className="inline-flex items-center gap-2 bg-moss text-bg font-semibold text-sm px-6 py-3 rounded-xl hover:brightness-110 transition"
+                href="mailto:anshul@altorlab.dev"
+                className="inline-flex items-center gap-2 bg-altor text-bg font-semibold text-sm px-6 py-3 rounded-xl hover:brightness-110 transition"
               >
                 <Mail size={15} />
-                hello@altorlab.dev
+                anshul@altorlab.dev
               </a>
             </div>
           </Reveal>
 
           <Reveal delay={100}>
             <div className="bg-surface-raised border border-surface-border rounded-2xl p-8">
-              <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-5">
-                Consulting rates
+              <div className="flex items-center gap-2 mb-6">
+                <Terminal size={16} className="text-altor" />
+                <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
+                  We built this
+                </span>
               </div>
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {[
                   {
-                    label: "Hourly consulting",
-                    price: "$150–250/hr",
-                    desc: "Architecture review, pair programming, code audit",
+                    label: "Rust + WASM",
+                    desc: "HNSW from scratch: graph construction, greedy beam search, SIMD dot product",
                   },
                   {
-                    label: "Integration project",
-                    price: "$5K–20K",
-                    desc: "Full implementation of search for your product",
+                    label: "Embedding pipeline",
+                    desc: "Server-side and browser-side embedding generation, index building, serialization",
                   },
                   {
-                    label: "Ongoing retainer",
-                    price: "Custom",
-                    desc: "Dedicated support, priority features, SLA",
+                    label: "Production integration",
+                    desc: "Web Workers, streaming WASM init, IndexedDB caching, offline PWA support",
+                  },
+                  {
+                    label: "Developer tooling",
+                    desc: "TypeScript types, benchmarking harness, Vite/Webpack/Next.js compatibility",
                   },
                 ].map((r) => (
                   <div
                     key={r.label}
-                    className="flex items-start justify-between gap-4 pb-5 border-b border-surface-border last:border-0 last:pb-0"
+                    className="pb-4 border-b border-surface-border last:border-0 last:pb-0"
                   >
-                    <div>
-                      <div className="text-sm font-semibold text-text-primary">
-                        {r.label}
-                      </div>
-                      <div className="text-xs text-text-muted mt-0.5">
-                        {r.desc}
-                      </div>
+                    <div className="text-sm font-semibold text-altor mb-1">
+                      {r.label}
                     </div>
-                    <span className="font-mono text-sm font-bold text-moss whitespace-nowrap">
-                      {r.price}
-                    </span>
+                    <div className="text-xs text-text-muted leading-relaxed">
+                      {r.desc}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1354,18 +1888,17 @@ function Footer() {
     <footer className="border-t border-surface-border py-10">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="flex items-center gap-2">
-            <span className="text-moss">&#x1F33F;</span>
-            <span className="font-display text-lg italic text-text-primary">
-              moss
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-base font-bold text-altor">
+              altor-vec
             </span>
-            <span className="text-xs text-text-muted font-mono ml-2">
-              by AltorLab
+            <span className="text-xs text-text-muted font-mono">
+              by Altor Lab
             </span>
           </div>
           <div className="flex items-center gap-6 text-[13px] text-text-muted">
             <a
-              href="https://github.com/AltorLab/altor-vec"
+              href="https://github.com/altor-lab/altor-vec"
               target="_blank"
               rel="noopener"
               className="hover:text-text-secondary transition-colors flex items-center gap-1"
@@ -1373,7 +1906,7 @@ function Footer() {
               <Github size={13} /> GitHub
             </a>
             <a
-              href="https://npmjs.com"
+              href="https://www.npmjs.com/package/altor-vec"
               target="_blank"
               rel="noopener"
               className="hover:text-text-secondary transition-colors flex items-center gap-1"
@@ -1381,7 +1914,7 @@ function Footer() {
               <Package size={13} /> npm
             </a>
             <a
-              href="mailto:hello@altorlab.dev"
+              href="mailto:anshul@altorlab.dev"
               className="hover:text-text-secondary transition-colors flex items-center gap-1"
             >
               <Mail size={13} /> Contact
@@ -1389,7 +1922,7 @@ function Footer() {
           </div>
         </div>
         <div className="mt-6 pt-5 border-t border-surface-border text-center text-xs text-text-muted">
-          &copy; {new Date().getFullYear()} AltorLab. Open source under MIT
+          &copy; {new Date().getFullYear()} Altor Lab. Open source under MIT
           license. Built with Rust.
         </div>
       </div>
@@ -1405,13 +1938,13 @@ export default function App() {
     <div className="noise">
       <Nav />
       <Hero />
-      <CostSavings />
-      <WhyMoss />
-      <SearchDemo />
-      <HowItWorks />
-      <VisualBenchmarks />
-      <WhoItsFor />
-      <Pricing />
+      <LiveSearchDemo />
+      <OpenSourceSection />
+      <WhyAltorVec />
+      <IntegrateInMinutes />
+      <HonestComparison />
+      <Benchmarks />
+      <UseCases />
       <FAQ />
       <GetStarted />
       <ConsultingCTA />
