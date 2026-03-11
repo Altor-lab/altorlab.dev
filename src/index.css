@@ -26,10 +26,13 @@
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Reset moved to @layer base so it doesn't override Tailwind utilities like mx-auto */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 }
 
 html {
