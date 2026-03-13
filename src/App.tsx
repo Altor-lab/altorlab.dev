@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import init, { WasmSearchEngine } from "altor-vec";
-import { DEMO_DOCS, DEMO_QUERIES } from "./demo-data";
+import { DEMO_QUERIES } from "./demo-data";
+import EmbedWorker from "./embed-worker?worker";
 import {
   Search,
   ArrowRight,
@@ -682,6 +683,13 @@ function WhyAltorVec() {
 /* ------------------------------------------------------------------ */
 /*  Live WASM Search Demo                                              */
 /* ------------------------------------------------------------------ */
+interface Passage {
+  id: number;
+  text: string;
+}
+
+type ModelState = "idle" | "downloading" | "ready" | "error";
+
 function LiveSearchDemo() {
   const [engineState, setEngineState] = useState<
     "loading" | "ready" | "error"
@@ -690,24 +698,44 @@ function LiveSearchDemo() {
   const [query, setQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
   const [results, setResults] = useState<
-    { title: string; snippet: string; distance: number }[]
+    { rank: number; text: string; distance: number }[]
   >([]);
-  const [latency, setLatency] = useState<number | null>(null);
+  const [searchLatency, setSearchLatency] = useState<number | null>(null);
+  const [embedLatency, setEmbedLatency] = useState<number | null>(null);
+  const [modelState, setModelState] = useState<ModelState>("idle");
+  const [modelProgress, setModelProgress] = useState("");
+  const [embedding, setEmbedding] = useState(false);
   const engineRef = useRef<WasmSearchEngine | null>(null);
+  const passagesRef = useRef<Passage[]>([]);
+  const workerRef = useRef<Worker | null>(null);
+  const embedResolveRef = useRef<((vec: number[]) => void) | null>(null);
+  const embedTimeRef = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-load on mount — no button needed
+  // Load WASM engine + metadata on mount
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
         await init();
-        const resp = await fetch("/demo-index.bin");
-        if (!resp.ok) throw new Error("Failed to fetch index");
-        const bytes = new Uint8Array(await resp.arrayBuffer());
+        const [indexResp, metaResp] = await Promise.all([
+          fetch("/demo-index.bin"),
+          fetch("/metadata.json"),
+        ]);
+        if (!indexResp.ok) throw new Error("Failed to fetch index");
+        if (!metaResp.ok) throw new Error("Failed to fetch metadata");
+        const [bytes, passages] = await Promise.all([
+          indexResp.arrayBuffer().then((b) => new Uint8Array(b)),
+          metaResp.json() as Promise<Passage[]>,
+        ]);
         const eng = new WasmSearchEngine(bytes);
-        if (cancelled) { eng.free(); return; }
+        if (cancelled) {
+          eng.free();
+          return;
+        }
         engineRef.current = eng;
+        passagesRef.current = passages;
         setEngine(eng);
         setEngineState("ready");
       } catch (e) {
@@ -716,8 +744,56 @@ function LiveSearchDemo() {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      engineRef.current?.free();
+    };
   }, []);
+
+  // Start embed worker once engine is ready
+  useEffect(() => {
+    if (engineState !== "ready") return;
+    const worker = new EmbedWorker();
+    workerRef.current = worker;
+    setModelState("downloading");
+    setModelProgress("Loading embedding model...");
+
+    worker.onmessage = (e: MessageEvent) => {
+      const msg = e.data;
+      if (msg.type === "progress") {
+        if (msg.status === "progress" && msg.file) {
+          const pct = msg.progress != null ? Math.round(msg.progress) : null;
+          setModelProgress(
+            pct != null
+              ? `Downloading model... ${pct}%`
+              : `Downloading ${msg.file}...`
+          );
+        }
+      } else if (msg.type === "ready") {
+        setModelState("ready");
+        setModelProgress("");
+      } else if (msg.type === "embedding") {
+        if (embedResolveRef.current) {
+          embedResolveRef.current(msg.vector);
+          embedResolveRef.current = null;
+        }
+      } else if (msg.type === "error") {
+        console.error("Embed worker error:", msg.message);
+        setModelState("error");
+        setModelProgress("Embedding model failed to load");
+        if (embedResolveRef.current) {
+          embedResolveRef.current([]);
+          embedResolveRef.current = null;
+        }
+      }
+    };
+
+    worker.postMessage({ type: "init" });
+
+    return () => {
+      worker.terminate();
+    };
+  }, [engineState]);
 
   // Auto-focus input when engine becomes ready
   useEffect(() => {
@@ -726,51 +802,82 @@ function LiveSearchDemo() {
     }
   }, [engineState]);
 
-  // Find the closest pre-computed query vector by cosine similarity
-  const findClosestQuery = useCallback((typed: string): number[] | null => {
-    if (!typed.trim()) return null;
-    const lower = typed.toLowerCase();
-    // Exact match first
-    const exact = DEMO_QUERIES.find(
-      (dq) => dq.query.toLowerCase() === lower
-    );
-    if (exact) return exact.vector;
-    // Keyword overlap fallback
-    const words = lower.split(/\s+/).filter((w) => w.length > 2);
-    let best: { score: number; vec: number[] } | null = null;
-    for (const dq of DEMO_QUERIES) {
-      const score = words.filter((w) => dq.query.toLowerCase().includes(w)).length;
-      if (!best || score > best.score) best = { score, vec: dq.vector };
-    }
-    return best && best.score > 0 ? best.vec : DEMO_QUERIES[0].vector;
+  const embedText = useCallback((text: string): Promise<number[]> => {
+    return new Promise((resolve) => {
+      embedResolveRef.current = resolve;
+      embedTimeRef.current = performance.now();
+      workerRef.current?.postMessage({ type: "embed", text, id: Date.now() });
+    });
   }, []);
 
-  const runQuery = useCallback(
-    (q: string, precomputed?: number[]) => {
+  const searchWithVector = useCallback(
+    (q: string, vec: number[], embedMs: number | null) => {
       const eng = engineRef.current;
-      if (!eng || !q.trim()) return;
-
-      const vec = precomputed ?? findClosestQuery(q);
-      if (!vec) return;
+      if (!eng || vec.length === 0) return;
 
       const t0 = performance.now();
       const raw: [number, number][] = JSON.parse(
-        eng.search(new Float32Array(vec), 4)
+        eng.search(new Float32Array(vec), 5)
       );
-      const ms = performance.now() - t0;
+      const searchMs = performance.now() - t0;
 
-      setLatency(ms);
+      setSearchLatency(searchMs);
+      setEmbedLatency(embedMs);
       setActiveQuery(q);
       setResults(
-        raw.map(([id, distance]) => ({
-          title: DEMO_DOCS[id]?.title ?? `Document ${id}`,
-          snippet: DEMO_DOCS[id]?.snippet ?? "",
-          distance,
-        }))
+        raw.map(([id, distance], i) => {
+          const passage = passagesRef.current[id];
+          return {
+            rank: i + 1,
+            text: passage?.text ?? `Passage ${id}`,
+            distance,
+          };
+        })
       );
     },
-    [findClosestQuery]
+    []
   );
+
+  const runQuery = useCallback(
+    async (q: string, precomputed?: number[]) => {
+      if (!engineRef.current || !q.trim()) return;
+
+      if (precomputed) {
+        searchWithVector(q, precomputed, null);
+        return;
+      }
+
+      if (modelState !== "ready") return;
+
+      setEmbedding(true);
+      const t0 = performance.now();
+      const vec = await embedText(q);
+      const embedMs = performance.now() - t0;
+      setEmbedding(false);
+
+      if (vec.length > 0) {
+        searchWithVector(q, vec, embedMs);
+      }
+    },
+    [modelState, embedText, searchWithVector]
+  );
+
+  // Debounced auto-search when model is ready and user types
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setQuery(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (modelState === "ready" && value.trim()) {
+        debounceRef.current = setTimeout(() => {
+          runQuery(value);
+        }, 300);
+      }
+    },
+    [modelState, runQuery]
+  );
+
+  const chipsEnabled = engineState === "ready";
+  const inputEnabled = engineState === "ready";
 
   return (
     <section
@@ -786,8 +893,8 @@ function LiveSearchDemo() {
               <span className="italic text-altor">Right here.</span>
             </h2>
             <p className="text-text-secondary max-w-lg mx-auto">
-              This search runs on the actual altor-vec WASM module — loaded
-              into your browser right now. No server is contacted.
+              10,000 real passages searched by semantic similarity — embeddings
+              and retrieval both run in your browser. No server is contacted.
             </p>
           </div>
         </Reveal>
@@ -795,7 +902,7 @@ function LiveSearchDemo() {
         <Reveal delay={80}>
           <div className="max-w-2xl mx-auto">
             {/* Engine status bar */}
-            <div className="flex items-center justify-center gap-2 mb-5 h-6">
+            <div className="flex flex-col items-center gap-1 mb-5 min-h-[3rem]">
               {engineState === "loading" && (
                 <span className="text-xs font-mono text-text-muted flex items-center gap-2">
                   <div className="live-dot opacity-50" />
@@ -805,12 +912,48 @@ function LiveSearchDemo() {
               {engineState === "ready" && (
                 <span className="text-xs font-mono text-altor flex items-center gap-2">
                   <div className="live-dot" />
-                  WASM engine running — {engine?.len()} vectors in memory
+                  WASM engine running — {engine?.len().toLocaleString()} vectors
                 </span>
               )}
               {engineState === "error" && (
                 <span className="text-xs font-mono text-red-400">
                   Failed to load engine. Try refreshing.
+                </span>
+              )}
+              {modelState === "downloading" && (
+                <span className="text-xs font-mono text-text-muted flex items-center gap-2">
+                  <svg
+                    className="animate-spin h-3 w-3 text-altor"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  {modelProgress}
+                </span>
+              )}
+              {modelState === "ready" && (
+                <span className="text-xs font-mono text-altor/70 flex items-center gap-1">
+                  <Check size={10} />
+                  Embedding model ready — type any query
+                </span>
+              )}
+              {modelState === "error" && (
+                <span className="text-xs font-mono text-amber-400">
+                  {modelProgress || "Embedding model unavailable"} — try a
+                  suggested query
                 </span>
               )}
             </div>
@@ -820,9 +963,10 @@ function LiveSearchDemo() {
               {DEMO_QUERIES.map((dq) => (
                 <button
                   key={dq.query}
-                  disabled={engineState !== "ready"}
+                  disabled={!chipsEnabled}
                   onClick={() => {
                     setQuery(dq.query);
+                    if (debounceRef.current) clearTimeout(debounceRef.current);
                     runQuery(dq.query, dq.vector);
                   }}
                   className={`tab-btn disabled:opacity-40 disabled:cursor-not-allowed ${
@@ -837,32 +981,60 @@ function LiveSearchDemo() {
             {/* Search box */}
             <div className="bg-surface-raised border border-surface-border rounded-2xl overflow-hidden">
               <div className="flex items-center gap-3 px-5 py-4 border-b border-surface-border">
-                <Search
-                  size={18}
-                  className="text-text-muted flex-shrink-0"
-                />
+                {embedding ? (
+                  <svg
+                    className="animate-spin h-[18px] w-[18px] text-altor flex-shrink-0"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                ) : (
+                  <Search
+                    size={18}
+                    className="text-text-muted flex-shrink-0"
+                  />
+                )}
                 <input
                   ref={inputRef}
                   type="text"
                   value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                  }}
+                  onChange={(e) => handleInputChange(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && engineState === "ready") {
+                    if (e.key === "Enter" && inputEnabled) {
+                      if (debounceRef.current)
+                        clearTimeout(debounceRef.current);
                       runQuery(query);
                     }
                   }}
-                  placeholder="Type a query and press Enter, or click a suggestion..."
-                  disabled={engineState !== "ready"}
+                  placeholder={
+                    modelState === "ready"
+                      ? "Search 10,000 passages — type anything..."
+                      : "Click a suggestion, or wait for model to load..."
+                  }
+                  disabled={!inputEnabled}
                   className="flex-1 bg-transparent font-body text-[15px] text-text-primary outline-none placeholder:text-text-muted disabled:opacity-40"
                 />
-                {latency !== null && (
+                {searchLatency !== null && (
                   <span className="font-mono text-xs text-text-muted flex items-center gap-1 flex-shrink-0">
                     <Clock size={11} />
-                    {latency < 0.1
-                      ? "< 0.1ms"
-                      : `${latency.toFixed(2)}ms`}
+                    {embedLatency != null
+                      ? `${embedLatency.toFixed(0)}ms + ${searchLatency < 0.1 ? "<0.1" : searchLatency.toFixed(1)}ms`
+                      : searchLatency < 0.1
+                        ? "< 0.1ms"
+                        : `${searchLatency.toFixed(2)}ms`}
                   </span>
                 )}
               </div>
@@ -875,13 +1047,13 @@ function LiveSearchDemo() {
                       className="mx-auto mb-2 text-surface-border-hover"
                     />
                     {engineState === "ready"
-                      ? "Click a sample query or type your own and press Enter"
+                      ? "Click a sample query or type your own"
                       : "Loading WASM engine..."}
                   </div>
                 )}
                 {results.map((r, i) => (
                   <div
-                    key={i}
+                    key={`${activeQuery}-${i}`}
                     className="px-5 py-4 hover:bg-surface-overlay/40 transition-colors"
                     style={{
                       animation: "fadeSlideIn 0.3s ease both",
@@ -889,15 +1061,19 @@ function LiveSearchDemo() {
                     }}
                   >
                     <div className="flex items-start gap-3">
-                      <span className="font-mono text-xs font-semibold text-altor bg-altor-glow border border-altor/10 rounded px-1.5 py-0.5 mt-0.5 flex-shrink-0">
-                        {(1 - r.distance).toFixed(2)}
-                      </span>
-                      <div>
-                        <div className="text-sm font-semibold text-text-primary mb-1">
-                          {r.title}
-                        </div>
-                        <div className="text-xs text-text-muted leading-relaxed">
-                          {r.snippet}
+                      <div className="flex flex-col items-center gap-1 flex-shrink-0 mt-0.5">
+                        <span className="font-mono text-[10px] font-bold text-text-muted">
+                          #{r.rank}
+                        </span>
+                        <span className="font-mono text-xs font-semibold text-altor bg-altor-glow border border-altor/10 rounded px-1.5 py-0.5">
+                          {(1 - r.distance).toFixed(3)}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm text-text-primary leading-relaxed">
+                          {r.text.length > 200
+                            ? r.text.slice(0, 200) + "..."
+                            : r.text}
                         </div>
                       </div>
                     </div>
@@ -908,12 +1084,10 @@ function LiveSearchDemo() {
               {results.length > 0 && (
                 <div className="px-5 py-3 border-t border-surface-border bg-surface/50 flex items-center justify-between">
                   <span className="text-[11px] font-mono text-text-muted">
-                    {results.length} results &middot; WASM search:{" "}
-                    {latency !== null
-                      ? latency < 0.1
-                        ? "< 0.1ms"
-                        : `${latency.toFixed(2)}ms`
-                      : "—"}
+                    {results.length} results &middot;{" "}
+                    {embedLatency != null
+                      ? `embed: ${embedLatency.toFixed(0)}ms + search: ${searchLatency !== null ? (searchLatency < 0.1 ? "<0.1ms" : `${searchLatency.toFixed(2)}ms`) : "—"}`
+                      : `search: ${searchLatency !== null ? (searchLatency < 0.1 ? "<0.1ms" : `${searchLatency.toFixed(2)}ms`) : "—"}`}
                   </span>
                   <span className="text-[11px] font-mono text-altor flex items-center gap-1">
                     <Shield size={10} />
