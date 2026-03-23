@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semantic Search JavaScript: Add Website Search in 5 Minutes</title>
+    <meta name="description" content="Learn semantic search JavaScript setup with altor-vec: install, generate embeddings, build HNSW index, query in browser, and improve relevance fast." />
+    <meta name="keywords" content="semantic search javascript, website search, altor-vec, hnsw wasm, browser vector search" />
+    <link rel="canonical" href="https://altorlab.dev/blog/semantic-search-website" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="How to Add Semantic Search to Your Website in 5 Minutes" />
+    <meta property="og:description" content="Practical semantic search JavaScript tutorial with code: embedding pipeline, index build, browser query path, and quality evaluation." />
+    <meta property="og:url" content="https://altorlab.dev/blog/semantic-search-website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="How to Add Semantic Search to Your Website in 5 Minutes" />
+    <meta name="twitter:description" content="Implementation-focused semantic search JavaScript tutorial for developers." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --bg:#080a09; --surface:#0e1210; --surface-raised:#141a17; --border:#1e2823; --border-hover:#2a3831; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --altor-glow:rgba(110,231,183,.07); }
+      * { box-sizing: border-box; }
+      body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',system-ui,sans-serif; line-height:1.74; }
+      .wrap { max-width: 880px; margin: 0 auto; padding: 28px 22px 72px; }
+      .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
+      a { color:var(--altor); text-decoration:none; }
+      h1 { font-family:'Instrument Serif',serif; font-size:clamp(2.2rem,5vw,3.6rem); line-height:1.1; margin:22px 0 16px; }
+      h2 { margin-top:38px; font-size:1.5rem; }
+      h3 { margin-top:24px; font-size:1.16rem; }
+      p, li { color:var(--text-secondary); }
+      .lede { font-size:1.06rem; }
+      pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
+      code { font-family:'JetBrains Mono',monospace; }
+      .box { background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; padding:14px; }
+      .cta { background:var(--altor-glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin-top:28px; }
+      .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .kicker { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
+    </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "How to Add Semantic Search to Your Website in 5 Minutes",
+        "author": {"@type": "Organization", "name": "AltorLab"},
+        "publisher": {"@type": "Organization", "name": "AltorLab"},
+        "mainEntityOfPage": "https://altorlab.dev/blog/semantic-search-website",
+        "description": "Step-by-step semantic search JavaScript tutorial using altor-vec in the browser.",
+        "keywords": ["semantic search javascript", "vector search", "hnsw", "altor-vec"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {"@type":"Question","name":"Do I need a backend to run semantic search?","acceptedAnswer":{"@type":"Answer","text":"No. You can host a prebuilt index and run retrieval directly in the browser using altor-vec."}},
+          {"@type":"Question","name":"Where are embeddings generated?","acceptedAnswer":{"@type":"Answer","text":"Embeddings can be generated offline at build time, or in-browser using a local model depending on UX constraints."}},
+          {"@type":"Question","name":"How many vectors can I search in browser?","acceptedAnswer":{"@type":"Answer","text":"For many use cases, tens of thousands of vectors are practical with sub-millisecond query latency on modern hardware."}},
+          {"@type":"Question","name":"How do I evaluate result quality?","acceptedAnswer":{"@type":"Answer","text":"Create a small benchmark set of queries and expected results, then compare semantic ranking versus keyword baseline."}}
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <p class="kicker">semantic search javascript</p>
+      <h1>How to Add Semantic Search to Your Website in 5 Minutes</h1>
+      <p class="lede">If your site search depends on exact keyword matches, users often fail to find content they would consider relevant. A query like <code>cheap vector db</code> might not match an article titled <code>cost-efficient approximate nearest neighbor retrieval</code>, even though they describe the same intent. Semantic search JavaScript closes that gap by ranking results according to vector similarity rather than raw token overlap. This tutorial shows the shortest production-capable path using <strong>altor-vec</strong>, a browser-native HNSW engine (54KB, sub-millisecond queries, no backend requirement for retrieval).</p>
+
+      <h2>Architecture in one minute</h2>
+      <p>A practical semantic retrieval stack has four parts: (1) content chunking, (2) embedding generation, (3) vector index construction, and (4) client-side querying. The first three can run in CI or local tooling, then you deploy two artifacts: <code>index.bin</code> and <code>metadata.json</code>. At runtime the browser loads both, computes a query embedding, and asks the WASM engine for top-k nearest vectors. Because search is local, latency is stable and independent of network roundtrips.</p>
+      <div class="box">
+        <p><strong>Why this pattern is fast:</strong> network latency is usually 30–200ms end-to-end. Local ANN lookup is often below 1ms. If your embedding model is local too, you can keep total interactive latency surprisingly low while preserving user privacy.</p>
+      </div>
+
+      <h2>Step 1 — Install dependencies</h2>
+      <pre><code>npm install altor-vec @huggingface/transformers
+</code></pre>
+      <p>You only need <code>altor-vec</code> for retrieval. We include <code>@huggingface/transformers</code> here for a local embedding path. In many teams, embeddings are generated offline in a Node pipeline so browser runtime stays lightweight.</p>
+
+      <h2>Step 2 — Build embeddings and index offline</h2>
+      <p>Below is a Node script that reads your content, generates normalized vectors, and creates an HNSW index with conservative defaults. The script writes files that your frontend can serve from <code>/public</code>.</p>
+      <pre><code>import fs from 'node:fs/promises';
+import init, { WasmSearchEngine } from 'altor-vec';
+import { pipeline } from '@huggingface/transformers';
+
+const docs = JSON.parse(await fs.readFile('./content.json', 'utf8'));
+const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+const vectors = [];
+const metadata = [];
+
+for (let i = 0; i &lt; docs.length; i++) {
+  const text = docs[i].title + '\n' + docs[i].body;
+  const out = await embed(text, { pooling: 'mean', normalize: true });
+  vectors.push(...Array.from(out.data));
+  metadata.push({ id: i, slug: docs[i].slug, title: docs[i].title, excerpt: docs[i].excerpt });
+}
+
+await init();
+const dim = 384;
+const flat = new Float32Array(vectors);
+const engine = WasmSearchEngine.from_vectors(flat, dim, 16, 200, 50);
+
+await fs.writeFile('./public/index.bin', Buffer.from(engine.to_bytes()));
+await fs.writeFile('./public/metadata.json', JSON.stringify(metadata));
+</code></pre>
+      <p>The two hyperparameters that matter most initially are <code>M</code> and <code>ef_search</code>. Higher values improve recall but increase memory and query cost. Start with defaults above, then tune using measured recall@k against your own query set.</p>
+
+      <h2>Step 3 — Query from the browser</h2>
+      <p>At runtime, load the index once and keep the engine in memory. Query vectors can come from a local browser model, from a server embedding API, or from precomputed vectors (for curated suggestions).</p>
+      <pre><code>import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const indexResp = await fetch('/index.bin');
+const metaResp = await fetch('/metadata.json');
+
+const engine = new WasmSearchEngine(new Uint8Array(await indexResp.arrayBuffer()));
+const metadata = await metaResp.json();
+
+export function searchByVector(queryVector, topK = 5) {
+  const pairs = JSON.parse(engine.search(new Float32Array(queryVector), topK));
+  return pairs.map(([id, distance]) =&gt; ({ ...metadata[id], score: 1 - distance }));
+}
+</code></pre>
+
+      <h2>Step 4 — Compare before/after quality</h2>
+      <p>To verify impact, run a small benchmark with 30–50 representative user intents. Compare lexical ranking (BM25 or prefix) against vector retrieval. A common result is that semantic retrieval significantly improves queries with synonyms, abbreviations, and “problem description” phrasing. Example from docs search:</p>
+      <pre><code>Query: "index vectors in browser"
+
+Keyword baseline top result:
+  "Using Web Workers for CPU-heavy tasks"
+
+Semantic top result:
+  "Build HNSW index with WasmSearchEngine.from_vectors"
+
+Query: "privacy search no server"
+
+Keyword baseline top result:
+  "Pricing FAQ"
+
+Semantic top result:
+  "Client-side retrieval architecture and data egress guarantees"
+</code></pre>
+      <p>For developers, this is the real value: users type intent, and results still align even when exact wording differs from your docs and UI copy.</p>
+
+      <h2>Performance notes for production</h2>
+      <h3>1) Keep metadata small</h3>
+      <p>Only include fields needed for result rendering. Large metadata payloads dominate download time and can erase perceived speed gains from fast ANN lookup.</p>
+      <h3>2) Warm up early</h3>
+      <p>Load <code>index.bin</code> after initial page interaction or when the search box gets focus. This makes first query feel instant.</p>
+      <h3>3) Worker isolation</h3>
+      <p>Move embedding generation to a web worker so UI stays responsive while users type. Retrieval itself is already very fast, but embedding can be the larger budget item depending on model.</p>
+      <h3>4) Add lexical fallback</h3>
+      <p>For exact identifiers (error codes, class names, route names), combine semantic ranking with a lexical boost. Hybrid ranking avoids “too semantic” misses for strict token lookups.</p>
+
+      <h2>Common mistakes</h2>
+      <ul>
+        <li>Building embeddings from full documents without chunking. Use paragraph-sized chunks with source IDs for better match granularity.</li>
+        <li>Mixing embedding models between index build and query time. Dimensions and vector space must match exactly.</li>
+        <li>Ignoring quality metrics. Always maintain a fixed evaluation set and track precision@k changes as you tune.</li>
+        <li>Re-downloading index assets on every page transition. Cache aggressively with immutable file names.</li>
+      </ul>
+
+      <h2>Minimal React integration example</h2>
+      <pre><code>import { useEffect, useMemo, useState } from 'react';
+import { searchByVector } from './search';
+
+export function SearchBox({ embed }) {
+  const [q, setQ] = useState('');
+  const [results, setResults] = useState([]);
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+    const run = async () =&gt; {
+      if (!q.trim()) return setResults([]);
+      const vec = await embed(q);
+      const next = searchByVector(vec, 6);
+      if (!cancelled) setResults(next);
+    };
+    run();
+    return () =&gt; { cancelled = true; };
+  }, [q, embed]);
+
+  return (
+    &lt;div&gt;
+      &lt;input value={q} onChange={(e) =&gt; setQ(e.target.value)} placeholder="Ask naturally" /&gt;
+      &lt;ul&gt;{results.map((r) =&gt; &lt;li key={r.id}&gt;{r.title} ({r.score.toFixed(3)})&lt;/li&gt;) }&lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+      <h2>Wrap-up</h2>
+      <p>You can ship semantic search JavaScript quickly if you separate offline indexing from online querying. The offline side handles content processing and vector generation; the online side only loads static artifacts and performs ANN lookup locally. That keeps operating cost near zero for retrieval while improving relevance over exact-match keyword search.</p>
+      <p>As your dataset grows, keep profiling memory, download size, and recall metrics, but the architecture remains the same: static index + browser retrieval + optional local embedding model. For many product docs, knowledge bases, and internal tools, this is the simplest path to “search that understands meaning” without introducing a dedicated vector backend.</p>
+
+      <div class="cta">
+        <strong>CTA</strong>: <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a>
+      </div>
+
+      <nav class="nav">
+        <a href="/blog/vector-search-without-backend.html">Vector Search Without a Backend</a>
+        <a href="/blog/vector-search-react.html">Vector Search in React</a>
+        <a href="/blog/hnsw-algorithm-explained.html">HNSW Explained</a>
+        <a href="/">Homepage</a>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Browser RAG Tutorial: Local Retrieval-Augmented Generation Architecture</title>
+    <meta name="description" content="Browser RAG tutorial: run local retrieval with altor-vec and connect to local LLM generation, with architecture diagram and code walkthrough." />
+    <meta name="keywords" content="browser rag, local rag javascript, retrieval augmented generation browser, altor-vec" />
+    <link rel="canonical" href="https://altorlab.dev/blog/browser-rag-tutorial" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Browser-Based RAG: Run Retrieval-Augmented Generation Locally" />
+    <meta property="og:description" content="Implement RAG in the browser with local vector retrieval, prompt assembly, and local generation constraints." />
+    <meta property="og:url" content="https://altorlab.dev/blog/browser-rag-tutorial" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Browser-Based RAG: Run Retrieval-Augmented Generation Locally" />
+    <meta name="twitter:description" content="A practical architecture and code walkthrough for browser-native RAG." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --bg:#080a09; --surface:#141a17; --border:#1e2823; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --glow:rgba(110,231,183,.07); }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; line-height:1.74; }
+      main { max-width:900px; margin:0 auto; padding:28px 22px 72px; }
+      a { color:var(--altor); text-decoration:none; } .mono { font-family:'JetBrains Mono',monospace; }
+      h1 { font-family:'Instrument Serif',serif; font-size:clamp(2.2rem,5vw,3.5rem); line-height:1.1; margin:.5rem 0 1rem; }
+      h2 { margin-top:2.25rem; } p, li { color:var(--text-secondary); }
+      pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
+      .diagram { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; font-family:'JetBrains Mono',monospace; color:#c3e88d; }
+      .callout { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
+      .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Browser-Based RAG: Run Retrieval-Augmented Generation Locally","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/browser-rag-tutorial","keywords":["browser rag","local rag","retrieval augmented generation"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is browser-based RAG?","acceptedAnswer":{"@type":"Answer","text":"It is retrieval-augmented generation where retrieval and optionally generation run on-device in the browser."}},{"@type":"Question","name":"Why run RAG locally?","acceptedAnswer":{"@type":"Answer","text":"Local execution reduces data egress risk, avoids per-query API costs, and can improve latency consistency."}},{"@type":"Question","name":"What are the limitations?","acceptedAnswer":{"@type":"Answer","text":"Model quality and context window are constrained by client hardware, memory, and browser runtime limits."}},{"@type":"Question","name":"Where does altor-vec fit in RAG?","acceptedAnswer":{"@type":"Answer","text":"altor-vec provides fast local nearest-neighbor retrieval over embedded chunks before prompt assembly."}}]}</script>
+  </head>
+  <body>
+    <main>
+      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <p class="k">browser rag</p>
+      <h1>Browser-Based RAG: Run Retrieval-Augmented Generation Locally</h1>
+      <p>RAG (Retrieval-Augmented Generation) usually implies a server architecture: vector database, retrieval API, prompt builder, and LLM endpoint. But for many developer-facing products, especially docs assistants and local knowledge tools, you can move major pieces into the browser. This tutorial explains a browser RAG architecture where retrieval runs locally using <code>altor-vec</code>, and generation can use a local model (or a remote fallback). We focus on implementation trade-offs, not marketing demos.</p>
+
+      <h2>RAG recap in one paragraph</h2>
+      <p>RAG improves LLM answers by retrieving relevant context chunks and injecting them into the prompt. Instead of relying only on model pretraining, the system grounds responses in your corpus. The quality of retrieval often dominates answer quality: poor context yields poor generation even with strong models.</p>
+
+      <h2>Why run RAG in the browser?</h2>
+      <ul>
+        <li><strong>Privacy:</strong> user queries and retrieved chunks can stay on-device.</li>
+        <li><strong>Cost:</strong> local retrieval removes recurring vector API costs.</li>
+        <li><strong>Latency:</strong> nearest-neighbor search avoids network roundtrips.</li>
+        <li><strong>Offline mode:</strong> docs/chat assistants still work for retrieval when disconnected.</li>
+      </ul>
+      <p>Even if generation remains remote, local retrieval still reduces total dependency on backend services and can cut prompt token volume through smarter context selection.</p>
+
+      <h2>Architecture diagram</h2>
+      <div class="diagram"><code>               Browser (Client)
+┌────────────────────────────────────────────────────────────┐
+│ Query Input                                                │
+│    │                                                       │
+│    ├─&gt; Embed Query (local model / worker)                 │
+│    │                                                       │
+│    ├─&gt; altor-vec HNSW Retrieval (index.bin)               │
+│    │       └─&gt; top-k chunk IDs + scores                   │
+│    │                                                       │
+│    ├─&gt; Prompt Assembler (metadata + chunk text)           │
+│    │                                                       │
+│    └─&gt; Local LLM generation OR remote fallback endpoint   │
+└────────────────────────────────────────────────────────────┘
+</code></div>
+
+      <h2>Step 1: build retrievable chunks</h2>
+      <p>Chunk your corpus by semantic boundaries (paragraphs/sections), not arbitrary token windows only. Keep source URL/title with each chunk for citation rendering.</p>
+      <pre><code>// chunk record
+{
+  "id": 4401,
+  "source": "/docs/indexing#hnsw-params",
+  "title": "HNSW Parameters",
+  "text": "M and ef_search control graph connectivity and query breadth..."
+}
+</code></pre>
+
+      <h2>Step 2: retrieval engine setup (altor-vec)</h2>
+      <pre><code>import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const bytes = new Uint8Array(await (await fetch('/rag/index.bin')).arrayBuffer());
+const chunks = await (await fetch('/rag/chunks.json')).json();
+const engine = new WasmSearchEngine(bytes);
+
+export function retrieve(queryVector, topK = 5) {
+  const pairs = JSON.parse(engine.search(new Float32Array(queryVector), topK));
+  return pairs.map(([id, distance]) =&gt; ({ ...chunks[id], score: 1 - distance }));
+}
+</code></pre>
+
+      <h2>Step 3: prompt assembly with citations</h2>
+      <p>Prompt assembly should preserve provenance and enforce answer constraints. Provide explicit instruction to cite source URLs and to say “I don’t know” when retrieval confidence is low.</p>
+      <pre><code>function buildPrompt(userQuery, contexts) {
+  const contextBlock = contexts.map((c, i) =&gt;
+    `[${i+1}] ${c.title} (${c.source})\n${c.text}`
+  ).join('\n\n');
+
+  return `You are a docs assistant. Answer only from provided context.
+If context is insufficient, say you don't know.
+Include citations as [n].
+
+Question: ${userQuery}
+
+Context:
+${contextBlock}`;
+}
+</code></pre>
+
+      <h2>Step 4: generation path options</h2>
+      <h3>Option A — local generation</h3>
+      <p>Use an in-browser model runtime (WebGPU/WebAssembly) for full local flow. This maximizes privacy but is limited by device capability and model size.</p>
+      <h3>Option B — remote fallback</h3>
+      <p>Keep retrieval local and send only compact, selected context to a hosted LLM endpoint. This often gives better output quality while still reducing egress scope.</p>
+      <pre><code>async function answer(query) {
+  const qVec = await embedLocal(query);
+  const docs = retrieve(qVec, 6);
+  const prompt = buildPrompt(query, docs);
+
+  if (supportsLocalGeneration()) {
+    return generateLocal(prompt);
+  }
+  return fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  }).then(r =&gt; r.json());
+}
+</code></pre>
+
+      <h2>Quality controls for browser RAG</h2>
+      <ul>
+        <li><strong>Retrieval threshold:</strong> if top score is below threshold, ask clarifying question instead of hallucinating.</li>
+        <li><strong>Chunk diversity:</strong> avoid feeding near-duplicate chunks; diversify by source/section.</li>
+        <li><strong>Citation requirement:</strong> reject generated outputs that omit references when your UX requires them.</li>
+        <li><strong>Context budget:</strong> keep prompt compact to reduce local generation cost.</li>
+      </ul>
+
+      <h2>Limitations you must accept</h2>
+      <p>Browser RAG has constraints. Large models can exceed memory budgets or fail on older devices. Cold start for local embedding or generation can be noticeable. Background tab throttling may affect long-running generation. Also, browser caches are not a secure enclave; sensitive corpus data should only be shipped when your access model allows it.</p>
+
+      <h2>Performance tuning checklist</h2>
+      <ol>
+        <li>Preload index when user opens assistant panel.</li>
+        <li>Run embedding and generation in workers where possible.</li>
+        <li>Use smaller embedding model for latency, then tune retrieval hyperparameters.</li>
+        <li>Measure answer quality with fixed eval questions, not anecdotal chats.</li>
+      </ol>
+
+      <h2>End-to-end walkthrough summary</h2>
+      <p>At runtime, query text is embedded locally, top-k chunks are retrieved via <code>altor-vec</code>, and a prompt is assembled with citations. The generation step can be local or remote, but retrieval remains local and deterministic. This architecture is often enough for technical docs assistants, onboarding copilots, and internal knowledge tools where privacy and cost predictability matter.</p>
+
+      <h2>Conclusion</h2>
+      <p>Browser-based RAG is not a universal replacement for server infrastructure, but it is a credible architecture for many product surfaces. If your corpus is moderate and your priority is low latency with tighter data boundaries, local retrieval plus optional local generation can deliver strong results. <code>altor-vec</code> provides a compact retrieval core that makes this feasible in standard JavaScript stacks.</p>
+
+      <div class="callout"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
+      <nav class="nav">
+        <a href="/blog/hnsw-algorithm-explained.html">HNSW Explained</a>
+        <a href="/blog/vector-search-without-backend.html">Without Backend</a>
+        <a href="/blog/offline-first-search.html">Offline-First Search</a>
+        <a href="/">Homepage</a>
+      </nav>
+    </main>
+  </body>
+</html>

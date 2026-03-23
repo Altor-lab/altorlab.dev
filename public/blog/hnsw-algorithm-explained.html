@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HNSW Algorithm Explained: Layers, Search Path, and Trade-offs</title>
+    <meta name="description" content="HNSW algorithm explained for developers: hierarchical graph intuition, search traversal, insertion process, and memory-speed trade-offs in browser." />
+    <meta name="keywords" content="hnsw algorithm explained, approximate nearest neighbor, hnsw javascript, vector search graph" />
+    <link rel="canonical" href="https://altorlab.dev/blog/hnsw-algorithm-explained" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="How HNSW Works: A Visual Explanation" />
+    <meta property="og:description" content="Deep technical walkthrough of HNSW layers, greedy search, and parameter tuning for browser vector retrieval." />
+    <meta property="og:url" content="https://altorlab.dev/blog/hnsw-algorithm-explained" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="How HNSW Works: A Visual Explanation" />
+    <meta name="twitter:description" content="Practical HNSW internals for frontend and infrastructure developers." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --bg:#080a09; --surface:#141a17; --border:#1e2823; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --glow:rgba(110,231,183,.07); }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; line-height:1.74; }
+      main { max-width:880px; margin:0 auto; padding:28px 22px 72px; }
+      a { color:var(--altor); text-decoration:none; } .mono { font-family:'JetBrains Mono',monospace; }
+      h1 { font-family:'Instrument Serif',serif; font-size:clamp(2.2rem,5vw,3.5rem); line-height:1.1; margin:.5rem 0 1rem; }
+      h2 { margin-top:2.25rem; } p, li { color:var(--text-secondary); }
+      pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
+      .diagram { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; font-family:'JetBrains Mono',monospace; color:#c3e88d; }
+      .box { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
+      .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How HNSW Works: A Visual Explanation","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/hnsw-algorithm-explained","keywords":["hnsw algorithm explained","ann","vector search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why is HNSW fast for nearest-neighbor search?","acceptedAnswer":{"@type":"Answer","text":"It uses a layered graph to avoid scanning all vectors, combining greedy routing and candidate refinement."}},{"@type":"Question","name":"What parameters matter most in HNSW?","acceptedAnswer":{"@type":"Answer","text":"M controls graph connectivity and memory; ef_search controls query-time candidate breadth and recall."}},{"@type":"Question","name":"Can HNSW run in the browser?","acceptedAnswer":{"@type":"Answer","text":"Yes, especially for moderate corpus sizes, using WebAssembly implementations like altor-vec."}},{"@type":"Question","name":"Is exact recall guaranteed?","acceptedAnswer":{"@type":"Answer","text":"No. HNSW is approximate; recall depends on graph quality and search parameters."}}]}</script>
+  </head>
+  <body>
+    <main>
+      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <p class="k">hnsw algorithm explained</p>
+      <h1>How HNSW Works: A Visual Explanation</h1>
+      <p>If you build vector search systems, HNSW appears everywhere: databases, retrieval APIs, and now browser-native libraries. But many explanations remain abstract. This article gives a practical mental model for developers who want to tune performance rather than memorize theory. We will walk through the layered graph idea, query traversal, insertion strategy, and key memory-speed trade-offs. We also explain why a 54KB WebAssembly implementation can still be useful in frontend products.</p>
+
+      <h2>Problem setup</h2>
+      <p>Given a query vector, find the nearest vectors in a large set. Exact scan computes distance to every item, which is expensive as corpus size grows. Approximate nearest neighbor (ANN) methods reduce work while preserving high recall. HNSW is a graph-based ANN method with strong empirical performance and good practical tunability.</p>
+
+      <h2>Core intuition: layered navigable graph</h2>
+      <p>Imagine a city map. Highways help you traverse long distances quickly; local streets help you find exact addresses. HNSW mirrors that idea: upper layers are sparse “highways,” lower layers are dense “streets.” Search starts at the top for coarse routing and descends to refine neighbors.</p>
+      <div class="diagram"><code>Layer 3 (very sparse):   o ---- o ----- o
+                         \            /
+Layer 2 (sparse):      o -- o -- o -- o -- o
+                        \   |   / \   |
+Layer 1 (dense):      o-o-o-o-o-o-o-o-o-o-o-o
+                        \|/\|/\|/\|/\|/\|/
+Layer 0 (densest):   full neighborhood graph for local refinement
+</code></div>
+      <p>Each node appears in layer 0 and possibly in higher layers, chosen probabilistically. Fewer nodes appear in higher layers, producing logarithmic-like navigation behavior in many datasets.</p>
+
+      <h2>Query algorithm step by step</h2>
+      <ol>
+        <li>Pick an entry point at highest layer.</li>
+        <li>Greedy walk: move to neighbor if it is closer to query.</li>
+        <li>When no better neighbor exists at current layer, descend one level.</li>
+        <li>At bottom layer, perform candidate expansion using a priority queue (ef_search).</li>
+        <li>Return top-k closest candidates found.</li>
+      </ol>
+      <pre><code>function hnswSearch(query, topK, efSearch):
+  ep = entryPointAtTopLayer
+  for layer from maxLayer downto 1:
+    ep = greedyDescent(layer, query, ep)
+
+  candidates = priorityQueue([ep])
+  visited = set([ep])
+  best = maxHeap(capacity = efSearch)
+
+  while candidates not empty:
+    cur = candidates.popClosest(query)
+    for n in neighbors(cur, layer=0):
+      if n in visited: continue
+      visited.add(n)
+      if shouldExplore(n, best, query):
+        candidates.push(n)
+        best.push(n)
+
+  return best.topK(topK)
+</code></pre>
+      <p>The “best frontier” logic is the reason HNSW usually outperforms naive greedy methods. It explores multiple promising candidates rather than committing to one path too early.</p>
+
+      <h2>Index construction basics</h2>
+      <p>Construction inserts vectors one by one. For each new vector:</p>
+      <ul>
+        <li>Sample its maximum layer from an exponential distribution.</li>
+        <li>Navigate from top entry point to the insertion layer.</li>
+        <li>At each layer, select M neighbors using heuristic diversity filtering.</li>
+        <li>Add bidirectional edges, potentially pruning overflow links.</li>
+      </ul>
+      <p>This process balances graph sparsity and local connectivity. Better graph quality yields higher recall at the same ef_search.</p>
+
+      <h2>Trade-off knobs</h2>
+      <h3>M (max connections)</h3>
+      <p>Higher M improves navigability and recall, especially in complex manifolds, but increases memory footprint and build time.</p>
+      <h3>ef_construction</h3>
+      <p>Higher values improve insertion quality (better edges), again at higher build cost.</p>
+      <h3>ef_search</h3>
+      <p>Higher ef_search increases query candidate breadth, improving recall but increasing query latency. For UI search, tune to keep p95 stable.</p>
+      <pre><code>// altor-vec build example
+const engine = WasmSearchEngine.from_vectors(
+  vectorsFlat,
+  384, // dim
+  16,  // M
+  200, // ef_construction
+  50   // ef_search default
+);
+</code></pre>
+
+      <h2>Memory vs speed in browser context</h2>
+      <p>Browser execution changes constraints. CPU is usually sufficient for moderate corpora, but memory and download size matter more than server deployments. A small, efficient engine helps, but metadata design and corpus scope still dominate real-world UX. Keep index assets tight, remove unused fields, and consider domain-partitioned indexes when payload grows.</p>
+      <p>Why can HNSW still be useful in a 54KB WASM package? Because package size and index size are separate concerns. The runtime algorithm code can be small while operating over externally loaded data files. If your index is appropriately scoped, query latency can remain sub-millisecond on modern devices.</p>
+
+      <h2>Why HNSW works well empirically</h2>
+      <p>Real embedding spaces are not random point clouds. They often have local semantic neighborhoods and navigable structure. HNSW exploits this by maintaining shortcuts and local refinement layers. While worst-case guarantees are complex, practical datasets in search and recommendation tend to be “friendly” enough that HNSW reaches strong recall-speed trade-offs.</p>
+
+      <h2>Debugging low recall</h2>
+      <ul>
+        <li>Check embedding consistency: same model/version for index and query vectors.</li>
+        <li>Increase ef_search before changing M; it is easier and runtime-only.</li>
+        <li>Evaluate with benchmark queries, not anecdotal single searches.</li>
+        <li>Inspect chunking strategy; poor chunks hurt retrieval more than graph tuning.</li>
+      </ul>
+
+      <h2>Browser implementation pattern</h2>
+      <pre><code>await init();
+const bytes = new Uint8Array(await (await fetch('/index.bin')).arrayBuffer());
+const engine = new WasmSearchEngine(bytes);
+
+export function nearest(queryVector, topK = 6) {
+  return JSON.parse(engine.search(new Float32Array(queryVector), topK));
+}
+</code></pre>
+      <p>Keep this path pure and deterministic. Do model inference and UI work around it, not inside it.</p>
+
+      <h2>Conclusion</h2>
+      <p>HNSW is best understood as a two-phase navigation strategy: long-range movement in sparse layers and local refinement in dense layers. The algorithm is fast because it avoids exhaustive comparisons while still exploring enough candidate paths to keep recall high. For browser products, this makes HNSW an excellent retrieval primitive when dataset size is moderate and low latency matters. With <code>altor-vec</code>, you can apply these ideas directly in JavaScript applications without maintaining a dedicated vector backend.</p>
+
+      <div class="box"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
+      <nav class="nav">
+        <a href="/blog/semantic-search-website.html">Semantic Search Tutorial</a>
+        <a href="/blog/vector-search-without-backend.html">Vector Search Without Backend</a>
+        <a href="/blog/browser-rag-tutorial.html">Browser RAG Tutorial</a>
+        <a href="/">Homepage</a>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vector Search React Tutorial: Hooks, Debounce, and Similarity Scores</title>
+    <meta name="description" content="Complete vector search React tutorial with altor-vec, debounced input, worker-based embeddings, similarity scores, and production reliability tips." />
+    <meta name="keywords" content="vector search react, react semantic search, altor-vec react, debounced search input" />
+    <link rel="canonical" href="https://altorlab.dev/blog/vector-search-react" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Vector Search in React: Complete Tutorial" />
+    <meta property="og:description" content="Practical React implementation of browser-native vector retrieval with production patterns." />
+    <meta property="og:url" content="https://altorlab.dev/blog/vector-search-react" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Vector Search in React: Complete Tutorial" />
+    <meta name="twitter:description" content="Hook architecture, debounce strategy, and score rendering for semantic search in React." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --bg:#080a09; --surface:#141a17; --border:#1e2823; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --glow:rgba(110,231,183,.07); }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; line-height:1.74; }
+      main { max-width:880px; margin:0 auto; padding:28px 22px 72px; }
+      a { color:var(--altor); text-decoration:none; } .mono { font-family:'JetBrains Mono',monospace; }
+      h1 { font-family:'Instrument Serif',serif; font-size:clamp(2.2rem,5vw,3.5rem); line-height:1.1; margin:.5rem 0 1rem; }
+      h2 { margin-top:2.25rem; } p, li { color:var(--text-secondary); }
+      pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
+      .callout { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
+      .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search in React: Complete Tutorial","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-react","keywords":["vector search react","react semantic search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I debounce semantic search in React?","acceptedAnswer":{"@type":"Answer","text":"Use useEffect with setTimeout or a custom useDebouncedValue hook, and cancel pending tasks on input changes."}},{"@type":"Question","name":"Should embeddings run in a web worker?","acceptedAnswer":{"@type":"Answer","text":"Yes for interactive UIs. Worker offloading prevents typing jank and keeps the main thread responsive."}},{"@type":"Question","name":"How do I show similarity scores safely?","acceptedAnswer":{"@type":"Answer","text":"Map distance to score and format to a few decimals; treat scores as relative ranking hints, not absolute truth."}},{"@type":"Question","name":"Can I avoid React routing changes for blog pages?","acceptedAnswer":{"@type":"Answer","text":"Yes. Static HTML in public/blog can coexist with a React SPA without adding client-side routes."}}]}</script>
+  </head>
+  <body>
+    <main>
+      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <p class="k">vector search react</p>
+      <h1>Vector Search in React: Complete Tutorial</h1>
+      <p>React is a great fit for semantic retrieval UIs because component state maps cleanly to query lifecycle: loading engine, processing query embeddings, ranking candidates, and rendering results. This tutorial builds a complete vector search module with <code>altor-vec</code>, including debounced input handling, worker messaging, similarity-score rendering, and production hardening. The goal is a practical implementation you can paste into a Vite/React project without introducing server routing changes.</p>
+
+      <h2>Project structure</h2>
+      <pre><code>src/
+  search/
+    useVectorSearch.ts
+    embed.worker.ts
+    vectorSearch.ts
+    types.ts
+  components/
+    SearchBox.tsx
+    SearchResultList.tsx
+public/
+  index.bin
+  metadata.json
+</code></pre>
+      <p>Keep retrieval logic separate from UI. This makes it easy to unit-test ranking behavior and reuse the hook in multiple search surfaces (header search, docs page search, command palette).</p>
+
+      <h2>Step 1: initialize the vector engine</h2>
+      <pre><code>// vectorSearch.ts
+import init, { WasmSearchEngine } from 'altor-vec';
+
+let engine: WasmSearchEngine | null = null;
+let meta: Array&lt;{ id: number; title: string; slug: string; excerpt: string }&gt; = [];
+
+export async function initVectorSearch() {
+  await init();
+  const [iRes, mRes] = await Promise.all([fetch('/index.bin'), fetch('/metadata.json')]);
+  engine = new WasmSearchEngine(new Uint8Array(await iRes.arrayBuffer()));
+  meta = await mRes.json();
+}
+
+export function queryVector(vec: number[], topK = 6) {
+  if (!engine) throw new Error('engine not initialized');
+  const hits: [number, number][] = JSON.parse(engine.search(new Float32Array(vec), topK));
+  return hits.map(([id, distance]) =&gt; ({ ...meta[id], distance, score: 1 - distance }));
+}
+</code></pre>
+
+      <h2>Step 2: worker for embeddings</h2>
+      <p>Embedding generation can be much heavier than vector lookup. Move it off the main thread using a dedicated worker.</p>
+      <pre><code>// embed.worker.ts
+import { pipeline } from '@huggingface/transformers';
+
+let embedder: any;
+self.onmessage = async (e: MessageEvent) =&gt; {
+  if (e.data.type === 'init') {
+    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    postMessage({ type: 'ready' });
+  }
+  if (e.data.type === 'embed') {
+    const out = await embedder(e.data.text, { pooling: 'mean', normalize: true });
+    postMessage({ type: 'embedding', id: e.data.id, vector: Array.from(out.data) });
+  }
+};
+</code></pre>
+
+      <h2>Step 3: create a reusable hook</h2>
+      <pre><code>// useVectorSearch.ts
+import { useEffect, useRef, useState } from 'react';
+import EmbedWorker from './embed.worker?worker';
+import { initVectorSearch, queryVector } from './vectorSearch';
+
+export function useVectorSearch() {
+  const [ready, setReady] = useState(false);
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const workerRef = useRef&lt;Worker | null&gt;(null);
+  const timerRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);
+  const pendingRef = useRef&lt;Map&lt;number, (v: number[]) =&gt; void&gt;&gt;(new Map());
+
+  useEffect(() =&gt; {
+    const worker = new EmbedWorker();
+    workerRef.current = worker;
+    worker.onmessage = (e) =&gt; {
+      if (e.data.type === 'embedding') {
+        pendingRef.current.get(e.data.id)?.(e.data.vector);
+        pendingRef.current.delete(e.data.id);
+      }
+    };
+
+    (async () =&gt; {
+      await initVectorSearch();
+      worker.postMessage({ type: 'init' });
+      setReady(true);
+    })();
+
+    return () =&gt; worker.terminate();
+  }, []);
+
+  const embed = (text: string) =&gt; new Promise&lt;number[]&gt;((resolve) =&gt; {
+    const id = Date.now() + Math.random();
+    pendingRef.current.set(id, resolve);
+    workerRef.current?.postMessage({ type: 'embed', id, text });
+  });
+
+  const search = (text: string) =&gt; {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!text.trim()) return setResults([]);
+    timerRef.current = setTimeout(async () =&gt; {
+      setLoading(true);
+      const vec = await embed(text);
+      setResults(queryVector(vec, 8));
+      setLoading(false);
+    }, 150);
+  };
+
+  return { ready, loading, results, search };
+}
+</code></pre>
+
+      <h2>Step 4: UI components and score rendering</h2>
+      <pre><code>// SearchBox.tsx
+export function SearchBox() {
+  const { ready, loading, results, search } = useVectorSearch();
+
+  return (
+    &lt;section&gt;
+      &lt;input
+        placeholder={ready ? 'Search docs semantically' : 'Loading search...'}
+        disabled={!ready}
+        onChange={(e) =&gt; search(e.target.value)}
+      /&gt;
+      {loading &amp;&amp; &lt;p&gt;Embedding query...&lt;/p&gt;}
+      &lt;ul&gt;
+        {results.map((r) =&gt; (
+          &lt;li key={r.id}&gt;
+            &lt;a href={r.slug}&gt;{r.title}&lt;/a&gt;
+            &lt;small&gt;score: {r.score.toFixed(3)}&lt;/small&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/section&gt;
+  );
+}
+</code></pre>
+      <p>Don’t over-interpret absolute score values. Use them primarily for relative ordering and optional debug displays.</p>
+
+      <h2>Production tips</h2>
+      <h3>Use AbortController for stale requests</h3>
+      <p>If your embedding path can involve remote fallback, cancel stale calls when input changes quickly.</p>
+      <h3>Cache model and index aggressively</h3>
+      <p>Model and index files are static assets; cache with long max-age and versioned filenames.</p>
+      <h3>Guard against dimension mismatch</h3>
+      <p>When model version changes, dimension may change too. Validate before querying, or ship manifest metadata.</p>
+      <h3>Combine with lexical boost</h3>
+      <p>For exact token queries (error codes, function names), merge lexical matches with semantic results.</p>
+
+      <h2>Error handling strategy</h2>
+      <pre><code>try {
+  const vec = await embed(query);
+  setResults(queryVector(vec));
+} catch (err) {
+  // Degrade gracefully
+  setResults([]);
+  setBanner('Semantic engine unavailable; showing keyword results.');
+}
+</code></pre>
+      <p>Keep UX resilient. A search box that occasionally degrades is acceptable; a search box that crashes is not.</p>
+
+      <h2>Testing checklist</h2>
+      <ul>
+        <li>Typing stress test: fast input bursts should not freeze UI.</li>
+        <li>Worker restart: ensure component can recover if worker terminates unexpectedly.</li>
+        <li>Cold-start latency: first search interaction under throttled network.</li>
+        <li>Ranking sanity: benchmark queries return expected top-k docs.</li>
+      </ul>
+
+      <h2>Conclusion</h2>
+      <p>React + browser-native vector search is a practical stack for modern developer products. The key pattern is separation of concerns: keep retrieval core deterministic, isolate embedding in a worker, and expose simple hook APIs to UI components. With <code>altor-vec</code>, you get fast local ANN retrieval and predictable cost characteristics while maintaining full control in frontend code.</p>
+
+      <div class="callout"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
+      <nav class="nav">
+        <a href="/blog/semantic-search-website.html">Semantic Search Tutorial</a>
+        <a href="/blog/embedding-autocomplete-browser.html">Embedding Autocomplete</a>
+        <a href="/blog/vector-search-without-backend.html">Without Backend</a>
+        <a href="/">Homepage</a>
+      </nav>
+    </main>
+  </body>
+</html>

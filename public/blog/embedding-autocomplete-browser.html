@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Semantic Autocomplete JavaScript: Embedding-Based Suggestions</title>
+    <meta name="description" content="Implement semantic autocomplete JavaScript in-browser with embeddings, altor-vec retrieval, React UI patterns, and sub-millisecond query paths." />
+    <meta name="keywords" content="semantic autocomplete javascript, embedding autocomplete browser, vector typeahead, altor-vec react" />
+    <link rel="canonical" href="https://altorlab.dev/blog/embedding-autocomplete-browser" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Embedding-Based Autocomplete in the Browser" />
+    <meta property="og:description" content="How semantic autocomplete differs from prefix matching and how to implement it in React." />
+    <meta property="og:url" content="https://altorlab.dev/blog/embedding-autocomplete-browser" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Embedding-Based Autocomplete in the Browser" />
+    <meta name="twitter:description" content="Production-focused tutorial for semantic typeahead with browser vector search." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --bg:#080a09; --surface:#141a17; --border:#1e2823; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --glow:rgba(110,231,183,.07); }
+      * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',sans-serif; line-height:1.74; }
+      main { max-width:880px; margin:0 auto; padding:28px 22px 72px; }
+      a { color:var(--altor); text-decoration:none; } .mono { font-family:'JetBrains Mono',monospace; }
+      h1 { font-family:'Instrument Serif',serif; font-size:clamp(2.2rem,5vw,3.5rem); line-height:1.1; margin:.5rem 0 1rem; }
+      h2 { margin-top:2.25rem; } p, li { color:var(--text-secondary); }
+      pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
+      .box { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
+      .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Embedding-Based Autocomplete in the Browser","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/embedding-autocomplete-browser","keywords":["semantic autocomplete javascript","embedding-based autocomplete"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How is semantic autocomplete different from prefix matching?","acceptedAnswer":{"@type":"Answer","text":"Prefix matching relies on string starts-with, while semantic autocomplete ranks by vector similarity to intent and meaning."}},{"@type":"Question","name":"Can I combine semantic and lexical autocomplete?","acceptedAnswer":{"@type":"Answer","text":"Yes. Hybrid ranking works best: lexical boosts exact entities, semantic ranking handles natural-language intent."}},{"@type":"Question","name":"Is sub-millisecond autocomplete realistic?","acceptedAnswer":{"@type":"Answer","text":"For nearest-neighbor retrieval itself, yes on moderate corpora; total latency still includes embedding generation and rendering."}},{"@type":"Question","name":"Should embedding run on each keystroke?","acceptedAnswer":{"@type":"Answer","text":"Use debounce/throttle and worker offloading; usually run semantic embedding after a short pause or minimum token count."}}]}</script>
+  </head>
+  <body>
+    <main>
+      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <p class="k">semantic autocomplete javascript</p>
+      <h1>Embedding-Based Autocomplete in the Browser</h1>
+      <p>Traditional autocomplete is prefix-centric: it finds terms that begin with what the user typed. That works for known commands or exact names, but it breaks when users type intent instead of literal tokens. A user entering <code>reduce payload size</code> may want suggestions like <code>bundle splitting</code> or <code>tree shaking guide</code>, none of which share prefixes. Semantic autocomplete solves this by ranking candidates in embedding space. In this tutorial, we build a browser implementation with <code>altor-vec</code>, discuss latency budgets, and provide a React component you can adapt directly.</p>
+
+      <h2>Prefix matching vs semantic matching</h2>
+      <p>Prefix matching is deterministic and cheap: O(term lookups) against a trie or sorted list. Semantic matching is intent-aware but requires embedding generation plus vector retrieval. In practice, use both:</p>
+      <ul>
+        <li>Lexical path for exact entities: route names, API symbols, IDs.</li>
+        <li>Semantic path for natural language intent and paraphrases.</li>
+      </ul>
+      <p>Hybrid ranking gives you predictable behavior for exact tokens while greatly improving “I don’t know exact wording” scenarios.</p>
+
+      <h2>Data preparation</h2>
+      <p>Autocomplete candidates should be concise and user-facing. Build a candidate list from docs titles, command descriptions, and frequent support answers. Generate embeddings offline and store candidate metadata separately from vectors.</p>
+      <pre><code>// candidate shape
+{
+  "id": 102,
+  "label": "Optimize bundle size with code splitting",
+  "slug": "/docs/performance/code-splitting",
+  "kind": "guide"
+}
+</code></pre>
+      <p>For quality, include both title and short description when embedding each candidate. This adds context and reduces near-duplicate collisions.</p>
+
+      <h2>Runtime flow and latency budget</h2>
+      <ol>
+        <li>User types in input.</li>
+        <li>Debounced pipeline generates query embedding.</li>
+        <li>altor-vec returns top-k nearest candidate IDs.</li>
+        <li>UI merges semantic and lexical scores, renders suggestions.</li>
+      </ol>
+      <p>Retrieval itself can be sub-millisecond for many corpora. Embedding time is usually the dominant factor. Therefore, optimize embedding lifecycle first: lazy init model, run in worker, and skip semantic path for very short inputs.</p>
+
+      <h2>React component example</h2>
+      <pre><code>import { useEffect, useMemo, useRef, useState } from 'react';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+export function SemanticAutocomplete({ embed }) {
+  const [q, setQ] = useState('');
+  const [items, setItems] = useState([]);
+  const [engine, setEngine] = useState(null);
+  const metaRef = useRef([]);
+  const timerRef = useRef(null);
+
+  useEffect(() =&gt; {
+    (async () =&gt; {
+      await init();
+      const [iRes, mRes] = await Promise.all([
+        fetch('/autocomplete-index.bin'),
+        fetch('/autocomplete-meta.json')
+      ]);
+      const bytes = new Uint8Array(await iRes.arrayBuffer());
+      const meta = await mRes.json();
+      metaRef.current = meta;
+      setEngine(new WasmSearchEngine(bytes));
+    })();
+  }, []);
+
+  useEffect(() =&gt; {
+    if (!engine) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (!q.trim()) return setItems([]);
+
+    timerRef.current = setTimeout(async () =&gt; {
+      const vec = await embed(q); // run embed in worker
+      const hits = JSON.parse(engine.search(new Float32Array(vec), 8));
+      const semantic = hits.map(([id, d]) =&gt; ({ ...metaRef.current[id], score: 1 - d }));
+      const lexical = metaRef.current
+        .filter((x) =&gt; x.label.toLowerCase().includes(q.toLowerCase()))
+        .slice(0, 5)
+        .map((x) =&gt; ({ ...x, score: 0.2 }));
+
+      const merged = [...semantic, ...lexical]
+        .reduce((acc, cur) =&gt; acc.set(cur.id, cur.score &gt; (acc.get(cur.id)?.score ?? -1) ? cur : acc.get(cur.id)), new Map())
+        .values();
+
+      setItems(Array.from(merged).sort((a,b)=&gt;b.score-a.score).slice(0,8));
+    }, 120);
+  }, [q, engine, embed]);
+
+  return (
+    &lt;div&gt;
+      &lt;input value={q} onChange={(e)=&gt;setQ(e.target.value)} placeholder="Search docs" /&gt;
+      &lt;ul&gt;{items.map((i)=&gt;&lt;li key={i.id}&gt;{i.label} ({i.score.toFixed(3)})&lt;/li&gt;)}&lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+      <h2>Why semantic autocomplete feels better</h2>
+      <p>Users often begin with symptom-level language, not canonical labels. Semantic ranking bridges that mismatch. It also reduces “dead-end typing,” where the user sees no suggestions until they accidentally hit exact wording. By surfacing intent-aligned options early, semantic typeahead decreases time-to-first-click and improves confidence in search quality.</p>
+      <p>For multilingual or terminology-heavy products, embeddings can encode associations that prefix methods cannot represent. For example, a query with “auth token expired” can surface docs titled “401 refresh flow” even without token overlap.</p>
+
+      <h2>UX improvements that matter</h2>
+      <ul>
+        <li><strong>Minimum token threshold:</strong> run semantic path only after 2–3 tokens to avoid noisy vectors.</li>
+        <li><strong>Score display:</strong> developers often like seeing confidence; expose score in debug mode.</li>
+        <li><strong>Keyboard navigation:</strong> maintain arrow + enter behavior regardless of ranking backend.</li>
+        <li><strong>Suggestion grouping:</strong> separate commands, docs, and FAQ items to reduce ambiguity.</li>
+      </ul>
+
+      <h2>Operational concerns</h2>
+      <p>Keep index payloads small by curating candidate set and trimming metadata fields. If you need thousands of suggestions, partition by domain and load segment-specific indexes on demand. For model lifecycle, avoid eager loading at page start; initialize after first input focus. This preserves core page performance while keeping autocomplete responsive.</p>
+
+      <h2>Failure modes and fallbacks</h2>
+      <p>Embedding model unavailable? Fall back to lexical suggestions and show a subtle degraded-mode indicator. Index missing? Hide semantic score and use static shortcut lists. Avoid throwing hard errors inside input handlers; autocomplete should always remain interactive even if advanced ranking path fails.</p>
+
+      <h2>Conclusion</h2>
+      <p>Embedding-based autocomplete gives frontend teams a practical quality upgrade over pure prefix matching, especially for intent-driven queries. With <code>altor-vec</code>, nearest-neighbor retrieval runs directly in the browser and typically contributes minimal latency compared to embedding generation. A hybrid ranker with lexical boosts plus semantic relevance usually delivers the best user experience and keeps behavior predictable for exact terms.</p>
+
+      <div class="box"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
+      <nav class="nav">
+        <a href="/blog/vector-search-react.html">Vector Search in React</a>
+        <a href="/blog/semantic-search-website.html">Semantic Search Tutorial</a>
+        <a href="/blog/offline-first-search.html">Offline-First Search</a>
+        <a href="/">Homepage</a>
+      </nav>
+    </main>
+  </body>
+</html>
