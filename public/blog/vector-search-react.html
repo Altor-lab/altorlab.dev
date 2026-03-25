@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vector Search React Tutorial: Hooks, Debounce, and Similarity Scores</title>
     <meta name="description" content="Complete vector search React tutorial with altor-vec, debounced input, worker-based embeddings, similarity scores, and production reliability tips." />
+    <meta name="geo.region" content="US" />
     <meta name="keywords" content="vector search react, react semantic search, altor-vec react, debounced search input" />
-    <link rel="canonical" href="https://altorlab.dev/blog/vector-search-react" />
+    <link rel="canonical" href="https://altorlab.dev/blog/vector-search-react.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/vector-search-react.html" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Vector Search in React: Complete Tutorial" />
     <meta property="og:description" content="Practical React implementation of browser-native vector retrieval with production patterns." />
-    <meta property="og:url" content="https://altorlab.dev/blog/vector-search-react" />
+    <meta property="og:url" content="https://altorlab.dev/blog/vector-search-react.html" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Vector Search in React: Complete Tutorial" />
     <meta name="twitter:description" content="Hook architecture, debounce strategy, and score rendering for semantic search in React." />
@@ -27,17 +30,30 @@
       pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
       .callout { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
       .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+      .install { background:var(--surface); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin:22px 0 0; }
+      .related { margin-top:34px; }
+      .related-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+      .related-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search in React: Complete Tutorial","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-react","keywords":["vector search react","react semantic search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search in React: Complete Tutorial","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-react.html","keywords":["vector search react","react semantic search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Vector Search in React: Complete Tutorial","codeRepository":"https://github.com/Altor-lab/altor-vec","programmingLanguage":["TypeScript","TSX"],"runtimePlatform":"Web Browser","url":"https://altorlab.dev/blog/vector-search-react.html","audience":{"@type":"Audience","audienceType":"React, JavaScript, and TypeScript developers"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I debounce semantic search in React?","acceptedAnswer":{"@type":"Answer","text":"Use useEffect with setTimeout or a custom useDebouncedValue hook, and cancel pending tasks on input changes."}},{"@type":"Question","name":"Should embeddings run in a web worker?","acceptedAnswer":{"@type":"Answer","text":"Yes for interactive UIs. Worker offloading prevents typing jank and keeps the main thread responsive."}},{"@type":"Question","name":"How do I show similarity scores safely?","acceptedAnswer":{"@type":"Answer","text":"Map distance to score and format to a few decimals; treat scores as relative ranking hints, not absolute truth."}},{"@type":"Question","name":"Can I avoid React routing changes for blog pages?","acceptedAnswer":{"@type":"Answer","text":"Yes. Static HTML in public/blog can coexist with a React SPA without adding client-side routes."}}]}</script>
   </head>
   <body>
     <main>
-      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a class="mono" href="/">Home</a>
+        <span>&gt;</span>
+        <a class="mono" href="/blog/">Blog</a>
+        <span>&gt;</span>
+        <span>Vector Search in React: Complete Tutorial</span>
+      </nav>
       <p class="k">vector search react</p>
       <h1>Vector Search in React: Complete Tutorial</h1>
       <p>React is a great fit for semantic retrieval UIs because component state maps cleanly to query lifecycle: loading engine, processing query embeddings, ranking candidates, and rendering results. This tutorial builds a complete vector search module with <code>altor-vec</code>, including debounced input handling, worker messaging, similarity-score rendering, and production hardening. The goal is a practical implementation you can paste into a Vite/React project without introducing server routing changes.</p>
+      <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>Project structure</h2>
       <pre><code>src/
@@ -209,10 +225,17 @@ export function SearchBox() {
       <p>React + browser-native vector search is a practical stack for modern developer products. The key pattern is separation of concerns: keep retrieval core deterministic, isolate embedding in a worker, and expose simple hook APIs to UI components. With <code>altor-vec</code>, you get fast local ANN retrieval and predictable cost characteristics while maintaining full control in frontend code.</p>
 
       <div class="callout"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
-      <nav class="nav">
-        <a href="/blog/semantic-search-website.html">Semantic Search Tutorial</a>
-        <a href="/blog/embedding-autocomplete-browser.html">Embedding Autocomplete</a>
-        <a href="/blog/vector-search-without-backend.html">Without Backend</a>
+      <section class="related" aria-labelledby="related-articles-title">
+        <h2 id="related-articles-title">Related articles</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/blog/semantic-search-website.html">Semantic Search Tutorial — the end-to-end architecture behind the React UI</a>
+          <a class="related-card" href="/blog/embedding-autocomplete-browser.html">Embedding Autocomplete — adapt semantic typeahead patterns for React apps</a>
+          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without Backend — understand the hosting model behind local React retrieval</a>
+        </div>
+      </section>
+
+      <nav class="nav" aria-label="Article navigation">
+        <a href="/blog/">Back to blog index</a>
         <a href="/">Homepage</a>
       </nav>
     </main>

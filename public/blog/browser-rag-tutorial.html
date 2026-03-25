@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Browser RAG Tutorial: Local Retrieval-Augmented Generation Architecture</title>
     <meta name="description" content="Browser RAG tutorial: run local retrieval with altor-vec and connect to local LLM generation, with architecture diagram and code walkthrough." />
+    <meta name="geo.region" content="US" />
     <meta name="keywords" content="browser rag, local rag javascript, retrieval augmented generation browser, altor-vec" />
-    <link rel="canonical" href="https://altorlab.dev/blog/browser-rag-tutorial" />
+    <link rel="canonical" href="https://altorlab.dev/blog/browser-rag-tutorial.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/browser-rag-tutorial.html" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Browser-Based RAG: Run Retrieval-Augmented Generation Locally" />
     <meta property="og:description" content="Implement RAG in the browser with local vector retrieval, prompt assembly, and local generation constraints." />
-    <meta property="og:url" content="https://altorlab.dev/blog/browser-rag-tutorial" />
+    <meta property="og:url" content="https://altorlab.dev/blog/browser-rag-tutorial.html" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Browser-Based RAG: Run Retrieval-Augmented Generation Locally" />
     <meta name="twitter:description" content="A practical architecture and code walkthrough for browser-native RAG." />
@@ -28,17 +31,30 @@
       .diagram { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; font-family:'JetBrains Mono',monospace; color:#c3e88d; }
       .callout { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
       .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+      .install { background:var(--surface); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin:22px 0 0; }
+      .related { margin-top:34px; }
+      .related-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+      .related-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Browser-Based RAG: Run Retrieval-Augmented Generation Locally","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/browser-rag-tutorial","keywords":["browser rag","local rag","retrieval augmented generation"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Browser-Based RAG: Run Retrieval-Augmented Generation Locally","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/browser-rag-tutorial.html","keywords":["browser rag","local rag","retrieval augmented generation"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"Browser-Based RAG: Run Retrieval-Augmented Generation Locally","codeRepository":"https://github.com/Altor-lab/altor-vec","programmingLanguage":["JavaScript","TypeScript"],"runtimePlatform":"Web Browser","url":"https://altorlab.dev/blog/browser-rag-tutorial.html","audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers building browser AI tools"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is browser-based RAG?","acceptedAnswer":{"@type":"Answer","text":"It is retrieval-augmented generation where retrieval and optionally generation run on-device in the browser."}},{"@type":"Question","name":"Why run RAG locally?","acceptedAnswer":{"@type":"Answer","text":"Local execution reduces data egress risk, avoids per-query API costs, and can improve latency consistency."}},{"@type":"Question","name":"What are the limitations?","acceptedAnswer":{"@type":"Answer","text":"Model quality and context window are constrained by client hardware, memory, and browser runtime limits."}},{"@type":"Question","name":"Where does altor-vec fit in RAG?","acceptedAnswer":{"@type":"Answer","text":"altor-vec provides fast local nearest-neighbor retrieval over embedded chunks before prompt assembly."}}]}</script>
   </head>
   <body>
     <main>
-      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a class="mono" href="/">Home</a>
+        <span>&gt;</span>
+        <a class="mono" href="/blog/">Blog</a>
+        <span>&gt;</span>
+        <span>Browser-Based RAG: Run Retrieval-Augmented Generation Locally</span>
+      </nav>
       <p class="k">browser rag</p>
       <h1>Browser-Based RAG: Run Retrieval-Augmented Generation Locally</h1>
       <p>RAG (Retrieval-Augmented Generation) usually implies a server architecture: vector database, retrieval API, prompt builder, and LLM endpoint. But for many developer-facing products, especially docs assistants and local knowledge tools, you can move major pieces into the browser. This tutorial explains a browser RAG architecture where retrieval runs locally using <code>altor-vec</code>, and generation can use a local model (or a remote fallback). We focus on implementation trade-offs, not marketing demos.</p>
+      <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>RAG recap in one paragraph</h2>
       <p>RAG improves LLM answers by retrieving relevant context chunks and injecting them into the prompt. Instead of relying only on model pretraining, the system grounds responses in your corpus. The quality of retrieval often dominates answer quality: poor context yields poor generation even with strong models.</p>
@@ -158,10 +174,17 @@ ${contextBlock}`;
       <p>Browser-based RAG is not a universal replacement for server infrastructure, but it is a credible architecture for many product surfaces. If your corpus is moderate and your priority is low latency with tighter data boundaries, local retrieval plus optional local generation can deliver strong results. <code>altor-vec</code> provides a compact retrieval core that makes this feasible in standard JavaScript stacks.</p>
 
       <div class="callout"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
-      <nav class="nav">
-        <a href="/blog/hnsw-algorithm-explained.html">HNSW Explained</a>
-        <a href="/blog/vector-search-without-backend.html">Without Backend</a>
-        <a href="/blog/offline-first-search.html">Offline-First Search</a>
+      <section class="related" aria-labelledby="related-articles-title">
+        <h2 id="related-articles-title">Related articles</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">HNSW Explained — understand the retrieval primitive inside browser RAG</a>
+          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without Backend — decide when local retrieval is enough</a>
+          <a class="related-card" href="/blog/offline-first-search.html">Offline-First Search — cache indexes for resilient local assistants</a>
+        </div>
+      </section>
+
+      <nav class="nav" aria-label="Article navigation">
+        <a href="/blog/">Back to blog index</a>
         <a href="/">Homepage</a>
       </nav>
     </main>
