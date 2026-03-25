@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Offline First Search JavaScript: IndexedDB + Service Worker Pattern</title>
     <meta name="description" content="Build offline first search JavaScript apps with IndexedDB, service workers, altor-vec HNSW retrieval, and resilient sync patterns for PWAs." />
+    <meta name="geo.region" content="US" />
     <meta name="keywords" content="offline first search javascript, indexeddb vector search, pwa semantic search, altor-vec" />
-    <link rel="canonical" href="https://altorlab.dev/blog/offline-first-search" />
+    <link rel="canonical" href="https://altorlab.dev/blog/offline-first-search.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/offline-first-search.html" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Building an Offline-First Search Experience" />
     <meta property="og:description" content="Architecture and code patterns for offline-capable semantic retrieval in web apps." />
-    <meta property="og:url" content="https://altorlab.dev/blog/offline-first-search" />
+    <meta property="og:url" content="https://altorlab.dev/blog/offline-first-search.html" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Building an Offline-First Search Experience" />
     <meta name="twitter:description" content="IndexedDB + service worker + browser HNSW for resilient local search UX." />
@@ -27,17 +30,30 @@
       pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
       .note { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
       .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+      .install { background:var(--surface); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin:22px 0 0; }
+      .related { margin-top:34px; }
+      .related-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+      .related-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Building an Offline-First Search Experience","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/offline-first-search","keywords":["offline first search javascript","indexeddb","pwa search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Building an Offline-First Search Experience","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/offline-first-search.html","keywords":["offline first search javascript","indexeddb","pwa search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Building an Offline-First Search Experience","url":"https://altorlab.dev/blog/offline-first-search.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can semantic search work fully offline?","acceptedAnswer":{"@type":"Answer","text":"Yes, if index and metadata are cached locally and query embeddings are generated on-device or precomputed."}},{"@type":"Question","name":"Why use IndexedDB for search assets?","acceptedAnswer":{"@type":"Answer","text":"IndexedDB supports larger binary payloads and structured metadata persistence beyond localStorage limits."}},{"@type":"Question","name":"Should I still use a service worker?","acceptedAnswer":{"@type":"Answer","text":"Yes. Service workers handle precaching, background updates, and offline request routing."}},{"@type":"Question","name":"How do I update index versions safely?","acceptedAnswer":{"@type":"Answer","text":"Use semantic versioned index manifests and swap only after verification checks complete."}}]}</script>
   </head>
   <body>
     <main>
-      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a class="mono" href="/">Home</a>
+        <span>&gt;</span>
+        <a class="mono" href="/blog/">Blog</a>
+        <span>&gt;</span>
+        <span>Building an Offline-First Search Experience</span>
+      </nav>
       <p class="k">offline first search javascript</p>
       <h1>Building an Offline-First Search Experience</h1>
       <p>Offline-first search is not only about airplane mode. It is about predictable UX under unstable connectivity, constrained corporate networks, and high-latency mobile environments. Users should still be able to discover content even if your API is temporarily unavailable. With JavaScript, IndexedDB, and browser-native HNSW retrieval, you can ship search that behaves like a local app while remaining web-deployable. This guide shows a robust implementation pattern using <code>altor-vec</code>.</p>
+      <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>Core architecture</h2>
       <p>Design the system around local state as the source of truth for retrieval. The network becomes a sync mechanism, not a hard runtime dependency. The minimal stack includes:</p>
@@ -165,10 +181,17 @@ worker.onmessage = (e) =&gt; {
       <p>An offline-first search experience is a reliability feature, not just a technical demo. By combining IndexedDB persistence, service-worker-driven updates, and local HNSW retrieval, you can deliver consistent search behavior regardless of network state. <code>altor-vec</code> keeps the retrieval core lightweight, while your app controls synchronization policy and UX. If your users expect speed and resilience, this architecture is often the best baseline.</p>
 
       <div class="note"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
-      <nav class="nav">
-        <a href="/blog/vector-search-without-backend.html">Vector Search Without Backend</a>
-        <a href="/blog/embedding-autocomplete-browser.html">Semantic Autocomplete</a>
-        <a href="/blog/browser-rag-tutorial.html">Browser RAG Tutorial</a>
+      <section class="related" aria-labelledby="related-articles-title">
+        <h2 id="related-articles-title">Related articles</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without Backend — when local retrieval beats an API</a>
+          <a class="related-card" href="/blog/embedding-autocomplete-browser.html">Embedding Autocomplete — layer semantic typeahead on top of offline data</a>
+          <a class="related-card" href="/blog/browser-rag-tutorial.html">Browser RAG Tutorial — combine cached retrieval with local assistants</a>
+        </div>
+      </section>
+
+      <nav class="nav" aria-label="Article navigation">
+        <a href="/blog/">Back to blog index</a>
         <a href="/">Homepage</a>
       </nav>
     </main>

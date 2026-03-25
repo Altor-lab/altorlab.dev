@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vector Search Without Server: Browser-Only Architecture Guide</title>
     <meta name="description" content="Vector search without server is practical: learn browser HNSW architecture, latency and cost advantages, privacy benefits, and implementation patterns." />
+    <meta name="geo.region" content="US" />
     <meta name="keywords" content="vector search without server, browser vector search, hnsw javascript, client-side retrieval" />
-    <link rel="canonical" href="https://altorlab.dev/blog/vector-search-without-backend" />
+    <link rel="canonical" href="https://altorlab.dev/blog/vector-search-without-backend.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/vector-search-without-backend.html" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Vector Search Without a Backend — Is It Possible?" />
     <meta property="og:description" content="Detailed technical analysis of serverless retrieval with browser HNSW and altor-vec." />
-    <meta property="og:url" content="https://altorlab.dev/blog/vector-search-without-backend" />
+    <meta property="og:url" content="https://altorlab.dev/blog/vector-search-without-backend.html" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Vector Search Without a Backend — Is It Possible?" />
     <meta name="twitter:description" content="Cost, latency, and architecture trade-offs for browser-native vector retrieval." />
@@ -30,17 +33,30 @@
       .table th, .table td { border:1px solid var(--border); padding:10px; text-align:left; }
       .table th { background:var(--surface); color:var(--text); }
       .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+      .install { background:var(--surface); border:1px solid rgba(110,231,183,.22); border-radius:12px; padding:14px; margin:22px 0 0; }
+      .related { margin-top:34px; }
+      .related-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+      .related-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search Without a Backend — Is It Possible?","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-without-backend","keywords":["vector search without server","browser vector search","hnsw"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search Without a Backend — Is It Possible?","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-without-backend.html","keywords":["vector search without server","browser vector search","hnsw"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Vector Search Without a Backend — Is It Possible?","url":"https://altorlab.dev/blog/vector-search-without-backend.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can vector search run without a server?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can load a static HNSW index in the browser and execute nearest-neighbor queries locally."}},{"@type":"Question","name":"What do you still need a backend for?","acceptedAnswer":{"@type":"Answer","text":"You may still need backend jobs for indexing pipelines, access control, analytics, or very large datasets."}},{"@type":"Question","name":"Is browser retrieval private by default?","acceptedAnswer":{"@type":"Answer","text":"Retrieval is local, so query text does not leave the device unless your app sends telemetry."}},{"@type":"Question","name":"How does latency compare with API-based search?","acceptedAnswer":{"@type":"Answer","text":"Local ANN lookup is often sub-millisecond, while network API calls add tens to hundreds of milliseconds."}}]}</script>
   </head>
   <body>
     <main>
-      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a class="mono" href="/">Home</a>
+        <span>&gt;</span>
+        <a class="mono" href="/blog/">Blog</a>
+        <span>&gt;</span>
+        <span>Vector Search Without a Backend — Is It Possible?</span>
+      </nav>
       <p class="k">vector search without server</p>
       <h1>Vector Search Without a Backend — Is It Possible?</h1>
       <p>Short answer: yes, for a large class of products. Long answer: it depends on dataset size, update frequency, and your control-plane needs. For developer docs, app command palettes, local knowledge bases, onboarding assistants, and many internal tools, browser-native retrieval is not just feasible—it can be the better default. You avoid per-query infrastructure, reduce privacy risk surface, and remove network latency from the critical path. This article explains when serverless vector search works, why HNSW is the right primitive in browser environments, and where the boundaries are.</p>
+      <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>Why teams want serverless retrieval</h2>
       <p>Most projects start with “just call a vector API,” and that works early. But over time, developers notice three operational pressures. First is unpredictable cost: as usage scales, per-query billing accumulates even when retrieval logic is simple. Second is privacy/legal complexity: sending every user query to remote services introduces obligations for storage, retention, consent, and security review. Third is latency variance: geographically distributed users can feel inconsistent response times due to network conditions. Running search locally removes these constraints from the hot path.</p>
@@ -127,10 +143,17 @@ function retrieve(queryVec, topK = 8) {
 
       <div class="callout"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
 
-      <nav class="nav">
-        <a href="/blog/semantic-search-website.html">Semantic Search Tutorial</a>
-        <a href="/blog/offline-first-search.html">Offline-First Search</a>
-        <a href="/blog/hnsw-algorithm-explained.html">HNSW Explained</a>
+      <section class="related" aria-labelledby="related-articles-title">
+        <h2 id="related-articles-title">Related articles</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/blog/semantic-search-website.html">Semantic Search Tutorial — add local retrieval to a website in minutes</a>
+          <a class="related-card" href="/blog/offline-first-search.html">Offline-First Search — keep retrieval working without a network</a>
+          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">HNSW Explained — understand the graph behind fast browser ANN</a>
+        </div>
+      </section>
+
+      <nav class="nav" aria-label="Article navigation">
+        <a href="/blog/">Back to blog index</a>
         <a href="/">Homepage</a>
       </nav>
     </main>

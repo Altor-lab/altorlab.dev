@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Semantic Autocomplete JavaScript: Embedding-Based Suggestions</title>
     <meta name="description" content="Implement semantic autocomplete JavaScript in-browser with embeddings, altor-vec retrieval, React UI patterns, and sub-millisecond query paths." />
+    <meta name="geo.region" content="US" />
     <meta name="keywords" content="semantic autocomplete javascript, embedding autocomplete browser, vector typeahead, altor-vec react" />
-    <link rel="canonical" href="https://altorlab.dev/blog/embedding-autocomplete-browser" />
+    <link rel="canonical" href="https://altorlab.dev/blog/embedding-autocomplete-browser.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/embedding-autocomplete-browser.html" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="Embedding-Based Autocomplete in the Browser" />
     <meta property="og:description" content="How semantic autocomplete differs from prefix matching and how to implement it in React." />
-    <meta property="og:url" content="https://altorlab.dev/blog/embedding-autocomplete-browser" />
+    <meta property="og:url" content="https://altorlab.dev/blog/embedding-autocomplete-browser.html" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Embedding-Based Autocomplete in the Browser" />
     <meta name="twitter:description" content="Production-focused tutorial for semantic typeahead with browser vector search." />
@@ -27,17 +30,30 @@
       pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:#c3e88d; }
       .box { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
       .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+      .install { background:var(--surface); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin:22px 0 0; }
+      .related { margin-top:34px; }
+      .related-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+      .related-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Embedding-Based Autocomplete in the Browser","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/embedding-autocomplete-browser","keywords":["semantic autocomplete javascript","embedding-based autocomplete"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Embedding-Based Autocomplete in the Browser","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/embedding-autocomplete-browser.html","keywords":["semantic autocomplete javascript","embedding-based autocomplete"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Embedding-Based Autocomplete in the Browser","url":"https://altorlab.dev/blog/embedding-autocomplete-browser.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How is semantic autocomplete different from prefix matching?","acceptedAnswer":{"@type":"Answer","text":"Prefix matching relies on string starts-with, while semantic autocomplete ranks by vector similarity to intent and meaning."}},{"@type":"Question","name":"Can I combine semantic and lexical autocomplete?","acceptedAnswer":{"@type":"Answer","text":"Yes. Hybrid ranking works best: lexical boosts exact entities, semantic ranking handles natural-language intent."}},{"@type":"Question","name":"Is sub-millisecond autocomplete realistic?","acceptedAnswer":{"@type":"Answer","text":"For nearest-neighbor retrieval itself, yes on moderate corpora; total latency still includes embedding generation and rendering."}},{"@type":"Question","name":"Should embedding run on each keystroke?","acceptedAnswer":{"@type":"Answer","text":"Use debounce/throttle and worker offloading; usually run semantic embedding after a short pause or minimum token count."}}]}</script>
   </head>
   <body>
     <main>
-      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a class="mono" href="/">Home</a>
+        <span>&gt;</span>
+        <a class="mono" href="/blog/">Blog</a>
+        <span>&gt;</span>
+        <span>Embedding-Based Autocomplete in the Browser</span>
+      </nav>
       <p class="k">semantic autocomplete javascript</p>
       <h1>Embedding-Based Autocomplete in the Browser</h1>
       <p>Traditional autocomplete is prefix-centric: it finds terms that begin with what the user typed. That works for known commands or exact names, but it breaks when users type intent instead of literal tokens. A user entering <code>reduce payload size</code> may want suggestions like <code>bundle splitting</code> or <code>tree shaking guide</code>, none of which share prefixes. Semantic autocomplete solves this by ranking candidates in embedding space. In this tutorial, we build a browser implementation with <code>altor-vec</code>, discuss latency budgets, and provide a React component you can adapt directly.</p>
+      <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>Prefix matching vs semantic matching</h2>
       <p>Prefix matching is deterministic and cheap: O(term lookups) against a trie or sorted list. Semantic matching is intent-aware but requires embedding generation plus vector retrieval. In practice, use both:</p>
@@ -146,10 +162,17 @@ export function SemanticAutocomplete({ embed }) {
       <p>Embedding-based autocomplete gives frontend teams a practical quality upgrade over pure prefix matching, especially for intent-driven queries. With <code>altor-vec</code>, nearest-neighbor retrieval runs directly in the browser and typically contributes minimal latency compared to embedding generation. A hybrid ranker with lexical boosts plus semantic relevance usually delivers the best user experience and keeps behavior predictable for exact terms.</p>
 
       <div class="box"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
-      <nav class="nav">
-        <a href="/blog/vector-search-react.html">Vector Search in React</a>
-        <a href="/blog/semantic-search-website.html">Semantic Search Tutorial</a>
-        <a href="/blog/offline-first-search.html">Offline-First Search</a>
+      <section class="related" aria-labelledby="related-articles-title">
+        <h2 id="related-articles-title">Related articles</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/blog/vector-search-react.html">Vector Search in React — ship semantic UI patterns in components and hooks</a>
+          <a class="related-card" href="/blog/semantic-search-website.html">Semantic Search Tutorial — build the retrieval layer behind autocomplete</a>
+          <a class="related-card" href="/blog/offline-first-search.html">Offline-First Search — keep suggestions available without the network</a>
+        </div>
+      </section>
+
+      <nav class="nav" aria-label="Article navigation">
+        <a href="/blog/">Back to blog index</a>
         <a href="/">Homepage</a>
       </nav>
     </main>

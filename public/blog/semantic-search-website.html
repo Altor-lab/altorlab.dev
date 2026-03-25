@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Semantic Search JavaScript: Add Website Search in 5 Minutes</title>
     <meta name="description" content="Learn semantic search JavaScript setup with altor-vec: install, generate embeddings, build HNSW index, query in browser, and improve relevance fast." />
+    <meta name="geo.region" content="US" />
     <meta name="keywords" content="semantic search javascript, website search, altor-vec, hnsw wasm, browser vector search" />
-    <link rel="canonical" href="https://altorlab.dev/blog/semantic-search-website" />
+    <link rel="canonical" href="https://altorlab.dev/blog/semantic-search-website.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/semantic-search-website.html" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="How to Add Semantic Search to Your Website in 5 Minutes" />
     <meta property="og:description" content="Practical semantic search JavaScript tutorial with code: embedding pipeline, index build, browser query path, and quality evaluation." />
-    <meta property="og:url" content="https://altorlab.dev/blog/semantic-search-website" />
+    <meta property="og:url" content="https://altorlab.dev/blog/semantic-search-website.html" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="How to Add Semantic Search to Your Website in 5 Minutes" />
     <meta name="twitter:description" content="Implementation-focused semantic search JavaScript tutorial for developers." />
@@ -34,6 +37,11 @@
       .box { background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .cta { background:var(--altor-glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin-top:28px; }
       .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+      .install { background:var(--surface-raised); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin:22px 0 0; }
+      .related { margin-top:34px; }
+      .related-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+      .related-card { background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .kicker { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
     <script type="application/ld+json">
@@ -43,9 +51,21 @@
         "headline": "How to Add Semantic Search to Your Website in 5 Minutes",
         "author": {"@type": "Organization", "name": "AltorLab"},
         "publisher": {"@type": "Organization", "name": "AltorLab"},
-        "mainEntityOfPage": "https://altorlab.dev/blog/semantic-search-website",
+        "mainEntityOfPage": "https://altorlab.dev/blog/semantic-search-website.html",
         "description": "Step-by-step semantic search JavaScript tutorial using altor-vec in the browser.",
         "keywords": ["semantic search javascript", "vector search", "hnsw", "altor-vec"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "How to Add Semantic Search to Your Website in 5 Minutes",
+        "url": "https://altorlab.dev/blog/semantic-search-website.html",
+        "proficiencyLevel": "Intermediate",
+        "about": {"@type": "SoftwareApplication", "name": "altor-vec"},
+        "audience": {"@type": "Audience", "audienceType": "JavaScript and TypeScript developers"},
+        "inLanguage": "en-US"
       }
     </script>
     <script type="application/ld+json">
@@ -63,10 +83,17 @@
   </head>
   <body>
     <main class="wrap">
-      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a class="mono" href="/">Home</a>
+        <span>&gt;</span>
+        <a class="mono" href="/blog/">Blog</a>
+        <span>&gt;</span>
+        <span>How to Add Semantic Search to Your Website in 5 Minutes</span>
+      </nav>
       <p class="kicker">semantic search javascript</p>
       <h1>How to Add Semantic Search to Your Website in 5 Minutes</h1>
       <p class="lede">If your site search depends on exact keyword matches, users often fail to find content they would consider relevant. A query like <code>cheap vector db</code> might not match an article titled <code>cost-efficient approximate nearest neighbor retrieval</code>, even though they describe the same intent. Semantic search JavaScript closes that gap by ranking results according to vector similarity rather than raw token overlap. This tutorial shows the shortest production-capable path using <strong>altor-vec</strong>, a browser-native HNSW engine (54KB, sub-millisecond queries, no backend requirement for retrieval).</p>
+      <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>Architecture in one minute</h2>
       <p>A practical semantic retrieval stack has four parts: (1) content chunking, (2) embedding generation, (3) vector index construction, and (4) client-side querying. The first three can run in CI or local tooling, then you deploy two artifacts: <code>index.bin</code> and <code>metadata.json</code>. At runtime the browser loads both, computes a query embedding, and asks the WASM engine for top-k nearest vectors. Because search is local, latency is stable and independent of network roundtrips.</p>
@@ -200,10 +227,17 @@ export function SearchBox({ embed }) {
         <strong>CTA</strong>: <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a>
       </div>
 
-      <nav class="nav">
-        <a href="/blog/vector-search-without-backend.html">Vector Search Without a Backend</a>
-        <a href="/blog/vector-search-react.html">Vector Search in React</a>
-        <a href="/blog/hnsw-algorithm-explained.html">HNSW Explained</a>
+      <section class="related" aria-labelledby="related-articles-title">
+        <h2 id="related-articles-title">Related articles</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without a Backend — cost, privacy, and latency trade-offs</a>
+          <a class="related-card" href="/blog/vector-search-react.html">Vector Search in React — wire retrieval into hooks and UI state</a>
+          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">How HNSW Works — understand the ANN graph behind local search</a>
+        </div>
+      </section>
+
+      <nav class="nav" aria-label="Article navigation">
+        <a href="/blog/">Back to blog index</a>
         <a href="/">Homepage</a>
       </nav>
     </main>

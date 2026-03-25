@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>altor-vec Blog: Vector Search, HNSW, Browser RAG Guides</title>
     <meta name="description" content="Technical guides for JavaScript developers: semantic search, vector retrieval, browser RAG, HNSW internals, and React integration with altor-vec." />
     <meta name="keywords" content="altor-vec blog, vector search javascript, semantic search javascript, hnsw algorithm explained, browser rag" />
+    <meta name="geo.region" content="US" />
     <link rel="canonical" href="https://altorlab.dev/blog/" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="altor-vec Blog — Technical Guides for Browser Vector Search" />
     <meta property="og:description" content="Deep technical tutorials for semantic search in JavaScript, React, offline-first retrieval, and browser-based RAG." />
     <meta property="og:url" content="https://altorlab.dev/blog/" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="altor-vec Blog — Technical Guides" />
     <meta name="twitter:description" content="Technical tutorials for browser-native vector search and retrieval." />
@@ -34,6 +37,26 @@
       .card p { color:var(--text-secondary); margin:0; font-size:15px; }
       footer { margin-top:40px; font-size:13px; color:var(--muted); }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "altor-vec Blog",
+        "url": "https://altorlab.dev/blog/",
+        "inLanguage": "en-US",
+        "publisher": {"@type": "Organization", "name": "AltorLab"},
+        "blogPost": [
+          {"@type":"BlogPosting","headline":"How to Add Semantic Search to Your Website in 5 Minutes","url":"https://altorlab.dev/blog/semantic-search-website.html"},
+          {"@type":"BlogPosting","headline":"Vector Search Without a Backend — Is It Possible?","url":"https://altorlab.dev/blog/vector-search-without-backend.html"},
+          {"@type":"BlogPosting","headline":"Building an Offline-First Search Experience","url":"https://altorlab.dev/blog/offline-first-search.html"},
+          {"@type":"BlogPosting","headline":"Embedding-Based Autocomplete in the Browser","url":"https://altorlab.dev/blog/embedding-autocomplete-browser.html"},
+          {"@type":"BlogPosting","headline":"How HNSW Works: A Visual Explanation","url":"https://altorlab.dev/blog/hnsw-algorithm-explained.html"},
+          {"@type":"BlogPosting","headline":"Vector Search in React: Complete Tutorial","url":"https://altorlab.dev/blog/vector-search-react.html"},
+          {"@type":"BlogPosting","headline":"Browser-Based RAG: Run Retrieval-Augmented Generation Locally","url":"https://altorlab.dev/blog/browser-rag-tutorial.html"},
+          {"@type":"BlogPosting","headline":"Client-Side Vector Search Guide: Build Semantic Search Without a Backend","url":"https://altorlab.dev/blog/client-side-vector-search-guide.html"}
+        ]
+      }
+    </script>
   </head>
   <body>
     <main class="wrap">
@@ -71,6 +94,11 @@
           <div class="k">vector search react</div>
           <h2><a href="/blog/vector-search-react.html">Vector Search in React: Complete Tutorial</a></h2>
           <p>Debounced input, hook design, score rendering, and production hardening tips.</p>
+        </article>
+        <article class="card">
+          <div class="k">client-side vector search</div>
+          <h2><a href="/blog/client-side-vector-search-guide.html">Client-Side Vector Search Guide: Build Semantic Search Without a Backend</a></h2>
+          <p>Deep dive into build-time embeddings, browser HNSW indexing, web workers, and performance constraints.</p>
         </article>
         <article class="card">
           <div class="k">browser rag</div>

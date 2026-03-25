@@ -1,16 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HNSW Algorithm Explained: Layers, Search Path, and Trade-offs</title>
     <meta name="description" content="HNSW algorithm explained for developers: hierarchical graph intuition, search traversal, insertion process, and memory-speed trade-offs in browser." />
+    <meta name="geo.region" content="US" />
     <meta name="keywords" content="hnsw algorithm explained, approximate nearest neighbor, hnsw javascript, vector search graph" />
-    <link rel="canonical" href="https://altorlab.dev/blog/hnsw-algorithm-explained" />
+    <link rel="canonical" href="https://altorlab.dev/blog/hnsw-algorithm-explained.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/hnsw-algorithm-explained.html" />
     <meta property="og:type" content="article" />
     <meta property="og:title" content="How HNSW Works: A Visual Explanation" />
     <meta property="og:description" content="Deep technical walkthrough of HNSW layers, greedy search, and parameter tuning for browser vector retrieval." />
-    <meta property="og:url" content="https://altorlab.dev/blog/hnsw-algorithm-explained" />
+    <meta property="og:url" content="https://altorlab.dev/blog/hnsw-algorithm-explained.html" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="How HNSW Works: A Visual Explanation" />
     <meta name="twitter:description" content="Practical HNSW internals for frontend and infrastructure developers." />
@@ -28,17 +31,30 @@
       .diagram { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; font-family:'JetBrains Mono',monospace; color:#c3e88d; }
       .box { background:var(--glow); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
       .nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+      .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+      .install { background:var(--surface); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; margin:22px 0 0; }
+      .related { margin-top:34px; }
+      .related-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+      .related-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How HNSW Works: A Visual Explanation","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/hnsw-algorithm-explained","keywords":["hnsw algorithm explained","ann","vector search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How HNSW Works: A Visual Explanation","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/hnsw-algorithm-explained.html","keywords":["hnsw algorithm explained","ann","vector search"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"How HNSW Works: A Visual Explanation","url":"https://altorlab.dev/blog/hnsw-algorithm-explained.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why is HNSW fast for nearest-neighbor search?","acceptedAnswer":{"@type":"Answer","text":"It uses a layered graph to avoid scanning all vectors, combining greedy routing and candidate refinement."}},{"@type":"Question","name":"What parameters matter most in HNSW?","acceptedAnswer":{"@type":"Answer","text":"M controls graph connectivity and memory; ef_search controls query-time candidate breadth and recall."}},{"@type":"Question","name":"Can HNSW run in the browser?","acceptedAnswer":{"@type":"Answer","text":"Yes, especially for moderate corpus sizes, using WebAssembly implementations like altor-vec."}},{"@type":"Question","name":"Is exact recall guaranteed?","acceptedAnswer":{"@type":"Answer","text":"No. HNSW is approximate; recall depends on graph quality and search parameters."}}]}</script>
   </head>
   <body>
     <main>
-      <a class="mono" href="/blog/">← Blog</a> · <a class="mono" href="/">Home</a>
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a class="mono" href="/">Home</a>
+        <span>&gt;</span>
+        <a class="mono" href="/blog/">Blog</a>
+        <span>&gt;</span>
+        <span>How HNSW Works: A Visual Explanation</span>
+      </nav>
       <p class="k">hnsw algorithm explained</p>
       <h1>How HNSW Works: A Visual Explanation</h1>
       <p>If you build vector search systems, HNSW appears everywhere: databases, retrieval APIs, and now browser-native libraries. But many explanations remain abstract. This article gives a practical mental model for developers who want to tune performance rather than memorize theory. We will walk through the layered graph idea, query traversal, insertion strategy, and key memory-speed trade-offs. We also explain why a 54KB WebAssembly implementation can still be useful in frontend products.</p>
+      <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>Problem setup</h2>
       <p>Given a query vector, find the nearest vectors in a large set. Exact scan computes distance to every item, which is expensive as corpus size grows. Approximate nearest neighbor (ANN) methods reduce work while preserving high recall. HNSW is a graph-based ANN method with strong empirical performance and good practical tunability.</p>
@@ -142,10 +158,17 @@ export function nearest(queryVector, topK = 6) {
       <p>HNSW is best understood as a two-phase navigation strategy: long-range movement in sparse layers and local refinement in dense layers. The algorithm is fast because it avoids exhaustive comparisons while still exploring enough candidate paths to keep recall high. For browser products, this makes HNSW an excellent retrieval primitive when dataset size is moderate and low latency matters. With <code>altor-vec</code>, you can apply these ideas directly in JavaScript applications without maintaining a dedicated vector backend.</p>
 
       <div class="box"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
-      <nav class="nav">
-        <a href="/blog/semantic-search-website.html">Semantic Search Tutorial</a>
-        <a href="/blog/vector-search-without-backend.html">Vector Search Without Backend</a>
-        <a href="/blog/browser-rag-tutorial.html">Browser RAG Tutorial</a>
+      <section class="related" aria-labelledby="related-articles-title">
+        <h2 id="related-articles-title">Related articles</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/blog/semantic-search-website.html">Semantic Search Tutorial — see HNSW applied in a real docs search flow</a>
+          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without Backend — choose when browser ANN is the right architecture</a>
+          <a class="related-card" href="/blog/browser-rag-tutorial.html">Browser RAG Tutorial — reuse HNSW retrieval inside local assistants</a>
+        </div>
+      </section>
+
+      <nav class="nav" aria-label="Article navigation">
+        <a href="/blog/">Back to blog index</a>
         <a href="/">Homepage</a>
       </nav>
     </main>
