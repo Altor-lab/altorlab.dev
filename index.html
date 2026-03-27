@@ -20,9 +20,62 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      .seo-links {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px 40px;
+        color: #d2d8d4;
+        font: 15px/1.7 "Plus Jakarta Sans", system-ui, sans-serif;
+      }
+
+      .seo-links h2,
+      .seo-links h3 {
+        color: #f4f7f5;
+        margin: 0 0 12px;
+      }
+
+      .seo-links p {
+        margin: 0 0 12px;
+      }
+
+      .seo-links a {
+        color: #6ee7b7;
+        text-decoration: none;
+      }
+
+      .seo-links ul {
+        margin: 0;
+        padding-left: 18px;
+        columns: 2;
+        column-gap: 28px;
+      }
+
+      .seo-links li {
+        margin-bottom: 8px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <section class="seo-links" aria-label="altor-vec resources">
+      <h2>altor-vec resources</h2>
+      <p>Browse the blog hub and technical guides covering semantic search, browser RAG, HNSW internals, React integration, and client-side retrieval architecture.</p>
+      <nav aria-label="Crawler-visible blog links">
+        <p><a href="/blog/">Visit the altor-vec blog index</a></p>
+        <ul>
+          <li><a href="/blog/semantic-search-website.html">How to Add Semantic Search to Your Website in 5 Minutes</a></li>
+          <li><a href="/blog/vector-search-without-backend.html">Vector Search Without a Backend — Is It Possible?</a></li>
+          <li><a href="/blog/offline-first-search.html">Building an Offline-First Search Experience</a></li>
+          <li><a href="/blog/embedding-autocomplete-browser.html">Embedding-Based Autocomplete in the Browser</a></li>
+          <li><a href="/blog/hnsw-algorithm-explained.html">How HNSW Works: A Visual Explanation</a></li>
+          <li><a href="/blog/vector-search-react.html">Vector Search in React: Complete Tutorial</a></li>
+          <li><a href="/blog/browser-rag-tutorial.html">Browser-Based RAG: Run Retrieval-Augmented Generation Locally</a></li>
+          <li><a href="/blog/client-side-vector-search-guide.html">Client-Side Vector Search Guide: Build Semantic Search Without a Backend</a></li>
+          <li><a href="/blog/cosine-similarity-vs-euclidean-distance-javascript.html">Cosine vs Euclidean Distance in JavaScript Vector Search</a></li>
+        </ul>
+      </nav>
+    </section>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
