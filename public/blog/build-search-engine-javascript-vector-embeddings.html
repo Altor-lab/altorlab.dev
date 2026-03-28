@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a Semantic Search Engine in JavaScript (Browser AI)</title>
+<meta name="description" content="Learn to create a vector-based search engine that runs entirely in the browser using embeddings and client-side AI models.">
+<link rel="canonical" href="https://altorlab.dev/blog/build-search-engine-javascript-vector-embeddings">
+<meta property="og:title" content="Build a Semantic Search Engine in JavaScript (Browser AI)">
+<meta property="og:description" content="Learn to create a vector-based search engine that runs entirely in the browser using embeddings and client-side AI models.">
+<meta property="og:url" content="https://altorlab.dev/blog/build-search-engine-javascript-vector-embeddings">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Build a Semantic Search Engine in JavaScript (Browser AI)",
+  "author": {"@type": "Organization", "name": "AltorLab"},
+  "publisher": {"@type": "Organization", "name": "AltorLab"},
+  "datePublished": "2026-03-28",
+  "url": "https://altorlab.dev/blog/build-search-engine-javascript-vector-embeddings"
+}
+</script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 2rem; line-height: 1.3; color: #f5f5f5; }
+h2 { font-size: 1.5rem; color: #f5f5f5; margin-top: 2rem; }
+h3 { font-size: 1.2rem; color: #d4a574; }
+a { color: #d4a574; }
+pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; }
+code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<nav><a href="/">← Home</a> · <a href="/blog/">Blog</a></nav>
+<article>
+<h1>How to Build a Search Engine in JavaScript (Without a Backend)</h1>
+
+<p>In 2023, Algolia processed 1.7 trillion search queries. Most of those required a server, an index rebuild pipeline, and a credit card. But if your dataset fits in a few megabytes and your users already have a browser, you can build a surprisingly capable search engine that runs entirely client-side—no API keys, no rate limits, no infrastructure.</p>
+
+<p>This isn't about substring matching or regex hacks. We're talking about semantic vector search that understands intent, runs in the browser, and ships as a single npm package.</p>
+
+<h2>Why Client-Side Search Isn't Stupid Anymore</h2>
+
+<p>Five years ago, this approach would've been laughable. Browsers were slow. JavaScript had no SIMD. Embedding models were gigabytes large and required GPUs.</p>
+
+<p>Today, WebAssembly gives you near-native speed. ONNX Runtime Web lets you run quantized transformer models in under 5MB. IndexedDB can store millions of vectors without choking. A typical product catalog, documentation site, or local-first app can embed its entire search index in the initial page load.</p>
+
+<p>The result: zero-latency search that works offline, costs nothing to scale, and keeps user data local.</p>
+
+<h2>Architecture: Three Pieces</h2>
+
+<p>A client-side vector search engine has three parts:</p>
+
+<p><strong>1. An embedding model</strong> that converts text into fixed-length vectors. We'll use a quantized version of all-MiniLM-L6-v2, which produces 384-dimensional embeddings and runs at ~40ms per query in-browser.</p>
+
+<p><strong>2. A vector index</strong> that stores pre-computed embeddings and finds nearest neighbors fast. HNSW (Hierarchical Navigable Small World) is the standard. It trades a small amount of recall for 10-100x faster queries than brute-force cosine similarity.</p>
+
+<p><strong>3. A query pipeline</strong> that embeds the search term, retrieves top-k results, and optionally reranks them with metadata filters or recency boosts.</p>
+
+<h2>Step 1: Embed Your Content</h2>
+
+<p>Start by generating embeddings for everything you want to search. This happens once, at build time.</p>
+
+<pre><code>import { pipeline } from '@xenova/transformers';
+
+const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+const docs = [
+  { id: 1, text: "React hooks let you use state without classes" },
+  { id: 2, text: "Vue 3 composition API provides reactive primitives" },
+  { id: 3, text: "Svelte compiles components to vanilla JavaScript" }
+];
+
+const embeddings = await Promise.all(
+  docs.map(async doc => ({
+    id: doc.id,
+    vector: await embedder(doc.text, { pooling: 'mean', normalize: true })
+  }))
+);</code></pre>
+
+<p>The output is an array of 384-dimensional float arrays. Serialize it to JSON or MessagePack and ship it with your app bundle. For 10,000 documents, expect ~15MB uncompressed, ~4MB gzipped.</p>
+
+<h2>Step 2: Build the Index</h2>
+
+<p>You could loop through all embeddings and calculate cosine similarity. That's O(n), which is fine for 1,000 items but unusable at 100,000.</p>
+
+<p>HNSW builds a multi-layer graph where each node connects to its nearest neighbors. Queries traverse the graph from coarse to fine, visiting only a fraction of the total vectors.</p>
+
+<pre><code>import { HNSWIndex } from 'altor-vec';
+
+const index = new HNSWIndex({ dimensions: 384, maxElements: 10000 });
+
+embeddings.forEach(({ id, vector }) => {
+  index.addPoint(vector, id);
+});
+
+const serialized = index.serialize();
+localStorage.setItem('search-index', serialized);</code></pre>
+
+<p>At query time, deserialize the index and search:</p>
+
+<pre><code>const index = HNSWIndex.deserialize(localStorage.getItem('search-index'));
+const queryVector = await embedder("state management in frontend frameworks");
+const results = index.searchKnn(queryVector, 5);
+
+// results = [{ id: 2, distance: 0.12 }, { id: 1, distance: 0.19 }, ...]</code></pre>
+
+<p>Typical query time: 5-15ms for a 10k vector index on a mid-range laptop.</p>
+
+<h2>Step 3: Add Metadata Filtering</h2>
+
+<p>Pure vector search ignores structure. If you need to filter by category, date, or custom fields, maintain a parallel metadata store and post-filter:</p>
+
+<pre><code>const metadata = new Map([
+  [1, { category: 'react', date: '2023-01-15' }],
+  [2, { category: 'vue', date: '2023-03-20' }],
+  [3, { category: 'svelte', date: '2023-02-10' }]
+]);
+
+const rawResults = index.searchKnn(queryVector, 20);
+const filtered = rawResults
+  .filter(r => metadata.get(r.id).category === 'react')
+  .slice(0, 5);</code></pre>
+
+<p>Retrieve more candidates (k=20) than you need (top 5) to account for filter attrition.</p>
+
+<h2>Optimization: Quantize the Vectors</h2>
+
+<p>384 floats × 4 bytes = 1,536 bytes per embedding. For 10,000 docs, that's 15MB. You can cut this by 75% with uint8 quantization:</p>
+
+<pre><code>function quantize(vector) {
+  const min = Math.min(...vector);
+  const max = Math.max(...vector);
+  return vector.map(v => Math.round(((v - min) / (max - min)) * 255));
+}</code></pre>
+
+<p>You'll lose ~2-3% recall, but query speed improves and bundle size shrinks to ~4MB uncompressed. For most use cases, the tradeoff is worth it.</p>
+
+<h2>Real-World Example: Documentation Search</h2>
+
+<p>Let's say you're indexing 5,000 MDX files from a Next.js docs site. At build time:</p>
+
+<pre><code>// scripts/build-search-index.js
+import fs from 'fs';
+import { pipeline } from '@xenova/transformers';
+import { HNSWIndex } from 'altor-vec';
+
+const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+const docs = JSON.parse(fs.readFileSync('docs-manifest.json'));
+
+const index = new HNSWIndex({ dimensions: 384, maxElements: 5000 });
+
+for (const doc of docs) {
+  const vector = await embedder(doc.content, { pooling: 'mean', normalize: true });
+  index.addPoint(vector, doc.id);
+}
+
+fs.writeFileSync('public/search-index.bin', index.serialize());</code></pre>
+
+<p>In your app:</p>
+
+<pre><code>const [index, setIndex] = useState(null);
+
+useEffect(() => {
+  fetch('/search-index.bin')
+    .then(r => r.arrayBuffer())
+    .then(buf => setIndex(HNSWIndex.deserialize(buf)));
+}, []);
+
+function search(query) {
+  if (!index) return [];
+  const vector = await embedder(query);
+  return index.searchKnn(vector, 10).map(r => docsById.get(r.id));
+}</code></pre>
+
+<p>Total overhead: ~6MB (3MB model + 3MB index). First query after page load: ~200ms. Subsequent queries: <20ms.</p>
+
+<h2>When Not to Do This</h2>
+
+<p>Client-side vector search breaks down when:</p>
+
+<ul>
+<li>Your dataset exceeds 50MB compressed. Users won't wait.</li>
+<li>You need real-time updates from multiple users. There's no sync mechanism.</li>
+<li>You're indexing private data per-user. Embedding 100k unique documents per session isn't feasible.</li>
+</ul>
+
+<p>For those cases, use Typesense, Meilisearch, or build a proper backend with Pinecone or Qdrant.</p>
+
+<h2>Why This Matters</h2>
+
+<p>Every search query you handle client-side is one you don't pay Algolia $1.50/1000 for. Every embedding you compute at build time is one you don't send to OpenAI's API at runtime. Every index you ship in the bundle is one less round-trip to a vector database.</p>
+
+<p>For documentation, product catalogs, internal tools, and local-first apps, client-side search isn't a compromise. It's faster, cheaper, and more private than the server-side default.</p>
+
+<section aria-label="FAQ">
+<h2>Frequently Asked Questions</h2>
+
+<h3>Can I use this for autocomplete?</h3>
+<p>Yes, but you'll want to optimize for sub-10ms queries. Use a smaller embedding model (e.g., a 128-dim distilled version), keep your index under 1,000 items, or fall back to prefix matching for the first few characters and vector search only after 3+ characters.</p>
+
+<h3>How do I handle large documents?</h3>
+<p>Split them into chunks (e.g., 200-word paragraphs), embed each chunk separately, and store chunk IDs with parent document references. At query time, retrieve top chunks and deduplicate by parent document.</p>
+
+<h3>Does this work with languages other than English?</h3>
+<p>Yes. Multilingual models like paraphrase-multilingual-MiniLM-L12-v2 support 50+ languages. Expect slightly larger model sizes (~8MB) and slower inference (~60ms per query).</p>
+
+<h3>What about typos and exact match?</h3>
+<p>Vector search is typo-tolerant by design—"javsacript" and "javascript" have similar embeddings. For exact match (e.g., error codes, product SKUs), combine vector results with a keyword index using something like FlexSearch.</p>
+
+<h3>Can I update the index without rebuilding everything?</h3>
+<p>HNSW supports incremental adds, but you'll need to re-serialize and re-download the index. For frequently changing data, consider a hybrid approach: static index for 95% of content, live API for the recent 5%.</p>
+</section>
+
+<p><strong>Ready to ship search without a backend?</strong> Install altor-vec and start embedding: <code>npm install altor-vec</code> — <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
+</article>
+<footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
+Published March 28, 2026 · Auto-generated from search data
+</footer>
+</body>
+</html>
