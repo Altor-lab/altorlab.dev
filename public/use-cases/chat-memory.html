@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chat Memory — Store and Retrieve Context Locally</title>
+    <meta name="description" content="Local chat memory with altor-vec, browser vector retrieval, and candid guidance on when conversational memory still belongs on a backend." />
+    <meta name="keywords" content="chat memory, client-side vector search, altor-vec" />
+    <meta name="geo.region" content="US" />
+    <link rel="canonical" href="https://altorlab.dev/use-cases/chat-memory.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/use-cases/chat-memory.html" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="AI Chat Memory — Store and Retrieve Context Locally" />
+    <meta property="og:description" content="Local chat memory with altor-vec, browser vector retrieval, and candid guidance on when conversational memory still belongs on a backend." />
+    <meta property="og:url" content="https://altorlab.dev/use-cases/chat-memory.html" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AI Chat Memory — Store and Retrieve Context Locally" />
+    <meta name="twitter:description" content="Local chat memory with altor-vec, browser vector retrieval, and candid guidance on when conversational memory still belongs on a backend." />
+    
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <style>
+:root { --bg:#080a09; --surface:#0e1210; --surface-raised:#141a17; --border:#1e2823; --border-hover:#2a3831; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --altor-glow:rgba(110,231,183,.07); --code:#c3e88d; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',system-ui,sans-serif; line-height:1.74; }
+a { color:var(--altor); text-decoration:none; }
+a:hover { text-decoration:underline; }
+main { max-width:920px; margin:0 auto; padding:30px 22px 78px; }
+.breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+.mono, code, pre { font-family:'JetBrains Mono',monospace; }
+h1 { font-family:'Instrument Serif',serif; font-size:clamp(2.3rem,5vw,3.7rem); line-height:1.08; margin:.55rem 0 1rem; }
+h2 { margin-top:2.35rem; font-size:1.55rem; }
+h3 { margin-top:1.5rem; font-size:1.08rem; }
+p, li, td, th { color:var(--text-secondary); }
+ul, ol { padding-left:20px; }
+pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:var(--code); line-height:1.6; }
+code { color:#d9f99d; }
+.table-wrap { overflow:auto; }
+table { width:100%; border-collapse:collapse; margin:14px 0; background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+th, td { padding:12px 14px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+th { color:var(--text); background:#111814; }
+tr:last-child td { border-bottom:none; }
+.k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
+.lead { font-size:1.03rem; }
+.install, .callout, .diagram, .note { background:var(--surface-raised); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
+.callout { background:var(--altor-glow); }
+.diagram { white-space:pre; overflow:auto; color:var(--code); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+.card { background:var(--surface-raised); border:1px solid var(--border); border-radius:14px; padding:16px; }
+.footer-nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+.small { font-size:13px; color:var(--muted); }
+</style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":'AI Chat Memory — Store and Retrieve Context Locally With Client-Side Vector Search',"url":'https://altorlab.dev/use-cases/chat-memory.html',"datePublished":'2026-03-29',"dateModified":'2026-03-29',"author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"keywords":['chat memory','client-side vector search','altor-vec'],"audience":{"@type":"Audience","audienceType":'JavaScript developers building search and AI UX'},"about":{"@type":"SoftwareApplication","name":"altor-vec"},"inLanguage":"en-US"}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":'Is local chat memory more private?',"acceptedAnswer":{"@type":"Answer","text":'Yes. Queries and recalled memories can stay on-device.'}},{"@type":"Question","name":'Does vector memory replace the recent context window?',"acceptedAnswer":{"@type":"Answer","text":'No. It complements it by resurfacing older relevant facts.'}},{"@type":"Question","name":'When does chat memory need a backend?',"acceptedAnswer":{"@type":"Answer","text":'When you need shared, synced, or policy-controlled memory.'}}]}</script>
+  </head>
+  <body>
+    <main>
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a class="mono" href="/">Home</a><span>&gt;</span><a class="mono" href="/use-cases/">Use Cases</a><span>&gt;</span><span>AI Chat Memory — Store and Retrieve Context Locally With Client-Side Vector Search</span></nav>
+      <p class="k">chat memory local vectors</p>
+      <h1>AI Chat Memory — Store and Retrieve Context Locally With Client-Side Vector Search</h1>
+      <p class="lead">AI Chat Memory — Store and Retrieve Context Locally is one of the clearest places where browser-native vector retrieval can be either a legitimate competitive advantage or a complete architectural mistake. The difference comes down to data boundaries, update cadence, and who should own the search experience. <code>altor-vec</code> is useful here because it turns nearest-neighbor search into a local runtime primitive rather than a network dependency. That means the main implementation questions move from “which vector database should we provision?” to “can the browser safely hold the corpus and produce a query vector fast enough?”</p><div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div><p>For programmatic SEO pages, vague claims are useless, so this guide stays concrete. The example code uses tiny four-dimensional vectors to remain runnable without external APIs. In production, you would swap those vectors with real embeddings from a text, image, or multimodal model. The mechanics are identical: build or load an HNSW index, add any new vectors you explicitly want to append, and search locally with a <code>Float32Array</code>.</p><h2>Architecture diagram</h2><div class="diagram">Conversation turn
+   |
+   +--&gt; summarize / embed turn
+   +--&gt; append to local vector memory
+New prompt
+   |
+   +--&gt; altor-vec memory retrieval
+   +--&gt; compact context block
+   +--&gt; local or remote model</div><p>The architecture is intentionally split into offline and online phases. Offline is where you chunk content, generate embeddings, and serialize the index. Online is where the browser loads static assets, turns user input into a query vector, and runs ANN search. Keeping those phases separate prevents you from doing expensive, repeated work at request time and gives you a deployment model that looks more like shipping images or JSON than operating a search cluster.</p><h2>Full code example</h2><p>The example below is small, but it is using the real <code>altor-vec</code> API: <code>init()</code>, <code>WasmSearchEngine.from_vectors()</code>, <code>add_vectors()</code>, and <code>search()</code>. That matters because the adaptation path to a real application is mechanical rather than conceptual.</p><pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+const memories = [
+  { id: &#x27;m1&#x27;, text: &#x27;User prefers concise answers&#x27;, vector: [1, 0, 0, 0] },
+  { id: &#x27;m2&#x27;, text: &#x27;User is building a docs search app&#x27;, vector: [0, 1, 0, 0] },
+  { id: &#x27;m3&#x27;, text: &#x27;User cares about offline support&#x27;, vector: [0, 0, 1, 0] },
+];
+
+await init();
+const dim = 4;
+const engine = WasmSearchEngine.from_vectors(new Float32Array(memories.flatMap((m) =&gt; m.vector)), dim, 16, 200, 50);
+memories.push({ id: &#x27;m4&#x27;, text: &#x27;User prefers TypeScript examples&#x27;, vector: [0.97, 0.03, 0, 0] });
+engine.add_vectors(new Float32Array([0.97, 0.03, 0, 0]), dim);
+
+export function retrieveMemory(queryVector) {
+  const hits = JSON.parse(engine.search(new Float32Array(queryVector), 3));
+  return hits.map(([id, distance]) =&gt; ({ ...memories[id], distance }));
+}</code></pre><h2>Step-by-step implementation notes</h2><ol><li><strong>Install:</strong> add <code>altor-vec</code> to the project.</li><li><strong>Import:</strong> load <code>init</code> and <code>WasmSearchEngine</code>.</li><li><strong>Create index:</strong> flatten vectors into one <code>Float32Array</code> and build the HNSW graph.</li><li><strong>Add vectors:</strong> append carefully when the runtime genuinely needs local incremental updates.</li><li><strong>Query:</strong> pass a query vector into <code>search()</code>, parse the JSON result, and map vector IDs back to metadata.</li></ol><p>This works for personal assistants, note-taking tools, and privacy-first chat interfaces where memory should stay on-device. The biggest conceptual shift is that search becomes a local user-experience feature. That reduces latency and cost, but it also means the browser is now responsible for cache management, memory usage, and any degradation strategy when embeddings or static assets fail to load.</p><h2>Performance benchmarks</h2><div class="table-wrap"><table><thead><tr><th>Metric</th><th>Published baseline or operational note</th></tr></thead><tbody><tr><td>HNSW retrieval</td><td>altor-vec publishes roughly <code>0.6ms</code> p95 retrieval in Chrome on 10K vectors with 384 dimensions.</td></tr><tr><td>Index load</td><td>The same published benchmark reports around <code>19ms</code> to instantiate the engine from serialized bytes.</td></tr><tr><td>WASM payload</td><td>The WebAssembly artifact is around <code>54KB gzipped</code>, which is small enough that your index and metadata usually dominate transfer size.</td></tr><tr><td>Reference index size</td><td>Published reference size for a 10K / 384d index is about <code>17MB</code>. Always profile your own metadata, compression, and cache behavior.</td></tr></tbody></table></div><p>Those numbers are useful because they stop teams from optimizing the wrong thing. In most real interfaces, the slowest operation is not <code>engine.search()</code>; it is building the query embedding, rendering a long result list, hydrating a framework page, or downloading too much metadata. If you want better UX, move embedding generation to a worker, lazy-load large metadata payloads, and keep your result cards light.</p><h2>When this approach works vs when you need a server</h2><p><strong>Works well:</strong> This works for personal assistants, note-taking tools, and privacy-first chat interfaces where memory should stay on-device.</p><p><strong>Needs a server:</strong> Use a server when memories must sync across devices, support teams, or comply with central retention rules.</p><p>The honest architectural test is simple: if every browser session is allowed to have the relevant vectors and metadata, local retrieval is a real option. If the answer is no, then client-side search should only be a cache or preview layer. That distinction prevents a lot of “vector search in the browser” experiments from turning into security incidents or disappointing scale stories.</p><h2>Developer checklist</h2><ul><li>Version the index and metadata together so IDs never drift.</li><li>Keep a lexical fallback for exact IDs, filenames, and very short queries.</li><li>Use worker-based embedding or build-time embeddings whenever possible.</li><li>Measure memory on mid-range mobile devices instead of only profiling on desktop Chrome.</li><li>Plan a graceful fallback state when the model or index cannot load.</li></ul><h2>Conclusion</h2><p>AI Chat Memory — Store and Retrieve Context Locally is a strong fit for browser-native vector retrieval when the browser is the correct ownership boundary for the data and for the search experience. <code>altor-vec</code> removes the infrastructure layer, but it does not remove the need for good chunking, thoughtful ranking, or realistic evaluation. Used in the right place, though, it is one of the shortest paths from idea to a technical feature that genuinely feels fast.</p><div class="callout"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div>
+      <nav class="footer-nav" aria-label="Page navigation">
+        <a href="/">Homepage</a>
+        <a href="/blog/">Blog</a>
+      </nav>
+    </main>
+  </body>
+</html>

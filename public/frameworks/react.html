@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vector Search in React — Complete Tutorial</title>
+    <meta name="description" content="Step-by-step React vector search guide using altor-vec, hooks, local indexes, and a debounced semantic search component." />
+    <meta name="keywords" content="react vector search, altor-vec, semantic search react, client-side search" />
+    <meta name="geo.region" content="US" />
+    <link rel="canonical" href="https://altorlab.dev/frameworks/react.html" />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/frameworks/react.html" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Vector Search in React — Complete Tutorial" />
+    <meta property="og:description" content="Step-by-step React vector search guide using altor-vec, hooks, local indexes, and a debounced semantic search component." />
+    <meta property="og:url" content="https://altorlab.dev/frameworks/react.html" />
+    <meta property="og:locale" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Vector Search in React — Complete Tutorial" />
+    <meta name="twitter:description" content="Step-by-step React vector search guide using altor-vec, hooks, local indexes, and a debounced semantic search component." />
+    
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <style>
+:root {
+  --bg:#080a09;
+  --surface:#0e1210;
+  --surface-raised:#141a17;
+  --border:#1e2823;
+  --border-hover:#2a3831;
+  --text:#edf0ee;
+  --text-secondary:#8b9690;
+  --muted:#556059;
+  --altor:#6ee7b7;
+  --altor-glow:rgba(110,231,183,.07);
+  --code:#c3e88d;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',system-ui,sans-serif; line-height:1.74; }
+a { color:var(--altor); text-decoration:none; }
+a:hover { text-decoration:underline; }
+main { max-width:920px; margin:0 auto; padding:30px 22px 78px; }
+.breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; }
+.mono, code, pre { font-family:'JetBrains Mono',monospace; }
+h1 { font-family:'Instrument Serif',serif; font-size:clamp(2.3rem,5vw,3.7rem); line-height:1.08; margin:.55rem 0 1rem; }
+h2 { margin-top:2.35rem; font-size:1.55rem; }
+h3 { margin-top:1.5rem; font-size:1.08rem; }
+p, li, td, th { color:var(--text-secondary); }
+ul, ol { padding-left:20px; }
+pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:var(--code); line-height:1.6; }
+code { color:#d9f99d; }
+.table-wrap { overflow:auto; }
+table { width:100%; border-collapse:collapse; margin:14px 0; background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+th, td { padding:12px 14px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; }
+th { color:var(--text); background:#111814; }
+tr:last-child td { border-bottom:none; }
+.k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
+.lead { font-size:1.03rem; }
+.install, .callout, .diagram, .note { background:var(--surface-raised); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; }
+.callout { background:var(--altor-glow); }
+.diagram { white-space:pre; overflow:auto; color:var(--code); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+.card { background:var(--surface-raised); border:1px solid var(--border); border-radius:14px; padding:16px; }
+.footer-nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }
+.small { font-size:13px; color:var(--muted); }
+hr { border:none; border-top:1px solid var(--border); margin:32px 0; }
+</style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":'Vector Search in React — Complete Tutorial',"url":'https://altorlab.dev/frameworks/react.html',"datePublished":'2026-03-29',"dateModified":'2026-03-29',"author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"keywords":['react','vector search','altor-vec','client-side search'],"audience":{"@type":"Audience","audienceType":'React, JavaScript, and TypeScript developers'},"about":{"@type":"SoftwareApplication","name":"altor-vec"},"inLanguage":"en-US"}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":'Does altor-vec need a backend in React?',"acceptedAnswer":{"@type":"Answer","text":'No. The library can load a serialized index or build one from vectors directly inside a React application. You only need a backend when your corpus is private, very large, or updated continuously.'}},{"@type":"Question","name":'Can I add vectors after initialization in React?',"acceptedAnswer":{"@type":"Answer","text":'Yes. WasmSearchEngine exposes add_vectors(flat, dims), which is useful for appending a few new embeddings without rebuilding the whole index during a demo or a controlled sync step.'}},{"@type":"Question","name":'What is the biggest performance risk in React?',"acceptedAnswer":{"@type":"Answer","text":'Embedding generation and UI churn are the main risks. altor-vec search is fast; expensive models, repeated initialization, or too many renders usually dominate the user-visible delay in React apps.'}}]}</script>
+  </head>
+  <body>
+    <main>
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a class="mono" href="/">Home</a><span>&gt;</span><a class="mono" href="/frameworks/">Frameworks</a><span>&gt;</span><span>Vector Search in React — Complete Tutorial</span></nav>
+      <p class="k">vector search react tutorial</p>
+      <h1>Vector Search in React — Complete Tutorial</h1>
+      <p class="lead">React developers usually hit the same search problem: keyword search is easy to ship, but it fails when the user phrase and the document phrase do not overlap. <code>altor-vec</code> solves the retrieval side by running HNSW vector search locally in WebAssembly. That means you can keep query latency close to the browser, eliminate per-query billing, and still expose a familiar framework component API. This guide focuses on implementation details rather than marketing claims.</p><div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div><p>The example below uses tiny four-dimensional vectors so the code is runnable as-is and easy to understand. In production you would usually replace those manual vectors with embeddings from a model such as <code>Xenova/all-MiniLM-L6-v2</code> or a build-time embedding job. The retrieval flow stays the same: install, import the WASM package, create an index, optionally add vectors, then query the engine and map result IDs back to metadata.</p><h2>Step 1: install and understand the runtime boundary</h2><p>Start with <code>npm install altor-vec</code>. The package exposes a default <code>init()</code> function that loads the WASM module and a <code>WasmSearchEngine</code> class that loads or builds an HNSW index. The important design question in React is not whether vector retrieval is possible. It is where initialization should live so the index is created once, memory is released intentionally, and queries do not trigger unnecessary work on each re-render or navigation.</p><h2>Step 2: import the library and create the index</h2><p>The sample builds an index from a flat <code>Float32Array</code>. That matches the real API from the package README: <code>WasmSearchEngine.from_vectors(flat, dims, m, ef_construction, ef_search)</code>. The four HNSW parameters here are conservative defaults for a small browser index. If you precompute a production index offline, you can instead serialize it with <code>to_bytes()</code> and load it using <code>new WasmSearchEngine(bytes)</code>.</p><pre><code>import { useEffect, useMemo, useState } from &#x27;react&#x27;;
+import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+type Doc = { id: string; title: string; vector: [number, number, number, number] };
+
+const docs: Doc[] = [
+  { id: &#x27;react-hooks&#x27;, title: &#x27;React hooks primer&#x27;, vector: [1, 0, 0, 0] },
+  { id: &#x27;vite-build&#x27;, title: &#x27;Vite build caching&#x27;, vector: [0, 1, 0, 0] },
+  { id: &#x27;browser-rag&#x27;, title: &#x27;Browser RAG design&#x27;, vector: [0, 0, 1, 0] },
+];
+
+export function VectorSearchDemo() {
+  const [engine, setEngine] = useState&lt;WasmSearchEngine | null&gt;(null);
+  const [results, setResults] = useState&lt;Array&lt;{ title: string; distance: number }&gt;&gt;([]);
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+
+    (async () =&gt; {
+      await init();
+      const dim = 4;
+      const flat = new Float32Array(docs.flatMap((doc) =&gt; doc.vector));
+      const localEngine = WasmSearchEngine.from_vectors(flat, dim, 16, 200, 50);
+
+      docs.push({ id: &#x27;semantic-ui&#x27;, title: &#x27;Semantic UI patterns&#x27;, vector: [0.92, 0.05, 0.03, 0] });
+      localEngine.add_vectors(new Float32Array([0.92, 0.05, 0.03, 0]), dim);
+
+      if (!cancelled) setEngine(localEngine);
+    })();
+
+    return () =&gt; {
+      cancelled = true;
+      engine?.free();
+    };
+  }, []);
+
+  const queryVector = useMemo(() =&gt; new Float32Array([0.95, 0.03, 0.02, 0]), []);
+
+  async function runSearch() {
+    if (!engine) return;
+    const hits: [number, number][] = JSON.parse(engine.search(queryVector, 3));
+    setResults(hits.map(([id, distance]) =&gt; ({ title: docs[id].title, distance })));
+  }
+
+  return (
+    &lt;section&gt;
+      &lt;button onClick={runSearch} disabled={!engine}&gt;Search local vectors&lt;/button&gt;
+      &lt;ul&gt;
+        {results.map((hit) =&gt; (
+          &lt;li key={hit.title}&gt;{hit.title} — distance {hit.distance.toFixed(3)}&lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/section&gt;
+  );
+}</code></pre><h2>Step 3: what the code is actually doing</h2><ol><li><strong>Install:</strong> the project adds <code>altor-vec</code> from npm.</li><li><strong>Import:</strong> the code imports <code>init</code> and <code>WasmSearchEngine</code>.</li><li><strong>Create index:</strong> manual vectors are flattened into a single <code>Float32Array</code> and passed into <code>from_vectors()</code>.</li><li><strong>Add vectors:</strong> the example appends one more vector via <code>add_vectors()</code> so you can see incremental updates.</li><li><strong>Query:</strong> it converts a query vector into a <code>Float32Array</code>, calls <code>search()</code>, parses the JSON response, and maps IDs back to the in-memory document array.</li></ol><p>That pattern is stable across browser frameworks because <code>altor-vec</code> is model-agnostic. The framework concerns are mostly lifecycle-related: where to hold the engine instance, how to debounce query creation, and whether embeddings run on the main thread or in a worker. If you keep those concerns separate, semantic retrieval feels surprisingly ordinary.</p><h2>Performance notes specific to this framework</h2><ul><li>Put embedding generation in a worker or React input latency will suffer long before altor-vec becomes the bottleneck.</li><li>Keep the engine instance in module or hook state so React re-renders do not rebuild the HNSW graph.</li><li>Memoize mapped hit objects if you render score badges, snippets, and highlighted fields in a large result list.</li></ul><div class="note"><strong>Published altor-vec baseline:</strong> Chrome p95 retrieval on 10K vectors / 384 dimensions is about <code>0.6ms</code>, index load is about <code>19ms</code>, the raw WASM binary is <code>117KB</code>, and the gzipped WASM payload is <code>54KB</code>. In real apps, embedding generation and rendering usually cost much more than the vector lookup itself.</div><h2>When to use client-side vs server-side in React</h2><p><strong>Client-side:</strong> React alone is enough when the corpus is public, updates at build time, and the page needs instant local retrieval.</p><p><strong>Server-side:</strong> Move retrieval to a server when vectors are private, when you need audit logs or tenant isolation, or when the result set is too large to ship to the browser.</p><p>A good rule is simple. If the data is already safe to send to every browser and you mostly care about fast semantic ranking, keep it local. If the search layer also needs to enforce business rules, security boundaries, or complex shared state, put retrieval on the server and let React call it as a normal endpoint.</p><h2>Production checklist</h2><ul><li>Cache the WASM and serialized index aggressively with versioned asset names.</li><li>Validate vector dimensions before every search to prevent subtle runtime errors.</li><li>Keep metadata outside the HNSW graph so result rendering stays flexible.</li><li>Measure cold start, repeated search latency, and memory on at least one mid-range mobile device.</li><li>Free the engine explicitly if you unload large indexes on navigation.</li></ul><h2>Conclusion</h2><p>React does not require a special semantic-search abstraction. It only needs a clean place to initialize the engine and a disciplined boundary between embedding, retrieval, and UI state. <code>altor-vec</code> gives you a small browser-native ANN core, while the framework handles rendering and ergonomics. If you want a developer-friendly starting point with no backend dependency, this is the shortest path: <code>npm install altor-vec</code>, build or load an index, and search locally.</p><div class="callout"><strong>CTA:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">Star on GitHub</a></div><p class="small">Related hubs: <a href="/frameworks/">Framework guides</a> · <a href="/use-cases/">Use cases</a> · <a href="/vs/">Comparison pages</a></p>
+      <nav class="footer-nav" aria-label="Page navigation">
+        <a href="/">Homepage</a>
+        <a href="/blog/">Blog</a>
+      </nav>
+    </main>
+  </body>
+</html>
