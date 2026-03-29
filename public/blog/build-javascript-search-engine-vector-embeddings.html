@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a JavaScript Search Engine with Vector Embeddings</title>
+<meta name="description" content="Learn to create a client-side semantic search engine using JavaScript, vector embeddings, and browser-based AI for fast, intelligent results.">
+<link rel="canonical" href="https://altorlab.dev/blog/build-javascript-search-engine-vector-embeddings">
+<meta property="og:title" content="Build a JavaScript Search Engine with Vector Embeddings">
+<meta property="og:description" content="Learn to create a client-side semantic search engine using JavaScript, vector embeddings, and browser-based AI for fast, intelligent results.">
+<meta property="og:url" content="https://altorlab.dev/blog/build-javascript-search-engine-vector-embeddings">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Build a JavaScript Search Engine with Vector Embeddings",
+  "author": {"@type": "Organization", "name": "AltorLab"},
+  "publisher": {"@type": "Organization", "name": "AltorLab"},
+  "datePublished": "2026-03-29",
+  "url": "https://altorlab.dev/blog/build-javascript-search-engine-vector-embeddings"
+}
+</script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 2rem; line-height: 1.3; color: #f5f5f5; }
+h2 { font-size: 1.5rem; color: #f5f5f5; margin-top: 2rem; }
+h3 { font-size: 1.2rem; color: #d4a574; }
+a { color: #d4a574; }
+pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; }
+code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<nav><a href="/">← Home</a> · <a href="/blog/">Blog</a></nav>
+<article>
+<h1>How to Build a Search Engine in JavaScript (Client-Side, No Server Required)</h1>
+
+<p>Most JavaScript search tutorials tell you to set up Elasticsearch, spin up a Node backend, or send every query to an API. But if you're building a documentation site, a personal blog, or a tool with a few thousand searchable items, you don't need infrastructure. You need a client-side search engine that runs entirely in the browser—fast, private, and zero latency.</p>
+
+<p>This is a practical guide to building semantic, vector-based search in JavaScript without backend dependencies. We'll use embeddings, cosine similarity, and a surprisingly small amount of code. By the end, you'll have a working search engine that understands "authentication error" and "login failed" are the same query, even if your content never uses those exact words.</p>
+
+<h2>Why Client-Side Search Beats Server Search for Small-to-Medium Datasets</h2>
+
+<p>Server-based search makes sense at scale. But for datasets under 10,000 documents—think documentation, product catalogs, personal archives—client-side search is faster to build, cheaper to run, and more private. No round-trips. No API keys. No logs.</p>
+
+<p>The challenge is making it <em>good</em>. Traditional keyword search in JavaScript is trivial with <code>String.prototype.includes()</code>, but it's brittle. A user searching "auth problems" won't find your article titled "Authentication Troubleshooting." Fuzzy matching helps, but semantic search—using vector embeddings—solves the problem properly.</p>
+
+<h2>The Architecture: Embeddings, Vectors, and Cosine Similarity</h2>
+
+<p>Here's the simplest possible mental model:</p>
+
+<ol>
+<li>Convert each searchable document into a vector (an array of numbers representing meaning)</li>
+<li>Convert the user's query into a vector using the same method</li>
+<li>Measure similarity between query vector and document vectors</li>
+<li>Return top matches, sorted by similarity score</li>
+</ol>
+
+<p>Vector embeddings capture semantic meaning. "Car" and "automobile" get similar vectors. "Login issue" and "authentication error" cluster close together. You're searching <em>meaning</em>, not just text.</p>
+
+<p>Pre-compute document vectors at build time. Store them as JSON. At runtime, embed the query and calculate cosine similarity against your pre-computed vectors. On modern hardware, comparing against 5,000 vectors takes under 20ms.</p>
+
+<h2>Step 1: Generate Embeddings for Your Documents</h2>
+
+<p>You need an embedding model. The two practical options for JavaScript developers are:</p>
+
+<p><strong>Option A: Use a local model with Transformers.js</strong><br>Xenova's <code>@xenova/transformers</code> runs ONNX models in the browser or Node. The <code>all-MiniLM-L6-v2</code> model is 23MB and produces 384-dimensional vectors. Good accuracy, but the initial model load is slow.</p>
+
+<p><strong>Option B: Pre-generate embeddings at build time</strong><br>Use OpenAI's API, a local model via Python, or a library like <code>altor-vec</code> to generate embeddings during your build process. Store them as static JSON. This is faster at runtime and keeps your bundle small.</p>
+
+<p>Here's a Node script that generates embeddings for a docs site:</p>
+
+<pre><code>import { embed } from 'altor-vec';
+import fs from 'fs';
+
+const docs = [
+  { id: 'auth-guide', title: 'Authentication Guide', content: '...' },
+  { id: 'api-errors', title: 'Common API Errors', content: '...' },
+  // ... more docs
+];
+
+const embeddings = await Promise.all(
+  docs.map(async (doc) => ({
+    id: doc.id,
+    title: doc.title,
+    vector: await embed(doc.title + ' ' + doc.content)
+  }))
+);
+
+fs.writeFileSync('embeddings.json', JSON.stringify(embeddings));
+</code></pre>
+
+<p>Run this during build. Commit <code>embeddings.json</code> to your repo or upload it to your static host. Your search engine loads it at runtime.</p>
+
+<h2>Step 2: Implement Cosine Similarity</h2>
+
+<p>Cosine similarity measures how close two vectors are. Value ranges from -1 to 1. Higher is better. The formula is simple:</p>
+
+<pre><code>function cosineSimilarity(vecA, vecB) {
+  let dotProduct = 0;
+  let normA = 0;
+  let normB = 0;
+  
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    normA += vecA[i] * vecA[i];
+    normB += vecB[i] * vecB[i];
+  }
+  
+  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+</code></pre>
+
+<p>This is the core of your search ranking. You'll call it once per document, per query. For 2,000 documents with 384-dimensional vectors, expect ~15ms on a mid-range laptop.</p>
+
+<h2>Step 3: Build the Search Function</h2>
+
+<p>Fetch your embeddings JSON. When a user types a query, embed it and rank documents by similarity:</p>
+
+<pre><code>let documentEmbeddings = [];
+
+async function initSearch() {
+  const res = await fetch('/embeddings.json');
+  documentEmbeddings = await res.json();
+}
+
+async function search(query) {
+  const queryVector = await embed(query);
+  
+  const results = documentEmbeddings
+    .map(doc => ({
+      ...doc,
+      score: cosineSimilarity(queryVector, doc.vector)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+  
+  return results;
+}
+</code></pre>
+
+<p>Call <code>initSearch()</code> on page load. Call <code>search(userQuery)</code> on input. Done.</p>
+
+<h2>Step 4: Add Hybrid Search (Keyword + Semantic)</h2>
+
+<p>Pure semantic search occasionally misses exact matches. If a user searches "React 18.3.1," you want exact version matches ranked higher than semantically similar content about React versions.</p>
+
+<p>Combine semantic scoring with keyword scoring:</p>
+
+<pre><code>function keywordScore(query, doc) {
+  const terms = query.toLowerCase().split(/\s+/);
+  const text = (doc.title + ' ' + doc.content).toLowerCase();
+  return terms.filter(term => text.includes(term)).length / terms.length;
+}
+
+function hybridSearch(query) {
+  const queryVector = embed(query);
+  
+  return documentEmbeddings
+    .map(doc => ({
+      ...doc,
+      semanticScore: cosineSimilarity(queryVector, doc.vector),
+      keywordScore: keywordScore(query, doc),
+      finalScore: 0.7 * semanticScore + 0.3 * keywordScore
+    }))
+    .sort((a, b) => b.finalScore - a.finalScore)
+    .slice(0, 10);
+}
+</code></pre>
+
+<p>The 70/30 weight works well for most use cases. Tune it based on your content.</p>
+
+<h2>Step 5: Optimize for Production</h2>
+
+<p>Three optimizations matter:</p>
+
+<p><strong>Lazy-load embeddings.</strong> Don't block page render. Fetch embeddings after DOMContentLoaded or on first focus of the search input.</p>
+
+<p><strong>Debounce queries.</strong> Don't run search on every keystroke. Wait 150-300ms after the user stops typing:</p>
+
+<pre><code>let debounceTimer;
+searchInput.addEventListener('input', (e) => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => search(e.target.value), 200);
+});
+</code></pre>
+
+<p><strong>Use Web Workers for large datasets.</strong> If you're searching 5,000+ documents, run the similarity calculations in a worker to avoid blocking the main thread.</p>
+
+<h2>Real-World Constraints and When This Breaks</h2>
+
+<p>This approach works well up to about 10,000 documents. Beyond that, you'll feel the JSON load time (several MB) and the brute-force similarity calculation (50ms+). At that scale, you need approximate nearest neighbor search (ANN) with libraries like hnswlib-wasm, or you need a server.</p>
+
+<p>Embedding quality matters more than algorithm complexity. A bad model produces random-feeling results. Test with real user queries. If "password reset" returns articles about database backups, your embeddings are undertrained for your domain.</p>
+
+<p>Privacy is a feature here. Queries never leave the browser. No analytics, no logs. For internal tools, medical apps, or anything handling sensitive data, this is a significant advantage over server-based search.</p>
+
+<section aria-label="FAQ">
+<h2>Frequently Asked Questions</h2>
+
+<h3>Can I use this for a 50,000-document site?</h3>
+<p>Not with brute-force cosine similarity. You'd need approximate nearest neighbor (ANN) indexing via hnswlib-wasm or a similar library. At that scale, a server-based solution like Typesense or Meilisearch becomes more practical.</p>
+
+<h3>Which embedding model should I use?</h3>
+<p>For English content, <code>all-MiniLM-L6-v2</code> (via Transformers.js or sentence-transformers in Python) is the best balance of size and quality. For multilingual search, use <code>paraphrase-multilingual-MiniLM-L12-v2</code>. Avoid OpenAI's Ada unless you're okay with API costs at scale.</p>
+
+<h3>How do I handle typos?</h3>
+<p>Semantic search is somewhat typo-tolerant—"athentication" will still match "authentication" because the embedding is close—but for severe typos, add a fuzzy matching layer using Levenshtein distance or a library like Fuse.js as a fallback.</p>
+
+<h3>Do I need TypeScript for this?</h3>
+<p>No, but type safety helps when managing vector dimensions and similarity scores. A single dimension mismatch breaks cosine similarity silently. Types catch that at compile time.</p>
+</section>
+
+<p>If you want to skip the embedding setup and get a working client-side vector search in under 10 lines, check out <code>altor-vec</code> on <a href="https://github.com/Altor-lab/altor-vec">GitHub</a>. Install it with <code>npm install altor-vec</code> and you'll have semantic search running in minutes.</p>
+</article>
+<footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
+Published March 29, 2026 · Auto-generated from search data
+</footer>
+</body>
+</html>
