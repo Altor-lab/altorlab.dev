@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>altor-vec Benchmark Comparisons | altorlab.dev</title>
+<meta name="description" content="10 honest altor-vec benchmark and tradeoff pages versus Pinecone, Weaviate, FAISS WASM, hnswlib-wasm, ChromaDB, and more.">
+<link rel="canonical" href="https://altorlab.dev/benchmarks/">
+<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 1.9rem; color: #f5f5f5; }
+h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+a { color: #a78bfa; }
+p, li { color: #d4d4d8; }
+pre, .note { background: #111111; padding: 14px; border-radius: 8px; border: 1px solid #27272a; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
+th { color: #f5f5f5; background: #131316; }
+strong { color: #f5f5f5; }
+ul { padding-left: 20px; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+.card { background: #111111; border: 1px solid #27272a; border-radius: 10px; padding: 16px; }
+.kicker { color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; }
+.small { color: #94a3b8; font-size: 0.95rem; }</style>
+</head>
+<body>
+<nav><a href="/">← altor-vec</a></nav>
+<main>
+<p class="kicker">benchmarks</p>
+<h1>altor-vec benchmark comparisons</h1>
+<p>These pages compare altor-vec with server-side vector databases, database-adjacent tools, and browser-capable libraries. The comparisons are intentionally honest: backend systems win on scale and operations, while altor-vec wins when local UX, bundle size, and zero per-query cost matter more.</p>
+<h2>Browse benchmark pages</h2>
+<div class="card-grid"><a class="card" href="/benchmarks/vs-pinecone.html"><strong>Pinecone</strong><p>Managed vector database versus browser-native retrieval.</p></a><a class="card" href="/benchmarks/vs-weaviate.html"><strong>Weaviate</strong><p>Feature-rich vector database versus lightweight client-side HNSW.</p></a><a class="card" href="/benchmarks/vs-hnswlib-wasm.html"><strong>hnswlib-wasm</strong><p>Two browser-capable HNSW approaches with different packaging tradeoffs.</p></a><a class="card" href="/benchmarks/vs-usearch.html"><strong>USearch</strong><p>Portable ANN engine versus an aggressively small browser-focused package.</p></a><a class="card" href="/benchmarks/vs-voyager.html"><strong>Voyager</strong><p>Browser-first vector search alternatives with different algorithm and packaging tradeoffs.</p></a><a class="card" href="/benchmarks/vs-faiss-wasm.html"><strong>FAISS WASM</strong><p>Research-grade ANN lineage versus a small production-friendly browser package.</p></a><a class="card" href="/benchmarks/vs-chromadb.html"><strong>ChromaDB</strong><p>Application database for embeddings versus static browser retrieval.</p></a><a class="card" href="/benchmarks/vs-lance.html"><strong>Lance</strong><p>Columnar/vector data platform tradeoffs versus browser-native ANN.</p></a><a class="card" href="/benchmarks/vs-milvus-lite.html"><strong>Milvus Lite</strong><p>Embedded/server vector database tradeoffs versus fully in-browser retrieval.</p></a><a class="card" href="/benchmarks/browser-vs-server.html"><strong>Server-Side Vector Search</strong><p>When local browser retrieval wins—and when it clearly does not.</p></a></div>
+<h2>Summary table</h2>
+<table>
+<thead><tr><th>Comparison</th><th>What is being compared</th><th>Short takeaway</th></tr></thead>
+<tbody><tr><td><a href="/benchmarks/vs-pinecone.html">Pinecone</a></td><td>Managed vector database versus browser-native retrieval.</td><td>Choose Pinecone when retrieval is a backend system. Choose altor-vec when retrieval is a frontend feature and the corpus is safe to ship.</td></tr><tr><td><a href="/benchmarks/vs-weaviate.html">Weaviate</a></td><td>Feature-rich vector database versus lightweight client-side HNSW.</td><td>Weaviate wins on backend features and scale. altor-vec wins when the search experience should be bundled into the app itself.</td></tr><tr><td><a href="/benchmarks/vs-hnswlib-wasm.html">hnswlib-wasm</a></td><td>Two browser-capable HNSW approaches with different packaging tradeoffs.</td><td>If both meet your recall target, bundle size and frontend ergonomics become the practical decision factors.</td></tr><tr><td><a href="/benchmarks/vs-usearch.html">USearch</a></td><td>Portable ANN engine versus an aggressively small browser-focused package.</td><td>USearch is broader. altor-vec is narrower but easier to justify when the web bundle is the product constraint.</td></tr><tr><td><a href="/benchmarks/vs-voyager.html">Voyager</a></td><td>Browser-first vector search alternatives with different algorithm and packaging tradeoffs.</td><td>For browser-to-browser comparisons, benchmark on your own corpus. At this tier, developer experience and bundle budget often decide more than theoretical algorithm differences.</td></tr><tr><td><a href="/benchmarks/vs-faiss-wasm.html">FAISS WASM</a></td><td>Research-grade ANN lineage versus a small production-friendly browser package.</td><td>FAISS wins on breadth. altor-vec wins on web delivery pragmatism.</td></tr><tr><td><a href="/benchmarks/vs-chromadb.html">ChromaDB</a></td><td>Application database for embeddings versus static browser retrieval.</td><td>ChromaDB is better as an application data layer. altor-vec is better as a shipped frontend retrieval primitive.</td></tr><tr><td><a href="/benchmarks/vs-lance.html">Lance</a></td><td>Columnar/vector data platform tradeoffs versus browser-native ANN.</td><td>Lance is a data platform choice. altor-vec is a frontend feature choice.</td></tr><tr><td><a href="/benchmarks/vs-milvus-lite.html">Milvus Lite</a></td><td>Embedded/server vector database tradeoffs versus fully in-browser retrieval.</td><td>Milvus Lite is the better stepping stone to a vector backend. altor-vec is the better fit for pure frontend retrieval.</td></tr><tr><td><a href="/benchmarks/browser-vs-server.html">Server-Side Vector Search</a></td><td>When local browser retrieval wins—and when it clearly does not.</td><td>Neither is universally better. Browser retrieval is a product architecture choice; server retrieval is a data platform choice.</td></tr></tbody>
+</table>
+</main>
+</body>
+</html>

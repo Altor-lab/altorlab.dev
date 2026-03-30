@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Recommendation Engine with Client-Side Vector Search — Code Example | altor-vec</title>
+<meta name="description" content="Build recommendation engine with altor-vec — 54KB client-side vector search. Full code example with React/JavaScript. No backend required.">
+<link rel="canonical" href="https://altorlab.dev/examples/recommendation-engine">
+<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 1.8rem; color: #f5f5f5; }
+h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+a { color: #a78bfa; }
+pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #27272a; }
+code { font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 0.9rem; color: #e2e8f0; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; }
+strong { color: #f5f5f5; }
+li { margin-bottom: 0.5rem; }
+.callout { background: #111111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; margin: 18px 0; }
+.small { color: #94a3b8; font-size: 0.95rem; }</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Recommendation Engine with Client-Side Vector Search", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+</head>
+<body>
+<nav><a href="/">← altor-vec</a> · <a href="/examples/">Examples</a></nav>
+<article>
+<h1>Build Recommendation Engine with altor-vec</h1>
+<p><strong>What you'll build:</strong> A related-items rail that recommends nearby products or articles from the current item embedding instead of hand-written rules.</p>
+<p><strong>Bundle cost:</strong> 54KB · <strong>Query time:</strong> &lt;1ms · <strong>Backend:</strong> None required</p>
+
+<h2>Install</h2>
+<pre><code>npm install altor-vec</code></pre>
+
+<h2>The Concept</h2>
+<p>Recommendation engines often start with categories and tags, but those rules miss nuance. Two items can be related because they solve the same job, share tone, or fit the same usage context even if the taxonomy is different.</p>
+<p>Running the nearest-neighbor lookup in the browser works well for small and medium catalogs, especially when the recommendation request happens on page load or after a user opens a detail view. The user gets instant related results without waiting on a ranking API.</p>
+<p>The example below builds an HNSW index in memory and uses the current item description as the query vector. It is real JavaScript you can run today, then swap to better embeddings once the pattern is proven.</p>
+<div class="callout small">This page uses a deterministic embedding helper so the snippets are runnable with only <code>altor-vec</code>. For production ranking quality, replace that helper with a real embedding model or precomputed vectors.</div>
+
+<h2>Full Code Example</h2>
+<pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+const dims = 8;
+const records = [
+  {
+    &quot;title&quot;: &quot;Compact mechanical keyboard&quot;,
+    &quot;text&quot;: &quot;Portable low-profile keyboard designed for frequent travel and small desks.&quot;,
+    &quot;meta&quot;: &quot;peripherals&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Silent wireless mouse&quot;,
+    &quot;text&quot;: &quot;Quiet click mouse for shared offices and late-night work.&quot;,
+    &quot;meta&quot;: &quot;peripherals&quot;
+  },
+  {
+    &quot;title&quot;: &quot;USB-C travel dock&quot;,
+    &quot;text&quot;: &quot;Slim dock with HDMI, charging, and SD card support for laptop setups.&quot;,
+    &quot;meta&quot;: &quot;accessories&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Noise-isolating headset&quot;,
+    &quot;text&quot;: &quot;Lightweight headset for calls in busy environments.&quot;,
+    &quot;meta&quot;: &quot;audio&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Laptop stand&quot;,
+    &quot;text&quot;: &quot;Foldable aluminum stand that fits inside a backpack.&quot;,
+    &quot;meta&quot;: &quot;ergonomics&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Portable monitor&quot;,
+    &quot;text&quot;: &quot;Thin second screen for working from hotel rooms or client sites.&quot;,
+    &quot;meta&quot;: &quot;displays&quot;
+  }
+];
+
+function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+async function main() {
+  await init();
+
+  const flat = new Float32Array(
+    records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+  );
+
+  const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+  const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;quiet travel keyboard&#x27;)), 4));
+
+  const results = hits.map(([id, distance]) =&gt; ({
+    ...records[id],
+    similarity: Number((1 - distance).toFixed(3)),
+  }));
+
+  console.table(results);
+  engine.free();
+}
+
+main();</code></pre>
+
+<h2>React Component</h2>
+<pre><code>import { useEffect, useState } from &#x27;react&#x27;;
+import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+const dims = 8;
+const records = [
+  {
+    &quot;title&quot;: &quot;Compact mechanical keyboard&quot;,
+    &quot;text&quot;: &quot;Portable low-profile keyboard designed for frequent travel and small desks.&quot;,
+    &quot;meta&quot;: &quot;peripherals&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Silent wireless mouse&quot;,
+    &quot;text&quot;: &quot;Quiet click mouse for shared offices and late-night work.&quot;,
+    &quot;meta&quot;: &quot;peripherals&quot;
+  },
+  {
+    &quot;title&quot;: &quot;USB-C travel dock&quot;,
+    &quot;text&quot;: &quot;Slim dock with HDMI, charging, and SD card support for laptop setups.&quot;,
+    &quot;meta&quot;: &quot;accessories&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Noise-isolating headset&quot;,
+    &quot;text&quot;: &quot;Lightweight headset for calls in busy environments.&quot;,
+    &quot;meta&quot;: &quot;audio&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Laptop stand&quot;,
+    &quot;text&quot;: &quot;Foldable aluminum stand that fits inside a backpack.&quot;,
+    &quot;meta&quot;: &quot;ergonomics&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Portable monitor&quot;,
+    &quot;text&quot;: &quot;Thin second screen for working from hotel rooms or client sites.&quot;,
+    &quot;meta&quot;: &quot;displays&quot;
+  }
+];
+
+function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+export function RecommendationEngineExample() {
+  const [engine, setEngine] = useState(null);
+  const [query, setQuery] = useState(&#x27;&#x27;);
+  const [results, setResults] = useState([]);
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+    let instance;
+
+    (async () =&gt; {
+      await init();
+      const flat = new Float32Array(
+        records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+      );
+      instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+      if (!cancelled) setEngine(instance);
+    })();
+
+    return () =&gt; {
+      cancelled = true;
+      instance?.free();
+    };
+  }, []);
+
+  useEffect(() =&gt; {
+    if (!engine || query.trim().length &lt; 2) {
+      setResults([]);
+      return;
+    }
+
+    const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
+    setResults(
+      hits.map(([id, distance]) =&gt; ({
+        ...records[id],
+        similarity: Number((1 - distance).toFixed(3)),
+      }))
+    );
+  }, [engine, query]);
+
+  return (
+    &lt;section&gt;
+      &lt;input
+        value={query}
+        onChange={(event) =&gt; setQuery(event.target.value)}
+        placeholder=&quot;Describe the current item&quot;
+      /&gt;
+      &lt;ul&gt;
+        {results.map((result) =&gt; (
+          &lt;li key={result.title}&gt;
+            &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/section&gt;
+  );
+}</code></pre>
+
+<h2>How It Works</h2>
+<p>The flow is the same pattern you would use in production: turn each record into an embedding vector, build an HNSW graph with <code>WasmSearchEngine.from_vectors()</code>, and query it with the embedding for the current search text. HNSW keeps approximate nearest-neighbor search fast by traversing a layered graph instead of scanning every vector linearly.</p>
+<p>Similarity scoring here is derived from the returned distance with <code>1 - distance</code> so the UI can show an intuitive confidence number. If you swap in a real embedding model such as MiniLM, multilingual-e5, or precomputed server-generated vectors, the surrounding indexing and querying code stays almost identical.</p>
+
+<h2>When to Use This Pattern</h2>
+<ul><li>Related product modules on ecommerce detail pages</li>
+<li>Newsletter or article recommendations in content apps</li>
+<li>Upsell surfaces inside desktop software</li>
+<li>Personalization experiments without adding backend ranking infrastructure</li></ul>
+
+<h2>Limitations</h2>
+<p>For very large catalogs or collaborative filtering signals, server-side recommenders still win. You also need consistent embeddings for both catalog items and the current context, and full personalization across users usually requires backend state.</p>
+
+<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+</article>
+</body>
+</html>

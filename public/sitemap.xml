@@ -1,65 +1,355 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/</loc>
+    
+    
     <changefreq>weekly</changefreq>
+    
+    
     <priority>1.0</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/</loc>
+    
+    
     <changefreq>weekly</changefreq>
+    
+    
     <priority>0.9</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/semantic-search-website.html</loc>
+    
+    
     <changefreq>monthly</changefreq>
+    
+    
     <priority>0.8</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/vector-search-without-backend.html</loc>
+    
+    
     <changefreq>monthly</changefreq>
+    
+    
     <priority>0.8</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/offline-first-search.html</loc>
+    
+    
     <changefreq>monthly</changefreq>
+    
+    
     <priority>0.8</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/embedding-autocomplete-browser.html</loc>
+    
+    
     <changefreq>monthly</changefreq>
+    
+    
     <priority>0.8</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/hnsw-algorithm-explained.html</loc>
+    
+    
     <changefreq>monthly</changefreq>
+    
+    
     <priority>0.8</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/vector-search-react.html</loc>
+    
+    
     <changefreq>monthly</changefreq>
+    
+    
     <priority>0.8</priority>
+    
+  
   </url>
+  
+  
   <url>
+    
+    
     <loc>https://altorlab.dev/blog/browser-rag-tutorial.html</loc>
+    
+    
+    <changefreq>monthly</changefreq>
+    
+    
+    <priority>0.8</priority>
+    
+  
+  </url>
+  
+  
+  <url>
+    
+    
+    <loc>https://altorlab.dev/blog/client-side-vector-search-guide.html</loc>
+    
+    
+    <lastmod>2026-03-25</lastmod>
+    
+    
+    <changefreq>monthly</changefreq>
+    
+    
+    <priority>0.7</priority>
+    
+  
+  </url>
+  
+  
+  <url>
+    
+    
+    <loc>https://altorlab.dev/blog/cosine-similarity-vs-euclidean-distance-javascript</loc>
+    
+    
+    <lastmod>2026-03-26</lastmod>
+    
+    
+    <changefreq>monthly</changefreq>
+    
+    
+    <priority>0.7</priority>
+    
+  
+  </url>
+  
+  
+  <url>
+    
+    
+    <loc>https://altorlab.dev/blog/build-javascript-vector-search-engine</loc>
+    
+    
+    <lastmod>2026-03-27</lastmod>
+    
+    
+    <changefreq>monthly</changefreq>
+    
+    
+    <priority>0.7</priority>
+    
+  
+  </url>
+  
+
+  <url>
+    <loc>https://altorlab.dev/examples/</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://altorlab.dev/blog/client-side-vector-search-guide.html</loc>
-    <lastmod>2026-03-25</lastmod>
+    <loc>https://altorlab.dev/benchmarks/</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/autocomplete</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://altorlab.dev/blog/cosine-similarity-vs-euclidean-distance-javascript</loc>
-    <lastmod>2026-03-26</lastmod>
+    <loc>https://altorlab.dev/examples/recommendation-engine</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://altorlab.dev/blog/build-javascript-vector-search-engine</loc>
-    <lastmod>2026-03-27</lastmod>
+    <loc>https://altorlab.dev/examples/product-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/document-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/image-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/faq-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/code-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/offline-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/privacy-preserving-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/multilingual-search</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/rag-retrieval</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/chat-memory</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/content-deduplication</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/similar-items</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/examples/semantic-filtering</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-pinecone</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-weaviate</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-hnswlib-wasm</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-usearch</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-voyager</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-faiss-wasm</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-chromadb</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-lance</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/vs-milvus-lite</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://altorlab.dev/benchmarks/browser-vs-server</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

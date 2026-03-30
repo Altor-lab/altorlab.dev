@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>altor-vec vs FAISS WASM — Performance Comparison | altorlab.dev</title>
+<meta name="description" content="Honest altor-vec vs FAISS WASM comparison covering bundle size, query latency, memory usage, and feature tradeoffs.">
+<link rel="canonical" href="https://altorlab.dev/benchmarks/vs-faiss-wasm">
+<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 1.9rem; color: #f5f5f5; }
+h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+a { color: #a78bfa; }
+p, li { color: #d4d4d8; }
+pre, .note { background: #111111; padding: 14px; border-radius: 8px; border: 1px solid #27272a; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
+th { color: #f5f5f5; background: #131316; }
+strong { color: #f5f5f5; }
+ul { padding-left: 20px; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
+.card { background: #111111; border: 1px solid #27272a; border-radius: 10px; padding: 16px; }
+.kicker { color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; }
+.small { color: #94a3b8; font-size: 0.95rem; }</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs FAISS WASM \u2014 Performance Comparison", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+</head>
+<body>
+<nav><a href="/">← altor-vec</a> · <a href="/benchmarks/">Benchmarks</a></nav>
+<article>
+<p class="kicker">benchmark comparison</p>
+<h1>altor-vec vs FAISS WASM</h1>
+<p>Research-grade ANN lineage versus a small production-friendly browser package. This is not an apples-to-apples benchmark in every category: the tools solve different jobs. The right choice depends on whether your search problem belongs in the browser or in infrastructure.</p>
+<div class="note small">Representative numbers only. Exact bundle size, latency, and memory usage vary with hardware, build flags, vector dimensions, index parameters, and whether embeddings are generated locally or remotely.</div>
+
+<h2>Comparison table</h2>
+<table>
+  <thead>
+    <tr><th>Category</th><th>altor-vec</th><th>FAISS WASM</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Runtime model</strong></td><td>Browser WASM (HNSW) with no backend required</td><td>Browser port of a broad ANN / vector indexing toolkit</td></tr>
+<tr><td><strong>Bundle / delivery</strong></td><td>54KB gzipped WebAssembly</td><td>FAISS WebAssembly ports are usually much heavier than altor-vec because FAISS is a broader library.</td></tr>
+<tr><td><strong>Query latency</strong></td><td>~0.6ms p95 local search on 10K vectors / 384d (excluding embedding generation)</td><td>FAISS offers many index types and can be excellent, but browser ports often pay for that flexibility with size and initialization cost.</td></tr>
+<tr><td><strong>Memory usage</strong></td><td>~17MB index asset for 10K vectors / 384d; browser memory scales with corpus size</td><td>Potentially heavier depending on index type and browser port. altor-vec keeps a narrower HNSW footprint.</td></tr>
+<tr><td><strong>Dataset sweet spot</strong></td><td>Best for static or moderately sized corpora that are safe to ship to the client</td><td>FAISS is strong for experimentation and advanced ANN strategies; altor-vec targets practical browser UI retrieval.</td></tr>
+<tr><td><strong>Feature set</strong></td><td>Nearest-neighbor search, serialization, offline/browser delivery; not a full vector database</td><td>FAISS exposes far more index families and research flexibility than altor-vec.</td></tr>
+  </tbody>
+</table>
+
+<h2>Where altor-vec wins</h2>
+<ul><li>Much smaller browser delivery target</li><li>Faster path to shipping semantic search in a web app</li><li>Cleaner fit for product UIs rather than ANN experimentation</li></ul>
+
+<h2>Where FAISS WASM wins</h2>
+<ul><li>Advanced ANN experimentation and custom index selection</li><li>Teams already using FAISS in research or backend evaluation pipelines</li><li>Scenarios where algorithm breadth matters more than bundle size</li></ul>
+
+<h2>Decision guide</h2>
+<p>FAISS wins on breadth. altor-vec wins on web delivery pragmatism.</p>
+<p><strong>Honest takeaway:</strong> If you need ACLs, huge datasets, hybrid ranking, or continuous writes, a server-side or database-style tool usually wins. If you need a tiny browser bundle, offline support, and zero backend search cost, altor-vec is the more natural fit.</p>
+
+<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+</article>
+</body>
+</html>

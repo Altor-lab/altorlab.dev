@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>FAQ Search with Client-Side Vector Search — Code Example | altor-vec</title>
+<meta name="description" content="Build faq search with altor-vec — 54KB client-side vector search. Full code example with React/JavaScript. No backend required.">
+<link rel="canonical" href="https://altorlab.dev/examples/faq-search">
+<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 1.8rem; color: #f5f5f5; }
+h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+a { color: #a78bfa; }
+pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #27272a; }
+code { font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 0.9rem; color: #e2e8f0; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; }
+strong { color: #f5f5f5; }
+li { margin-bottom: 0.5rem; }
+.callout { background: #111111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; margin: 18px 0; }
+.small { color: #94a3b8; font-size: 0.95rem; }</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "FAQ Search with Client-Side Vector Search", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+</head>
+<body>
+<nav><a href="/">← altor-vec</a> · <a href="/examples/">Examples</a></nav>
+<article>
+<h1>Build FAQ Search with altor-vec</h1>
+<p><strong>What you'll build:</strong> A help-center lookup that routes natural-language questions to the closest FAQ answer without a server.</p>
+<p><strong>Bundle cost:</strong> 54KB · <strong>Query time:</strong> &lt;1ms · <strong>Backend:</strong> None required</p>
+
+<h2>Install</h2>
+<pre><code>npm install altor-vec</code></pre>
+
+<h2>The Concept</h2>
+<p>FAQs are a classic semantic search problem because users ask the same question in dozens of ways. A vector index lets &quot;change payment card&quot; and &quot;update billing details&quot; converge on the same answer.</p>
+<p>Doing the lookup in the browser is ideal for support surfaces that need instant response and lower operational complexity. You avoid an API hop and can serve static help content directly from a CDN.</p>
+<p>This copy-paste example indexes question-answer pairs in memory. It is enough to validate the UX before you move to precomputed embeddings for a larger production help center.</p>
+<div class="callout small">This page uses a deterministic embedding helper so the snippets are runnable with only <code>altor-vec</code>. For production ranking quality, replace that helper with a real embedding model or precomputed vectors.</div>
+
+<h2>Full Code Example</h2>
+<pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+const dims = 8;
+const records = [
+  {
+    &quot;title&quot;: &quot;How do I reset my password?&quot;,
+    &quot;text&quot;: &quot;Use the forgot password link on the sign-in page to receive a reset email.&quot;,
+    &quot;meta&quot;: &quot;account&quot;
+  },
+  {
+    &quot;title&quot;: &quot;How do I update my billing card?&quot;,
+    &quot;text&quot;: &quot;Open Billing, choose Payment method, and replace the saved card.&quot;,
+    &quot;meta&quot;: &quot;billing&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Can I invite teammates?&quot;,
+    &quot;text&quot;: &quot;Owners and admins can invite users from the Team settings page.&quot;,
+    &quot;meta&quot;: &quot;team&quot;
+  },
+  {
+    &quot;title&quot;: &quot;How do I download invoices?&quot;,
+    &quot;text&quot;: &quot;Invoices are available as PDFs in Billing history.&quot;,
+    &quot;meta&quot;: &quot;billing&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Where do I enable SSO?&quot;,
+    &quot;text&quot;: &quot;Enterprise customers can configure SAML under Security settings.&quot;,
+    &quot;meta&quot;: &quot;security&quot;
+  },
+  {
+    &quot;title&quot;: &quot;How do I cancel my plan?&quot;,
+    &quot;text&quot;: &quot;You can cancel or downgrade at the end of the current billing period.&quot;,
+    &quot;meta&quot;: &quot;billing&quot;
+  }
+];
+
+function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+async function main() {
+  await init();
+
+  const flat = new Float32Array(
+    records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+  );
+
+  const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+  const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;can i change the card on my subscription&#x27;)), 4));
+
+  const results = hits.map(([id, distance]) =&gt; ({
+    ...records[id],
+    similarity: Number((1 - distance).toFixed(3)),
+  }));
+
+  console.table(results);
+  engine.free();
+}
+
+main();</code></pre>
+
+<h2>React Component</h2>
+<pre><code>import { useEffect, useState } from &#x27;react&#x27;;
+import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+const dims = 8;
+const records = [
+  {
+    &quot;title&quot;: &quot;How do I reset my password?&quot;,
+    &quot;text&quot;: &quot;Use the forgot password link on the sign-in page to receive a reset email.&quot;,
+    &quot;meta&quot;: &quot;account&quot;
+  },
+  {
+    &quot;title&quot;: &quot;How do I update my billing card?&quot;,
+    &quot;text&quot;: &quot;Open Billing, choose Payment method, and replace the saved card.&quot;,
+    &quot;meta&quot;: &quot;billing&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Can I invite teammates?&quot;,
+    &quot;text&quot;: &quot;Owners and admins can invite users from the Team settings page.&quot;,
+    &quot;meta&quot;: &quot;team&quot;
+  },
+  {
+    &quot;title&quot;: &quot;How do I download invoices?&quot;,
+    &quot;text&quot;: &quot;Invoices are available as PDFs in Billing history.&quot;,
+    &quot;meta&quot;: &quot;billing&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Where do I enable SSO?&quot;,
+    &quot;text&quot;: &quot;Enterprise customers can configure SAML under Security settings.&quot;,
+    &quot;meta&quot;: &quot;security&quot;
+  },
+  {
+    &quot;title&quot;: &quot;How do I cancel my plan?&quot;,
+    &quot;text&quot;: &quot;You can cancel or downgrade at the end of the current billing period.&quot;,
+    &quot;meta&quot;: &quot;billing&quot;
+  }
+];
+
+function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+export function FAQSearchExample() {
+  const [engine, setEngine] = useState(null);
+  const [query, setQuery] = useState(&#x27;&#x27;);
+  const [results, setResults] = useState([]);
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+    let instance;
+
+    (async () =&gt; {
+      await init();
+      const flat = new Float32Array(
+        records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+      );
+      instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+      if (!cancelled) setEngine(instance);
+    })();
+
+    return () =&gt; {
+      cancelled = true;
+      instance?.free();
+    };
+  }, []);
+
+  useEffect(() =&gt; {
+    if (!engine || query.trim().length &lt; 2) {
+      setResults([]);
+      return;
+    }
+
+    const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
+    setResults(
+      hits.map(([id, distance]) =&gt; ({
+        ...records[id],
+        similarity: Number((1 - distance).toFixed(3)),
+      }))
+    );
+  }, [engine, query]);
+
+  return (
+    &lt;section&gt;
+      &lt;input
+        value={query}
+        onChange={(event) =&gt; setQuery(event.target.value)}
+        placeholder=&quot;Ask a support question&quot;
+      /&gt;
+      &lt;ul&gt;
+        {results.map((result) =&gt; (
+          &lt;li key={result.title}&gt;
+            &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/section&gt;
+  );
+}</code></pre>
+
+<h2>How It Works</h2>
+<p>The flow is the same pattern you would use in production: turn each record into an embedding vector, build an HNSW graph with <code>WasmSearchEngine.from_vectors()</code>, and query it with the embedding for the current search text. HNSW keeps approximate nearest-neighbor search fast by traversing a layered graph instead of scanning every vector linearly.</p>
+<p>Similarity scoring here is derived from the returned distance with <code>1 - distance</code> so the UI can show an intuitive confidence number. If you swap in a real embedding model such as MiniLM, multilingual-e5, or precomputed server-generated vectors, the surrounding indexing and querying code stays almost identical.</p>
+
+<h2>When to Use This Pattern</h2>
+<ul><li>SaaS help widgets</li>
+<li>Embedded support centers inside authenticated apps</li>
+<li>Static support portals distributed globally via CDN</li>
+<li>Agent assist tools that need a fast FAQ fallback</li></ul>
+
+<h2>Limitations</h2>
+<p>FAQ search is only as good as the answer corpus. Exact policy references and account-specific questions may still need lexical search or backend logic, and larger help centers benefit from offline index generation.</p>
+
+<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+</article>
+</body>
+</html>
