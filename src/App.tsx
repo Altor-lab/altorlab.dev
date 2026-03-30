@@ -1,31 +1,36 @@
-import { useState, useEffect, useRef, useCallback } from "react";
 import init, { WasmSearchEngine } from "altor-vec";
+import {
+  ArrowRight,
+  BookOpen,
+  Check,
+  ChevronDown,
+  Clock,
+  Code2,
+  Copy,
+  Cpu,
+  DollarSign,
+  ExternalLink,
+  FileText,
+  Github,
+  Lock,
+  Mail,
+  Menu,
+  Package,
+  Search,
+  Server,
+  Shield,
+  Terminal,
+  X,
+  Zap,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DEMO_QUERIES } from "./demo-data";
 import EmbedWorker from "./embed-worker?worker";
-import {
-  Search,
-  ArrowRight,
-  Check,
-  Copy,
-  Github,
-  Package,
-  Menu,
-  X,
-  Shield,
-  DollarSign,
-  Zap,
-  ChevronDown,
-  FileText,
-  BookOpen,
-  Code2,
-  Mail,
-  ExternalLink,
-  Clock,
-  Lock,
-  Server,
-  Terminal,
-  Cpu,
-} from "lucide-react";
+
+const INSTALL_COMMAND = "npm install altor-vec";
+const GITHUB_URL = "https://github.com/altor-lab/altor-vec";
+const NPM_URL = "https://www.npmjs.com/package/altor-vec";
+const CONTACT_EMAIL = "anshul@altorlab.com";
 
 /* ------------------------------------------------------------------ */
 /*  Reveal on scroll                                                   */
@@ -115,6 +120,7 @@ function CodeBlock({
         )}
         {copyText && (
           <button
+            type="button"
             onClick={copy}
             className="ml-auto text-text-muted hover:text-altor transition-colors p-0.5"
             title="Copy code"
@@ -146,11 +152,10 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <div
+    <button
+      type="button"
       className="copy-trigger group flex items-center bg-surface-raised border border-surface-border rounded-xl px-5 py-3 cursor-pointer hover:border-surface-border-hover transition"
       onClick={copy}
-      role="button"
-      tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && copy()}
     >
       <span className="font-mono text-sm text-text-muted mr-2 select-none">
@@ -164,6 +169,35 @@ function CopyButton({ text }: { text: string }) {
           <Copy size={14} />
         )}
       </span>
+    </button>
+  );
+}
+
+function ConversionBar() {
+  return (
+    <div className="sticky top-0 z-[70] border-b border-altor/10 bg-bg/95 backdrop-blur-xl">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-2.5 flex flex-col md:flex-row md:items-center md:justify-center gap-2 md:gap-3 text-center text-[11px] md:text-[12px] font-mono text-text-secondary">
+        <span className="text-text-primary font-semibold">Try it now:</span>
+        <a
+          href={NPM_URL}
+          target="_blank"
+          rel="noopener"
+          className="text-altor hover:text-altor-dim transition-colors"
+        >
+          {INSTALL_COMMAND}
+        </a>
+        <span className="hidden md:inline text-surface-border-hover">|</span>
+        <a
+          href={GITHUB_URL}
+          target="_blank"
+          rel="noopener"
+          className="text-text-primary hover:text-altor transition-colors"
+        >
+          ⭐ Star on GitHub
+        </a>
+        <span className="hidden md:inline text-surface-border-hover">|</span>
+        <span>54KB • Sub-millisecond • No server needed</span>
+      </div>
     </div>
   );
 }
@@ -186,25 +220,24 @@ function Nav() {
 
   return (
     <nav
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+      className={`fixed inset-x-0 top-11 md:top-12 z-50 transition-all duration-300 ${
         scrolled
           ? "bg-bg/70 backdrop-blur-2xl border-b border-surface-border"
           : ""
       }`}
     >
       <div className="max-w-5xl mx-auto px-6 h-[60px] flex items-center justify-between">
-        <a
-          href="#"
+        <button
+          type="button"
           className="flex items-center gap-2"
-          onClick={(e) => {
-            e.preventDefault();
+          onClick={() => {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
           <span className="font-mono text-[18px] font-bold text-altor tracking-tight">
             altor-vec
           </span>
-        </a>
+        </button>
 
         <div className="hidden md:flex items-center gap-7">
           <a href="#why" className={linkClass}>
@@ -248,6 +281,7 @@ function Nav() {
         </div>
 
         <button
+          type="button"
           className="md:hidden text-text-secondary"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
@@ -277,13 +311,18 @@ function Nav() {
           >
             <Github size={13} /> GitHub
           </a>
-          <a
-            href="#get-started"
+          <button
+            type="button"
             className="text-sm font-semibold text-altor"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              setOpen(false);
+              document
+                .getElementById("get-started")
+                ?.scrollIntoView({ behavior: "smooth" });
+            }}
           >
             Get Started
-          </a>
+          </button>
         </div>
       )}
     </nav>
@@ -321,7 +360,7 @@ function Hero() {
         }}
       />
 
-      <div className="relative max-w-3xl mx-auto px-6 pt-32 pb-24 text-center">
+      <div className="relative max-w-3xl mx-auto px-6 pt-36 md:pt-40 pb-24 text-center">
         <Reveal>
           <a
             href="https://github.com/altor-lab/altor-vec"
@@ -358,13 +397,13 @@ function Hero() {
         </Reveal>
 
         <Reveal delay={180}>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
-            <CopyButton text="npm install altor-vec" />
-            <a
-              href="https://github.com/altor-lab/altor-vec"
-              target="_blank"
-              rel="noopener"
-              className="flex items-center gap-2 border border-surface-border text-text-primary font-semibold text-sm px-6 py-3 rounded-xl hover:border-surface-border-hover hover:text-altor transition"
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-8">
+              <CopyButton text={INSTALL_COMMAND} />
+              <a
+                href={GITHUB_URL}
+                target="_blank"
+                rel="noopener"
+                className="flex items-center gap-2 border border-surface-border text-text-primary font-semibold text-sm px-6 py-3 rounded-xl hover:border-surface-border-hover hover:text-altor transition"
             >
               <Github size={14} />
               View on GitHub
@@ -461,6 +500,202 @@ const results = JSON.parse(
   );
 }
 
+function EmailSignup() {
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedEmail = email.trim();
+    const body = trimmedEmail
+      ? `Please add me to the altor-vec mailing list.\n\nEmail: ${trimmedEmail}`
+      : "Please add me to the altor-vec mailing list";
+
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("altor-vec updates signup")}&body=${encodeURIComponent(body)}`;
+    setSubmitted(true);
+  };
+
+  return (
+    <section className="py-16 border-t border-surface-border bg-surface/30">
+      <div className="max-w-4xl mx-auto px-6">
+        <Reveal>
+          <div className="bg-surface-raised border border-surface-border rounded-3xl p-8 md:p-10 text-center">
+            <SectionLabel>Stay updated</SectionLabel>
+            <h2 className="font-display text-3xl md:text-[2.3rem] leading-[1.1] mb-3">
+              Get notified about new features and tutorials
+            </h2>
+            <p className="text-sm text-text-secondary max-w-xl mx-auto mb-7">
+              Leave your email and your mail app opens with a pre-filled signup request.
+            </p>
+
+            <form
+              onSubmit={handleSubmit}
+              className="max-w-xl mx-auto flex flex-col sm:flex-row gap-3"
+            >
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="Email input"
+                className="flex-1 rounded-xl border border-surface-border bg-bg px-4 py-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-altor"
+                aria-label="Email address"
+                required
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-altor px-6 py-3 text-sm font-semibold text-bg hover:brightness-110 transition"
+              >
+                Subscribe
+              </button>
+            </form>
+
+            <p className="mt-4 text-xs text-text-muted">
+              {submitted ? "Opening your email client…" : `Or email ${CONTACT_EMAIL} directly.`}
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function SocialProofSection() {
+  const useCases = [
+    "Semantic search for e-commerce",
+    "Offline-first applications",
+    "Browser-based RAG systems",
+    "Privacy-preserving search",
+  ];
+
+  const proofPoints = [
+    "54KB bundle",
+    "<1ms queries",
+    "0 server dependencies",
+    "MIT licensed",
+  ];
+
+  return (
+    <section className="py-20 border-t border-surface-border">
+      <div className="max-w-5xl mx-auto px-6">
+        <Reveal>
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-8 items-start">
+            <div className="bg-surface-raised border border-surface-border rounded-3xl p-8 md:p-10">
+              <SectionLabel>Social proof</SectionLabel>
+              <h2 className="font-display text-3xl md:text-[2.4rem] leading-[1.1] mb-5">
+                Used by developers building:
+              </h2>
+              <ul className="space-y-3 mb-6">
+                {useCases.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-3 text-text-secondary"
+                  >
+                    <Check size={16} className="text-altor mt-1 flex-shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-3">
+                {proofPoints.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-altor/15 bg-altor-glow px-3 py-1.5 text-xs font-mono text-text-primary"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-bg border border-surface-border rounded-3xl p-8">
+              <p className="text-xs font-mono uppercase tracking-[0.2em] text-text-muted mb-4">
+                What converts
+              </p>
+              <div className="space-y-4 text-sm text-text-secondary leading-relaxed">
+                <p>
+                  Show the install command, prove the speed, and reduce trust friction.
+                </p>
+                <p>
+                  altor-vec already demonstrates the product live in-browser, so this section reinforces why developers adopt it.
+                </p>
+              </div>
+              <div className="mt-6 pt-6 border-t border-surface-border">
+                <a
+                  href={GITHUB_URL}
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-altor hover:text-altor-dim transition-colors"
+                >
+                  <Github size={15} />
+                  See the repo developers star
+                  <ArrowRight size={13} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function ComparisonCallout() {
+  const rows = [
+    ["Bundle", "54KB", "N/A (API calls)"],
+    ["Latency", "<1ms", "50-200ms"],
+    ["Cost", "Free", "$70+/mo"],
+    ["Privacy", "Data stays in browser", "Data sent to server"],
+  ];
+
+  return (
+    <section className="py-20 border-t border-surface-border bg-surface/30">
+      <div className="max-w-5xl mx-auto px-6">
+        <Reveal>
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <SectionLabel>Why altor-vec?</SectionLabel>
+              <h2 className="font-display text-3xl md:text-[2.4rem] leading-[1.1]">
+                Client-side vector search without the server tax
+              </h2>
+            </div>
+
+            <div className="overflow-hidden rounded-3xl border border-surface-border bg-surface-raised">
+              <table className="w-full text-left">
+                <thead className="bg-bg/70 border-b border-surface-border">
+                  <tr>
+                    <th className="px-5 py-4 text-xs font-mono uppercase tracking-wider text-text-muted">
+                      Feature
+                    </th>
+                    <th className="px-5 py-4 text-xs font-mono uppercase tracking-wider text-altor">
+                      altor-vec
+                    </th>
+                    <th className="px-5 py-4 text-xs font-mono uppercase tracking-wider text-text-muted">
+                      Server-side (Pinecone)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map(([feature, altorValue, serverValue]) => (
+                    <tr key={feature} className="border-t border-surface-border first:border-0">
+                      <td className="px-5 py-4 text-sm font-semibold text-text-primary">
+                        {feature}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-altor">{altorValue}</td>
+                      <td className="px-5 py-4 text-sm text-text-secondary">
+                        {serverValue}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Open Source Credibility                                            */
 /* ------------------------------------------------------------------ */
@@ -497,7 +732,7 @@ function OpenSourceSection() {
               sub: "forever, no server",
             },
           ].map((s, i) => (
-            <Reveal key={i} delay={i * 60}>
+            <Reveal key={s.label} delay={i * 60}>
               <div className="stat-card">
                 <div className="font-display text-3xl md:text-4xl italic text-altor mb-2">
                   {s.val}
@@ -660,7 +895,7 @@ function WhyAltorVec() {
 
         <div className="grid md:grid-cols-3 gap-5">
           {cards.map((c, i) => (
-            <Reveal key={i} delay={i * 80}>
+            <Reveal key={c.title} delay={i * 80}>
               <div className="group bg-surface-raised border border-surface-border rounded-2xl p-8 h-full hover:border-surface-border-hover transition-colors">
                 <div className="w-11 h-11 rounded-xl bg-altor-glow border border-altor/10 flex items-center justify-center mb-6 group-hover:bg-altor-glow-strong transition-colors">
                   <c.icon size={20} className="text-altor" />
@@ -926,6 +1161,7 @@ function LiveSearchDemo() {
                     className="animate-spin h-3 w-3 text-altor"
                     viewBox="0 0 24 24"
                   >
+                    <title>Loading embedding model</title>
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -962,6 +1198,7 @@ function LiveSearchDemo() {
             <div className="flex flex-wrap gap-2 mb-4 justify-center">
               {DEMO_QUERIES.map((dq) => (
                 <button
+                  type="button"
                   key={dq.query}
                   disabled={!chipsEnabled}
                   onClick={() => {
@@ -986,6 +1223,7 @@ function LiveSearchDemo() {
                     className="animate-spin h-[18px] w-[18px] text-altor flex-shrink-0"
                     viewBox="0 0 24 24"
                   >
+                    <title>Embedding query</title>
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -1053,7 +1291,7 @@ function LiveSearchDemo() {
                 )}
                 {results.map((r, i) => (
                   <div
-                    key={`${activeQuery}-${i}`}
+                    key={`${activeQuery}-${r.rank}-${r.text.slice(0, 24)}`}
                     className="px-5 py-4 hover:bg-surface-overlay/40 transition-colors"
                     style={{
                       animation: "fadeSlideIn 0.3s ease both",
@@ -1072,7 +1310,7 @@ function LiveSearchDemo() {
                       <div className="min-w-0">
                         <div className="text-sm text-text-primary leading-relaxed">
                           {r.text.length > 200
-                            ? r.text.slice(0, 200) + "..."
+                            ? `${r.text.slice(0, 200)}...`
                             : r.text}
                         </div>
                       </div>
@@ -1417,7 +1655,8 @@ const bytes = engine.to_bytes();
             <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
               {tabs.map((t, i) => (
                 <button
-                  key={i}
+                  type="button"
+                  key={t.label}
                   onClick={() => setTab(i)}
                   className={`tab-btn ${tab === i ? "active" : ""}`}
                 >
@@ -1460,9 +1699,9 @@ const bytes = engine.to_bytes();
                   },
                   { method: ".len()", desc: "Number of vectors in the index" },
                   { method: ".free()", desc: "Free WASM memory" },
-                ].map((row, i) => (
+                ].map((row) => (
                   <div
-                    key={i}
+                    key={row.method}
                     className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6 px-6 py-3"
                   >
                     <span className="font-mono text-xs text-altor font-medium min-w-0 sm:min-w-[320px]">
@@ -1529,9 +1768,9 @@ function HonestComparison() {
 
           <Reveal delay={100}>
             <div className="bg-surface-raised border border-surface-border rounded-2xl p-8">
-              <label className="block text-xs font-mono text-text-muted uppercase tracking-wider mb-3">
+              <div className="block text-xs font-mono text-text-muted uppercase tracking-wider mb-3">
                 Monthly search queries
-              </label>
+              </div>
               <div className="flex items-center gap-4 mb-8">
                 <input
                   type="range"
@@ -1651,9 +1890,9 @@ function Benchmarks() {
               { val: "54 KB", label: "gzipped", sub: ".wasm binary" },
               { val: "95.4%", label: "recall@10", sub: "10K vectors" },
               { val: "117KB", label: "raw .wasm", sub: "before gzip" },
-            ].map((s, i) => (
+            ].map((s) => (
               <div
-                key={i}
+                key={s.label}
                 className="bg-surface-raised border border-surface-border rounded-xl p-5 text-center"
               >
                 <div className="font-display text-2xl md:text-3xl italic text-altor mb-1">
@@ -1672,14 +1911,14 @@ function Benchmarks() {
 
         <div className="max-w-3xl mx-auto space-y-12">
           {comparisons.map((comp, ci) => (
-            <Reveal key={ci} delay={ci * 100 + 120}>
+            <Reveal key={comp.label} delay={ci * 100 + 120}>
               <div>
                 <h3 className="text-xs font-mono text-text-muted uppercase tracking-wider mb-5 text-center">
                   {comp.label}
                 </h3>
                 <div className="space-y-3">
                   {comp.items.map((item, ii) => (
-                    <div key={ii} className="flex items-center gap-4">
+                    <div key={item.name} className="flex items-center gap-4">
                       <span className="text-sm text-text-secondary w-20 text-right font-medium flex-shrink-0">
                         {item.name}
                       </span>
@@ -1769,7 +2008,7 @@ function UseCases() {
 
         <div className="grid sm:grid-cols-2 gap-5">
           {segments.map((s, i) => (
-            <Reveal key={i} delay={i * 60}>
+            <Reveal key={s.title} delay={i * 60}>
               <div className="bg-surface-raised border border-surface-border rounded-2xl p-7 hover:border-surface-border-hover transition-colors h-full">
                 <div className="flex items-start justify-between mb-4">
                   <s.icon size={22} className="text-altor" />
@@ -1845,9 +2084,10 @@ function FAQ() {
 
         <div className="divide-y divide-surface-border border-t border-b border-surface-border">
           {items.map((item, i) => (
-            <Reveal key={i} delay={i * 40}>
+            <Reveal key={item.q} delay={i * 40}>
               <div>
                 <button
+                  type="button"
                   className="w-full flex items-center justify-between py-5 text-left group"
                   onClick={() => setOpenIdx(openIdx === i ? null : i)}
                 >
@@ -1913,9 +2153,9 @@ function GetStarted() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-                <CopyButton text="npm install altor-vec" />
+                <CopyButton text={INSTALL_COMMAND} />
                 <a
-                  href="https://github.com/altor-lab/altor-vec"
+                  href={GITHUB_URL}
                   target="_blank"
                   rel="noopener"
                   className="flex items-center gap-2 text-sm font-semibold text-text-primary hover:text-altor transition-colors"
@@ -1928,7 +2168,7 @@ function GetStarted() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-xs text-text-muted">
                 <a
-                  href="https://www.npmjs.com/package/altor-vec"
+                  href={NPM_URL}
                   target="_blank"
                   rel="noopener"
                   className="flex items-center gap-1.5 hover:text-altor transition-colors"
@@ -1994,11 +2234,11 @@ function ConsultingCTA() {
                 ))}
               </ul>
               <a
-                href="mailto:anshul@altorlab.dev"
+                href={`mailto:${CONTACT_EMAIL}`}
                 className="inline-flex items-center gap-2 bg-altor text-bg font-semibold text-sm px-6 py-3 rounded-xl hover:brightness-110 transition"
               >
                 <Mail size={15} />
-                anshul@altorlab.dev
+                {CONTACT_EMAIL}
               </a>
             </div>
           </Reveal>
@@ -2051,6 +2291,35 @@ function ConsultingCTA() {
   );
 }
 
+function BottomCTA() {
+  return (
+    <section className="py-20 border-t border-surface-border">
+      <div className="max-w-5xl mx-auto px-6">
+        <Reveal>
+          <div className="rounded-3xl border border-altor/15 bg-altor-glow p-8 md:p-12 text-center">
+            <SectionLabel>Ready to ship?</SectionLabel>
+            <h2 className="font-display text-3xl md:text-[2.5rem] leading-[1.1] mb-4">
+              Ready to add vector search to your app?
+            </h2>
+            <div className="flex justify-center mb-5">
+              <CopyButton text={INSTALL_COMMAND} />
+            </div>
+            <p className="text-sm text-text-secondary">
+              Questions?{" "}
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="text-altor hover:text-altor-dim transition-colors"
+              >
+                Email {CONTACT_EMAIL}
+              </a>
+            </p>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Footer                                                             */
 /* ------------------------------------------------------------------ */
@@ -2069,7 +2338,7 @@ function Footer() {
           </div>
           <div className="flex items-center gap-6 text-[13px] text-text-muted">
             <a
-              href="https://github.com/altor-lab/altor-vec"
+              href={GITHUB_URL}
               target="_blank"
               rel="noopener"
               className="hover:text-text-secondary transition-colors flex items-center gap-1"
@@ -2077,7 +2346,7 @@ function Footer() {
               <Github size={13} /> GitHub
             </a>
             <a
-              href="https://www.npmjs.com/package/altor-vec"
+              href={NPM_URL}
               target="_blank"
               rel="noopener"
               className="hover:text-text-secondary transition-colors flex items-center gap-1"
@@ -2085,7 +2354,7 @@ function Footer() {
               <Package size={13} /> npm
             </a>
             <a
-              href="mailto:anshul@altorlab.dev"
+              href={`mailto:${CONTACT_EMAIL}`}
               className="hover:text-text-secondary transition-colors flex items-center gap-1"
             >
               <Mail size={13} /> Contact
@@ -2107,9 +2376,13 @@ function Footer() {
 export default function App() {
   return (
     <div className="noise">
+      <ConversionBar />
       <Nav />
       <Hero />
       <LiveSearchDemo />
+      <EmailSignup />
+      <SocialProofSection />
+      <ComparisonCallout />
       <OpenSourceSection />
       <WhyAltorVec />
       <IntegrateInMinutes />
@@ -2119,6 +2392,7 @@ export default function App() {
       <FAQ />
       <GetStarted />
       <ConsultingCTA />
+      <BottomCTA />
       <Footer />
     </div>
   );
