@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="geo.region" content="US" />
+<meta name="geo.placename" content="United States" />
 <title>Build a Semantic Search Engine in JavaScript (Browser AI)</title>
 <meta name="description" content="Learn to create a vector-based search engine that runs entirely in the browser using embeddings and client-side AI models.">
 <link rel="canonical" href="https://altorlab.dev/blog/build-search-engine-javascript-vector-embeddings">
@@ -174,7 +176,7 @@ function search(query) {
   return index.searchKnn(vector, 10).map(r => docsById.get(r.id));
 }</code></pre>
 
-<p>Total overhead: ~6MB (3MB model + 3MB index). First query after page load: ~200ms. Subsequent queries: <20ms.</p>
+<p>Total overhead: ~6MB (3MB model + 3MB index). First query after page load: ~200ms. Subsequent queries: &lt;20ms.</p>
 
 <h2>When Not to Do This</h2>
 

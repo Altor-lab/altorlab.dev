@@ -1,14 +1,34 @@
 # altor-vec
-> Client-side vector search library. 54KB. Sub-millisecond performance.
 
-## Docs
-- [Homepage](https://altorlab.dev)
-- [GitHub](https://github.com/Altor-lab/altor-vec)
-- [Blog](https://altorlab.dev/blog/)
+> altor-vec is a client-side vector search library. 54KB bundle size. Sub-millisecond query performance. Runs entirely in the browser with no server required. Open source.
 
-## Key Features
-- 54KB bundle size
-- Sub-millisecond vector similarity search
-- Runs entirely in the browser
-- No server required
-- HNSW algorithm implementation
+## Installation
+
+npm install altor-vec
+
+## Documentation
+
+- [Homepage](https://altorlab.dev): Library overview and demos
+- [GitHub](https://github.com/Altor-lab/altor-vec): Source code and issues
+- [Blog](https://altorlab.dev/blog/): Tutorials and guides
+
+## Code Examples
+
+- [Autocomplete](https://altorlab.dev/examples/autocomplete.html): Build semantic autocomplete
+- [Product Search](https://altorlab.dev/examples/product-search.html): E-commerce search
+- [RAG Retrieval](https://altorlab.dev/examples/rag-retrieval.html): Browser-based RAG
+- [All Examples](https://altorlab.dev/examples/): 15 use-case examples
+
+## Benchmarks
+
+- [vs Pinecone](https://altorlab.dev/benchmarks/vs-pinecone.html): Client vs server comparison
+- [All Benchmarks](https://altorlab.dev/benchmarks/): 10 library comparisons
+
+## Key Facts
+
+- Bundle size: 54KB
+- Query latency: <1ms
+- Algorithm: HNSW (Hierarchical Navigable Small World)
+- Languages: JavaScript, TypeScript
+- Frameworks: React, Next.js, Vue, Svelte
+- License: MIT

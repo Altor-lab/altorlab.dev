@@ -1,9 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-US">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="geo.region" content="US" />
+    <meta name="geo.placename" content="United States" />
     <meta name="description" content="altor-vec — Client-side vector search powered by HNSW. 54KB gzipped WASM. Sub-millisecond latency. No server. No API keys. No per-query billing." />
     <meta name="theme-color" content="#080a09" />
 
@@ -55,6 +57,28 @@
         margin-bottom: 8px;
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "altor-vec",
+        "url": "https://altorlab.dev",
+        "description": "altor-vec is a client-side vector search library. 54KB bundle size. Sub-millisecond query performance. Runs entirely in the browser with no server required.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "United States"
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "US"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "sales",
+          "availableLanguage": "English"
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

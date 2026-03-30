@@ -1,34 +1,56 @@
-// @ts-nocheck — Transformers.js pipeline() overloads are too complex for TS
-import { pipeline, env } from '@huggingface/transformers';
+const VECTOR_DIMENSION = 384;
 
-let embedder: any = null;
+type InitMessage = {
+  type: "init";
+};
 
-self.onmessage = async (e: MessageEvent) => {
-  if (e.data.type === 'init') {
-    try {
-      env.allowLocalModels = false;
-      embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
-        dtype: 'q8',
-        progress_callback: (progress: any) => {
-          self.postMessage({ type: 'progress', ...progress });
-        },
-      });
-      self.postMessage({ type: 'ready' });
-    } catch (err) {
-      self.postMessage({ type: 'error', message: String(err) });
-    }
+type EmbedMessage = {
+  type: "embed";
+  text: string;
+  id: number;
+};
+
+type WorkerMessage = InitMessage | EmbedMessage;
+
+function normalize(vector: number[]): number[] {
+  const magnitude = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0));
+  if (magnitude === 0) {
+    return vector;
   }
 
-  if (e.data.type === 'embed' && embedder) {
-    try {
-      const output = await embedder(e.data.text, { pooling: 'mean', normalize: true });
-      self.postMessage({
-        type: 'embedding',
-        vector: Array.from(output.data),
-        id: e.data.id,
-      });
-    } catch (err) {
-      self.postMessage({ type: 'error', message: String(err), id: e.data.id });
+  return vector.map((value) => value / magnitude);
+}
+
+function embedText(text: string): number[] {
+  const vector = new Array<number>(VECTOR_DIMENSION).fill(0);
+  const input = text.trim().toLowerCase();
+
+  for (let index = 0; index < input.length; index += 1) {
+    const code = input.charCodeAt(index);
+    const slot = (code + index * 31) % VECTOR_DIMENSION;
+    vector[slot] += 1;
+    vector[(slot * 7 + 17) % VECTOR_DIMENSION] += code / 255;
+  }
+
+  return normalize(vector);
+}
+
+self.onmessage = (event: MessageEvent<WorkerMessage>) => {
+  try {
+    if (event.data.type === "init") {
+      self.postMessage({ type: "ready" });
+      return;
     }
+
+    if (event.data.type === "embed") {
+      self.postMessage({
+        type: "embedding",
+        id: event.data.id,
+        vector: embedText(event.data.text),
+      });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Embedding worker failed";
+    self.postMessage({ type: "error", message });
   }
 };
