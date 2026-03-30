@@ -1,234 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Image Search with Client-Side Vector Search — Code Example | altor-vec</title>
-<meta name="description" content="Build image search with altor-vec — 54KB client-side vector search. Full code example with React/JavaScript. No backend required.">
-<link rel="canonical" href="https://altorlab.dev/examples/image-search">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.8rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Image Search with altor-vec — Code Example | altorlab.dev</title>
+  <meta name="description" content="Build image search with altor-vec using a real runnable JavaScript example, React component, and browser-side vector search architecture notes.">
+  <link rel="canonical" href="https://altorlab.dev/examples/image-search.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #27272a; }
-code { font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 0.9rem; color: #e2e8f0; }
-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-th, td { border: 1px solid #27272a; padding: 10px; text-align: left; }
-strong { color: #f5f5f5; }
-li { margin-bottom: 0.5rem; }
-.callout { background: #111111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; margin: 18px 0; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Image Search with Client-Side Vector Search", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
+th { background: #141418; }
+ul { padding-left: 20px; }
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Image Search with altor-vec", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "publisher": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/examples/image-search.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Do I need multimodal embeddings for image search?", "acceptedAnswer": {"@type": "Answer", "text": "For strong production quality, yes. The lightweight example uses captions only, which is runnable but less powerful than a shared text-image embedding space."}}, {"@type": "Question", "name": "Can I search a private asset bundle entirely offline?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. If the assets and their embeddings are safe to ship, altor-vec can keep retrieval fully local."}}, {"@type": "Question", "name": "Where does the browser approach stop working well?", "acceptedAnswer": {"@type": "Answer", "text": "At very large media-library sizes or when the source assets cannot be exposed to the client."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/examples/">Examples</a></nav>
 <article>
-<h1>Build Image Search with altor-vec</h1>
-<p><strong>What you'll build:</strong> An image finder that searches caption embeddings locally so users can type concepts like &quot;sunset over city skyline&quot; and get visual matches.</p>
-<p><strong>Bundle cost:</strong> 54KB · <strong>Query time:</strong> &lt;1ms · <strong>Backend:</strong> None required</p>
+  <p class="kicker">code example</p>
+  <h1>Build Image Search with altor-vec</h1>
+  <p><strong>What this pattern solves:</strong> Caption- and tag-based image retrieval for curated media libraries.</p>
+  <p>Image libraries are often searched by intent, mood, or scene description rather than exact filenames. Vector search lets a user type &#x27;sunset city skyline&#x27; or &#x27;happy team workshop&#x27; and retrieve the nearest captioned assets.</p>
+  <p>For design systems, marketing asset bundles, or offline media explorers, local retrieval removes API round trips and keeps browsing fluid while the user scans many variations.</p>
 
-<h2>Install</h2>
-<pre><code>npm install altor-vec</code></pre>
+  <h2>Install</h2>
+  <pre><code>npm install altor-vec</code></pre>
 
-<h2>The Concept</h2>
-<p>Vector search is a practical way to power image discovery when you have captions, tags, or multimodal embeddings. Users describe the scene they want instead of memorizing filenames or exact labels.</p>
-<p>A browser-side index works well for curated libraries, portfolios, or offline media tools. Once assets and metadata are cached, searches remain instant and private.</p>
-<p>The example keeps the embedding step simple by encoding text descriptions directly. Swap the helper for a caption embedding model or multimodal embeddings when you connect this pattern to real images.</p>
-<div class="callout small">This page uses a deterministic embedding helper so the snippets are runnable with only <code>altor-vec</code>. For production ranking quality, replace that helper with a real embedding model or precomputed vectors.</div>
+  <h2>Concept explanation</h2>
+  <p>In a image search workflow, users usually describe intent in their own words. That is why vector search works well here: each record is turned into an embedding, the embeddings are indexed once, and later queries retrieve the nearest semantic neighbors instead of relying only on exact tokens. In practice this means the interface can respond to paraphrases, shorthand, and partial descriptions far better than a literal-only search box.</p>
+  <p>The browser is often the right place to do this when the corpus is moderate in size and safe to ship. The instant benefit is lower latency. The architectural benefit is that you remove a whole search service from the request path. That matters for keystroke-heavy interactions, offline-capable apps, and product surfaces where search should feel like a UI primitive rather than a network round trip.</p>
+  <p>This page uses a deterministic embedding helper so the sample is runnable with only <code>altor-vec</code> installed. That keeps the example honest and easy to paste into a demo project. The example indexes text captions because that keeps the snippet lightweight. In production you can use CLIP-style embeddings or any pipeline that projects both text and images into the same vector space.</p>
+  <div class="callout small">Representative browser benchmark: ~54KB gzipped library payload, sub-millisecond local query time on a moderate corpus, and no per-query API dependency. Exact numbers depend on vector dimensions, index parameters, and device class.</div>
 
-<h2>Full Code Example</h2>
-<pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+  <h2>Runnable JavaScript example</h2>
+  <p>The following snippet indexes a small in-memory dataset, performs a semantic lookup for <code>cozy coffee shop interior</code>, and prints the nearest matches. It uses the real <code>altor-vec</code> API, including <code>init()</code>, <code>WasmSearchEngine.from_vectors()</code>, and <code>search()</code>.</p>
+  <pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
 
-const dims = 8;
-const records = [
+        const dims = 12;
+        const records = [
   {
-    &quot;title&quot;: &quot;Golden hour skyline&quot;,
-    &quot;text&quot;: &quot;Downtown skyline shot with orange sunset light and reflective windows.&quot;,
+    &quot;title&quot;: &quot;Morning cafe counter&quot;,
+    &quot;text&quot;: &quot;Warm wooden coffee bar with pastries, espresso machine, and soft window light.&quot;,
+    &quot;meta&quot;: &quot;interior&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Remote team workshop&quot;,
+    &quot;text&quot;: &quot;Colleagues around a table covered in sticky notes and laptops.&quot;,
+    &quot;meta&quot;: &quot;team&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Downtown skyline at dusk&quot;,
+    &quot;text&quot;: &quot;City skyline with purple sunset, office towers, and river reflections.&quot;,
     &quot;meta&quot;: &quot;city&quot;
   },
   {
-    &quot;title&quot;: &quot;Forest waterfall&quot;,
-    &quot;text&quot;: &quot;Long-exposure image of a waterfall surrounded by moss and trees.&quot;,
-    &quot;meta&quot;: &quot;nature&quot;
+    &quot;title&quot;: &quot;Trail runner in forest&quot;,
+    &quot;text&quot;: &quot;Athlete sprinting through a pine trail with dramatic side light.&quot;,
+    &quot;meta&quot;: &quot;outdoor&quot;
   },
   {
-    &quot;title&quot;: &quot;Night market&quot;,
-    &quot;text&quot;: &quot;Street food stalls with neon lights and a crowded city scene.&quot;,
-    &quot;meta&quot;: &quot;travel&quot;
+    &quot;title&quot;: &quot;Minimal product flat lay&quot;,
+    &quot;text&quot;: &quot;Neutral tabletop composition with skincare bottles and shadows.&quot;,
+    &quot;meta&quot;: &quot;product&quot;
   },
   {
-    &quot;title&quot;: &quot;Desert road&quot;,
-    &quot;text&quot;: &quot;Open highway cutting through red rock desert at sunrise.&quot;,
-    &quot;meta&quot;: &quot;landscape&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Mountain lake&quot;,
-    &quot;text&quot;: &quot;Calm alpine lake with snowy peaks mirrored in the water.&quot;,
-    &quot;meta&quot;: &quot;nature&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Studio portrait&quot;,
-    &quot;text&quot;: &quot;High-contrast portrait with dark background and rim lighting.&quot;,
-    &quot;meta&quot;: &quot;people&quot;
+    &quot;title&quot;: &quot;Warehouse fulfillment line&quot;,
+    &quot;text&quot;: &quot;Workers packing boxes beside shelves and barcode scanners.&quot;,
+    &quot;meta&quot;: &quot;operations&quot;
   }
 ];
 
-function embedText(text) {
+        function embedText(text) {
   const vector = new Float32Array(dims);
   for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
     let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-async function main() {
-  await init();
-
-  const flat = new Float32Array(
-    records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-  );
-
-  const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-  const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;sunset over city skyline&#x27;)), 4));
-
-  const results = hits.map(([id, distance]) =&gt; ({
-    ...records[id],
-    similarity: Number((1 - distance).toFixed(3)),
-  }));
-
-  console.table(results);
-  engine.free();
-}
-
-main();</code></pre>
-
-<h2>React Component</h2>
-<pre><code>import { useEffect, useState } from &#x27;react&#x27;;
-import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
-
-const dims = 8;
-const records = [
-  {
-    &quot;title&quot;: &quot;Golden hour skyline&quot;,
-    &quot;text&quot;: &quot;Downtown skyline shot with orange sunset light and reflective windows.&quot;,
-    &quot;meta&quot;: &quot;city&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Forest waterfall&quot;,
-    &quot;text&quot;: &quot;Long-exposure image of a waterfall surrounded by moss and trees.&quot;,
-    &quot;meta&quot;: &quot;nature&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Night market&quot;,
-    &quot;text&quot;: &quot;Street food stalls with neon lights and a crowded city scene.&quot;,
-    &quot;meta&quot;: &quot;travel&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Desert road&quot;,
-    &quot;text&quot;: &quot;Open highway cutting through red rock desert at sunrise.&quot;,
-    &quot;meta&quot;: &quot;landscape&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Mountain lake&quot;,
-    &quot;text&quot;: &quot;Calm alpine lake with snowy peaks mirrored in the water.&quot;,
-    &quot;meta&quot;: &quot;nature&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Studio portrait&quot;,
-    &quot;text&quot;: &quot;High-contrast portrait with dark background and rim lighting.&quot;,
-    &quot;meta&quot;: &quot;people&quot;
-  }
-];
-
-function embedText(text) {
-  const vector = new Float32Array(dims);
-  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
-    let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-export function ImageSearchExample() {
-  const [engine, setEngine] = useState(null);
-  const [query, setQuery] = useState(&#x27;&#x27;);
-  const [results, setResults] = useState([]);
-
-  useEffect(() =&gt; {
-    let cancelled = false;
-    let instance;
-
-    (async () =&gt; {
-      await init();
-      const flat = new Float32Array(
-        records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-      );
-      instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-      if (!cancelled) setEngine(instance);
-    })();
-
-    return () =&gt; {
-      cancelled = true;
-      instance?.free();
-    };
-  }, []);
-
-  useEffect(() =&gt; {
-    if (!engine || query.trim().length &lt; 2) {
-      setResults([]);
-      return;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
     }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
 
-    const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
-    setResults(
-      hits.map(([id, distance]) =&gt; ({
-        ...records[id],
-        similarity: Number((1 - distance).toFixed(3)),
-      }))
-    );
-  }, [engine, query]);
+        async function main() {
+          await init();
 
-  return (
-    &lt;section&gt;
-      &lt;input
-        value={query}
-        onChange={(event) =&gt; setQuery(event.target.value)}
-        placeholder=&quot;Describe an image&quot;
-      /&gt;
-      &lt;ul&gt;
-        {results.map((result) =&gt; (
-          &lt;li key={result.title}&gt;
-            &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
-          &lt;/li&gt;
-        ))}
-      &lt;/ul&gt;
-    &lt;/section&gt;
-  );
-}</code></pre>
+          const flat = new Float32Array(
+            records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+          );
 
-<h2>How It Works</h2>
-<p>The flow is the same pattern you would use in production: turn each record into an embedding vector, build an HNSW graph with <code>WasmSearchEngine.from_vectors()</code>, and query it with the embedding for the current search text. HNSW keeps approximate nearest-neighbor search fast by traversing a layered graph instead of scanning every vector linearly.</p>
-<p>Similarity scoring here is derived from the returned distance with <code>1 - distance</code> so the UI can show an intuitive confidence number. If you swap in a real embedding model such as MiniLM, multilingual-e5, or precomputed server-generated vectors, the surrounding indexing and querying code stays almost identical.</p>
+          const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+          const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;cozy coffee shop interior&#x27;)), 4));
 
-<h2>When to Use This Pattern</h2>
-<ul><li>Photography portfolio search</li>
-<li>Design asset pickers in creative tools</li>
-<li>Offline museum or kiosk guides</li>
-<li>Stock image browsers with small curated collections</li></ul>
+          const results = hits.map(([id, distance]) =&gt; ({
+            ...records[id],
+            similarity: Number((1 - distance).toFixed(3)),
+          }));
 
-<h2>Limitations</h2>
-<p>Real image search quality depends on strong captions or image embeddings. Large image libraries can make download size expensive, and multimodal models are heavier than the toy text helper used in this demo.</p>
+          console.table(results);
+          engine.free();
+        }
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+        main();</code></pre>
+
+  <h2>React component version</h2>
+  <p>The React version keeps the same index build but wires it into component state so the UI can query on input changes. That is usually how teams introduce semantic retrieval into an existing product: initialize once, keep the engine in memory, and map nearest-neighbor hits back to the original records.</p>
+  <pre><code>import { useEffect, useState } from &#x27;react&#x27;;
+        import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+        const dims = 12;
+        const records = [
+  {
+    &quot;title&quot;: &quot;Morning cafe counter&quot;,
+    &quot;text&quot;: &quot;Warm wooden coffee bar with pastries, espresso machine, and soft window light.&quot;,
+    &quot;meta&quot;: &quot;interior&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Remote team workshop&quot;,
+    &quot;text&quot;: &quot;Colleagues around a table covered in sticky notes and laptops.&quot;,
+    &quot;meta&quot;: &quot;team&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Downtown skyline at dusk&quot;,
+    &quot;text&quot;: &quot;City skyline with purple sunset, office towers, and river reflections.&quot;,
+    &quot;meta&quot;: &quot;city&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Trail runner in forest&quot;,
+    &quot;text&quot;: &quot;Athlete sprinting through a pine trail with dramatic side light.&quot;,
+    &quot;meta&quot;: &quot;outdoor&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Minimal product flat lay&quot;,
+    &quot;text&quot;: &quot;Neutral tabletop composition with skincare bottles and shadows.&quot;,
+    &quot;meta&quot;: &quot;product&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Warehouse fulfillment line&quot;,
+    &quot;text&quot;: &quot;Workers packing boxes beside shelves and barcode scanners.&quot;,
+    &quot;meta&quot;: &quot;operations&quot;
+  }
+];
+
+        function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+        export function ImageSearchExample() {
+          const [engine, setEngine] = useState(null);
+          const [query, setQuery] = useState(&#x27;&#x27;);
+          const [results, setResults] = useState([]);
+
+          useEffect(() =&gt; {
+            let cancelled = false;
+            let instance;
+
+            (async () =&gt; {
+              await init();
+              const flat = new Float32Array(
+                records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+              );
+              instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+              if (!cancelled) setEngine(instance);
+            })();
+
+            return () =&gt; {
+              cancelled = true;
+              instance?.free();
+            };
+          }, []);
+
+          useEffect(() =&gt; {
+            if (!engine || query.trim().length &lt; 2) {
+              setResults([]);
+              return;
+            }
+
+            const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
+            setResults(
+              hits.map(([id, distance]) =&gt; ({
+                ...records[id],
+                similarity: Number((1 - distance).toFixed(3)),
+              }))
+            );
+          }, [engine, query]);
+
+          return (
+            &lt;section&gt;
+              &lt;input
+                value={query}
+                onChange={(event) =&gt; setQuery(event.target.value)}
+                placeholder=&quot;Describe the image you need&quot;
+              /&gt;
+              &lt;ul&gt;
+                {results.map((result) =&gt; (
+                  &lt;li key={result.title}&gt;
+                    &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
+                  &lt;/li&gt;
+                ))}
+              &lt;/ul&gt;
+            &lt;/section&gt;
+          );
+        }</code></pre>
+
+  <h2>How this example works</h2>
+  <p>The pattern has three moving parts. First, you choose what text represents each record: title, description, metadata, or a chunk of content. Second, you turn that text into vectors and flatten them into one <code>Float32Array</code>. Third, you build the HNSW graph and query it with a vector created from the user input. The library returns nearest-neighbor IDs and distances, and your app decides how to display or post-process them.</p>
+  <p>Because the retrieval step is approximate nearest-neighbor search, it stays fast even as the dataset grows beyond trivial linear scans. The most important quality lever is still the embedding model. Better vectors usually matter more than micro-optimizing ANN parameters, so teams should benchmark retrieval quality on real user phrasing before shipping the experience widely.</p>
+
+  <h2>When to use this pattern</h2>
+  <p>This is a practical fit when the search corpus is small to medium, shipped with the app, and searched frequently enough that backend latency would be noticeable. Common examples include docs portals, embedded support widgets, local-first assistants, and curated catalogs.</p>
+  <ul><li>Stock photo pickers</li><li>Marketing asset browsers</li><li>Creative inspiration boards</li><li>Offline media catalogs</li></ul>
+
+  <h2>Limitations</h2>
+  <p>This pattern assumes you have useful captions or multimodal embeddings. Pure filename indexing is not enough, and very large image collections still challenge browser memory and download budgets.</p>
+  <p>Be especially careful about corpus size, update frequency, and data sensitivity. Browser vector search is excellent when those three constraints are favorable, but it is not the right answer when the dataset is huge, private, or changing constantly for every user.</p>
+
+  <h2>FAQ</h2>
+  <h3>Do I need multimodal embeddings for image search?</h3>
+<p>For strong production quality, yes. The lightweight example uses captions only, which is runnable but less powerful than a shared text-image embedding space.</p>
+<h3>Can I search a private asset bundle entirely offline?</h3>
+<p>Yes. If the assets and their embeddings are safe to ship, altor-vec can keep retrieval fully local.</p>
+<h3>Where does the browser approach stop working well?</h3>
+<p>At very large media-library sizes or when the source assets cannot be exposed to the client.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

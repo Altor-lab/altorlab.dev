@@ -1,234 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Document Search with Client-Side Vector Search — Code Example | altor-vec</title>
-<meta name="description" content="Build document search with altor-vec — 54KB client-side vector search. Full code example with React/JavaScript. No backend required.">
-<link rel="canonical" href="https://altorlab.dev/examples/document-search">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.8rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Document Search with altor-vec — Code Example | altorlab.dev</title>
+  <meta name="description" content="Build document search with altor-vec using a real runnable JavaScript example, React component, and browser-side vector search architecture notes.">
+  <link rel="canonical" href="https://altorlab.dev/examples/document-search.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #27272a; }
-code { font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 0.9rem; color: #e2e8f0; }
-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-th, td { border: 1px solid #27272a; padding: 10px; text-align: left; }
-strong { color: #f5f5f5; }
-li { margin-bottom: 0.5rem; }
-.callout { background: #111111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; margin: 18px 0; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Document Search with Client-Side Vector Search", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
+th { background: #141418; }
+ul { padding-left: 20px; }
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Document Search with altor-vec", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "publisher": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/examples/document-search.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is this good for offline manuals?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Static manuals are one of the clearest wins because the index can be bundled once and searched locally."}}, {"@type": "Question", "name": "Should I index whole documents or chunks?", "acceptedAnswer": {"@type": "Answer", "text": "Chunks are usually better. Smaller units produce more precise retrieval and make it easier to jump to the exact section a user needs."}}, {"@type": "Question", "name": "What is the main architectural limit?", "acceptedAnswer": {"@type": "Answer", "text": "The browser can only search what you ship to it, so sensitive or highly dynamic document stores usually belong on the server."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/examples/">Examples</a></nav>
 <article>
-<h1>Build Document Search with altor-vec</h1>
-<p><strong>What you'll build:</strong> A docs search box that ranks sections by meaning, not just token overlap, and keeps working after the page is cached.</p>
-<p><strong>Bundle cost:</strong> 54KB · <strong>Query time:</strong> &lt;1ms · <strong>Backend:</strong> None required</p>
+  <p class="kicker">code example</p>
+  <h1>Build Document Search with altor-vec</h1>
+  <p><strong>What this pattern solves:</strong> Browser-native retrieval for knowledge bases, policy libraries, and internal manuals.</p>
+  <p>Document portals become hard to navigate when users remember a concept but not a file name. A vector index lets them ask for &#x27;security review checklist&#x27; and retrieve the closest policy chunks instead of relying on exact phrasing.</p>
+  <p>For static manuals, docs bundles, and packaged internal portals, local search means instant retrieval with no dependency on a live API. That is especially valuable for field teams or air-gapped review environments.</p>
 
-<h2>Install</h2>
-<pre><code>npm install altor-vec</code></pre>
+  <h2>Install</h2>
+  <pre><code>npm install altor-vec</code></pre>
 
-<h2>The Concept</h2>
-<p>Long documents rarely use the same phrasing as the user. Someone might search for an invoice retention rule while the document section is titled &quot;financial record preservation.&quot; Vector search closes that wording gap.</p>
-<p>Because many document corpora are static between deploys, they map well to a browser-delivered index. You can ship the chunks and index as versioned assets and answer queries locally with predictable latency.</p>
-<p>The sample code below indexes document snippets directly in the browser so you can see the full flow. In production, teams usually precompute chunk embeddings and serialize the index once during their content build.</p>
-<div class="callout small">This page uses a deterministic embedding helper so the snippets are runnable with only <code>altor-vec</code>. For production ranking quality, replace that helper with a real embedding model or precomputed vectors.</div>
+  <h2>Concept explanation</h2>
+  <p>In a document search workflow, users usually describe intent in their own words. That is why vector search works well here: each record is turned into an embedding, the embeddings are indexed once, and later queries retrieve the nearest semantic neighbors instead of relying only on exact tokens. In practice this means the interface can respond to paraphrases, shorthand, and partial descriptions far better than a literal-only search box.</p>
+  <p>The browser is often the right place to do this when the corpus is moderate in size and safe to ship. The instant benefit is lower latency. The architectural benefit is that you remove a whole search service from the request path. That matters for keystroke-heavy interactions, offline-capable apps, and product surfaces where search should feel like a UI primitive rather than a network round trip.</p>
+  <p>This page uses a deterministic embedding helper so the sample is runnable with only <code>altor-vec</code> installed. That keeps the example honest and easy to paste into a demo project. For long documents, chunk them before indexing so the result points to a specific section instead of a whole PDF or page title.</p>
+  <div class="callout small">Representative browser benchmark: ~54KB gzipped library payload, sub-millisecond local query time on a moderate corpus, and no per-query API dependency. Exact numbers depend on vector dimensions, index parameters, and device class.</div>
 
-<h2>Full Code Example</h2>
-<pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+  <h2>Runnable JavaScript example</h2>
+  <p>The following snippet indexes a small in-memory dataset, performs a semantic lookup for <code>vendor security review checklist</code>, and prints the nearest matches. It uses the real <code>altor-vec</code> API, including <code>init()</code>, <code>WasmSearchEngine.from_vectors()</code>, and <code>search()</code>.</p>
+  <pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
 
-const dims = 8;
-const records = [
+        const dims = 12;
+        const records = [
   {
-    &quot;title&quot;: &quot;Expense policy&quot;,
-    &quot;text&quot;: &quot;Defines reimbursable travel, meal, and equipment spending rules.&quot;,
-    &quot;meta&quot;: &quot;finance&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Invoice retention policy&quot;,
-    &quot;text&quot;: &quot;Explains how long billing records and tax documents must be stored.&quot;,
-    &quot;meta&quot;: &quot;compliance&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Vendor onboarding guide&quot;,
-    &quot;text&quot;: &quot;Checklist for collecting contracts, W-9 forms, and security review data.&quot;,
-    &quot;meta&quot;: &quot;operations&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Access review procedure&quot;,
-    &quot;text&quot;: &quot;Quarterly audit process for removing stale system permissions.&quot;,
+    &quot;title&quot;: &quot;Incident response playbook&quot;,
+    &quot;text&quot;: &quot;Checklist for triage, communication, and postmortems during security incidents.&quot;,
     &quot;meta&quot;: &quot;security&quot;
   },
   {
-    &quot;title&quot;: &quot;Support escalation playbook&quot;,
-    &quot;text&quot;: &quot;How incidents move from frontline support to engineering.&quot;,
-    &quot;meta&quot;: &quot;support&quot;
+    &quot;title&quot;: &quot;Vendor review policy&quot;,
+    &quot;text&quot;: &quot;Security questionnaire and approval steps for third-party vendors.&quot;,
+    &quot;meta&quot;: &quot;procurement&quot;
   },
   {
-    &quot;title&quot;: &quot;Legal hold instructions&quot;,
-    &quot;text&quot;: &quot;Steps for preserving records when litigation is anticipated.&quot;,
+    &quot;title&quot;: &quot;Onboarding guide&quot;,
+    &quot;text&quot;: &quot;First-week checklist for new hires, tooling access, and team introductions.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Travel reimbursement rules&quot;,
+    &quot;text&quot;: &quot;Allowed expenses, receipt thresholds, and reimbursement timelines.&quot;,
+    &quot;meta&quot;: &quot;finance&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Design system handbook&quot;,
+    &quot;text&quot;: &quot;Usage rules for colors, tokens, spacing, and component accessibility.&quot;,
+    &quot;meta&quot;: &quot;design&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Data retention policy&quot;,
+    &quot;text&quot;: &quot;Rules for storing, deleting, and archiving customer information.&quot;,
     &quot;meta&quot;: &quot;legal&quot;
   }
 ];
 
-function embedText(text) {
+        function embedText(text) {
   const vector = new Float32Array(dims);
   for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
     let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-async function main() {
-  await init();
-
-  const flat = new Float32Array(
-    records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-  );
-
-  const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-  const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;retention policy for customer invoices&#x27;)), 4));
-
-  const results = hits.map(([id, distance]) =&gt; ({
-    ...records[id],
-    similarity: Number((1 - distance).toFixed(3)),
-  }));
-
-  console.table(results);
-  engine.free();
-}
-
-main();</code></pre>
-
-<h2>React Component</h2>
-<pre><code>import { useEffect, useState } from &#x27;react&#x27;;
-import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
-
-const dims = 8;
-const records = [
-  {
-    &quot;title&quot;: &quot;Expense policy&quot;,
-    &quot;text&quot;: &quot;Defines reimbursable travel, meal, and equipment spending rules.&quot;,
-    &quot;meta&quot;: &quot;finance&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Invoice retention policy&quot;,
-    &quot;text&quot;: &quot;Explains how long billing records and tax documents must be stored.&quot;,
-    &quot;meta&quot;: &quot;compliance&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Vendor onboarding guide&quot;,
-    &quot;text&quot;: &quot;Checklist for collecting contracts, W-9 forms, and security review data.&quot;,
-    &quot;meta&quot;: &quot;operations&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Access review procedure&quot;,
-    &quot;text&quot;: &quot;Quarterly audit process for removing stale system permissions.&quot;,
-    &quot;meta&quot;: &quot;security&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Support escalation playbook&quot;,
-    &quot;text&quot;: &quot;How incidents move from frontline support to engineering.&quot;,
-    &quot;meta&quot;: &quot;support&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Legal hold instructions&quot;,
-    &quot;text&quot;: &quot;Steps for preserving records when litigation is anticipated.&quot;,
-    &quot;meta&quot;: &quot;legal&quot;
-  }
-];
-
-function embedText(text) {
-  const vector = new Float32Array(dims);
-  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
-    let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-export function DocumentSearchExample() {
-  const [engine, setEngine] = useState(null);
-  const [query, setQuery] = useState(&#x27;&#x27;);
-  const [results, setResults] = useState([]);
-
-  useEffect(() =&gt; {
-    let cancelled = false;
-    let instance;
-
-    (async () =&gt; {
-      await init();
-      const flat = new Float32Array(
-        records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-      );
-      instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-      if (!cancelled) setEngine(instance);
-    })();
-
-    return () =&gt; {
-      cancelled = true;
-      instance?.free();
-    };
-  }, []);
-
-  useEffect(() =&gt; {
-    if (!engine || query.trim().length &lt; 2) {
-      setResults([]);
-      return;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
     }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
 
-    const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
-    setResults(
-      hits.map(([id, distance]) =&gt; ({
-        ...records[id],
-        similarity: Number((1 - distance).toFixed(3)),
-      }))
-    );
-  }, [engine, query]);
+        async function main() {
+          await init();
 
-  return (
-    &lt;section&gt;
-      &lt;input
-        value={query}
-        onChange={(event) =&gt; setQuery(event.target.value)}
-        placeholder=&quot;Search your documents&quot;
-      /&gt;
-      &lt;ul&gt;
-        {results.map((result) =&gt; (
-          &lt;li key={result.title}&gt;
-            &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
-          &lt;/li&gt;
-        ))}
-      &lt;/ul&gt;
-    &lt;/section&gt;
-  );
-}</code></pre>
+          const flat = new Float32Array(
+            records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+          );
 
-<h2>How It Works</h2>
-<p>The flow is the same pattern you would use in production: turn each record into an embedding vector, build an HNSW graph with <code>WasmSearchEngine.from_vectors()</code>, and query it with the embedding for the current search text. HNSW keeps approximate nearest-neighbor search fast by traversing a layered graph instead of scanning every vector linearly.</p>
-<p>Similarity scoring here is derived from the returned distance with <code>1 - distance</code> so the UI can show an intuitive confidence number. If you swap in a real embedding model such as MiniLM, multilingual-e5, or precomputed server-generated vectors, the surrounding indexing and querying code stays almost identical.</p>
+          const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+          const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;vendor security review checklist&#x27;)), 4));
 
-<h2>When to Use This Pattern</h2>
-<ul><li>Internal policy portals</li>
-<li>Documentation microsites and help centers</li>
-<li>Contract or handbook viewers packaged as desktop apps</li>
-<li>Static knowledge bases served from a CDN</li></ul>
+          const results = hits.map(([id, distance]) =&gt; ({
+            ...records[id],
+            similarity: Number((1 - distance).toFixed(3)),
+          }));
 
-<h2>Limitations</h2>
-<p>Very large document sets may exceed practical browser memory, and secure corpora should only be shipped to clients who are allowed to access the source text. Query-time permissions still usually require a backend.</p>
+          console.table(results);
+          engine.free();
+        }
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+        main();</code></pre>
+
+  <h2>React component version</h2>
+  <p>The React version keeps the same index build but wires it into component state so the UI can query on input changes. That is usually how teams introduce semantic retrieval into an existing product: initialize once, keep the engine in memory, and map nearest-neighbor hits back to the original records.</p>
+  <pre><code>import { useEffect, useState } from &#x27;react&#x27;;
+        import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+        const dims = 12;
+        const records = [
+  {
+    &quot;title&quot;: &quot;Incident response playbook&quot;,
+    &quot;text&quot;: &quot;Checklist for triage, communication, and postmortems during security incidents.&quot;,
+    &quot;meta&quot;: &quot;security&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Vendor review policy&quot;,
+    &quot;text&quot;: &quot;Security questionnaire and approval steps for third-party vendors.&quot;,
+    &quot;meta&quot;: &quot;procurement&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Onboarding guide&quot;,
+    &quot;text&quot;: &quot;First-week checklist for new hires, tooling access, and team introductions.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Travel reimbursement rules&quot;,
+    &quot;text&quot;: &quot;Allowed expenses, receipt thresholds, and reimbursement timelines.&quot;,
+    &quot;meta&quot;: &quot;finance&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Design system handbook&quot;,
+    &quot;text&quot;: &quot;Usage rules for colors, tokens, spacing, and component accessibility.&quot;,
+    &quot;meta&quot;: &quot;design&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Data retention policy&quot;,
+    &quot;text&quot;: &quot;Rules for storing, deleting, and archiving customer information.&quot;,
+    &quot;meta&quot;: &quot;legal&quot;
+  }
+];
+
+        function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+        export function DocumentSearchExample() {
+          const [engine, setEngine] = useState(null);
+          const [query, setQuery] = useState(&#x27;&#x27;);
+          const [results, setResults] = useState([]);
+
+          useEffect(() =&gt; {
+            let cancelled = false;
+            let instance;
+
+            (async () =&gt; {
+              await init();
+              const flat = new Float32Array(
+                records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+              );
+              instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+              if (!cancelled) setEngine(instance);
+            })();
+
+            return () =&gt; {
+              cancelled = true;
+              instance?.free();
+            };
+          }, []);
+
+          useEffect(() =&gt; {
+            if (!engine || query.trim().length &lt; 2) {
+              setResults([]);
+              return;
+            }
+
+            const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
+            setResults(
+              hits.map(([id, distance]) =&gt; ({
+                ...records[id],
+                similarity: Number((1 - distance).toFixed(3)),
+              }))
+            );
+          }, [engine, query]);
+
+          return (
+            &lt;section&gt;
+              &lt;input
+                value={query}
+                onChange={(event) =&gt; setQuery(event.target.value)}
+                placeholder=&quot;Search your documents&quot;
+              /&gt;
+              &lt;ul&gt;
+                {results.map((result) =&gt; (
+                  &lt;li key={result.title}&gt;
+                    &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
+                  &lt;/li&gt;
+                ))}
+              &lt;/ul&gt;
+            &lt;/section&gt;
+          );
+        }</code></pre>
+
+  <h2>How this example works</h2>
+  <p>The pattern has three moving parts. First, you choose what text represents each record: title, description, metadata, or a chunk of content. Second, you turn that text into vectors and flatten them into one <code>Float32Array</code>. Third, you build the HNSW graph and query it with a vector created from the user input. The library returns nearest-neighbor IDs and distances, and your app decides how to display or post-process them.</p>
+  <p>Because the retrieval step is approximate nearest-neighbor search, it stays fast even as the dataset grows beyond trivial linear scans. The most important quality lever is still the embedding model. Better vectors usually matter more than micro-optimizing ANN parameters, so teams should benchmark retrieval quality on real user phrasing before shipping the experience widely.</p>
+
+  <h2>When to use this pattern</h2>
+  <p>This is a practical fit when the search corpus is small to medium, shipped with the app, and searched frequently enough that backend latency would be noticeable. Common examples include docs portals, embedded support widgets, local-first assistants, and curated catalogs.</p>
+  <ul><li>Handbooks</li><li>Policy centers</li><li>Offline manuals</li><li>Embedded doc search in SaaS apps</li></ul>
+
+  <h2>Limitations</h2>
+  <p>If documents are access-controlled per user or change minute by minute, shipping the corpus to the browser is usually the wrong architecture. Search quality also depends heavily on chunking strategy and embeddings.</p>
+  <p>Be especially careful about corpus size, update frequency, and data sensitivity. Browser vector search is excellent when those three constraints are favorable, but it is not the right answer when the dataset is huge, private, or changing constantly for every user.</p>
+
+  <h2>FAQ</h2>
+  <h3>Is this good for offline manuals?</h3>
+<p>Yes. Static manuals are one of the clearest wins because the index can be bundled once and searched locally.</p>
+<h3>Should I index whole documents or chunks?</h3>
+<p>Chunks are usually better. Smaller units produce more precise retrieval and make it easier to jump to the exact section a user needs.</p>
+<h3>What is the main architectural limit?</h3>
+<p>The browser can only search what you ship to it, so sensitive or highly dynamic document stores usually belong on the server.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

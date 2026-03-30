@@ -1,234 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Offline Search with Client-Side Vector Search — Code Example | altor-vec</title>
-<meta name="description" content="Build offline search with altor-vec — 54KB client-side vector search. Full code example with React/JavaScript. No backend required.">
-<link rel="canonical" href="https://altorlab.dev/examples/offline-search">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.8rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Offline Search with altor-vec — Code Example | altorlab.dev</title>
+  <meta name="description" content="Build offline search with altor-vec using a real runnable JavaScript example, React component, and browser-side vector search architecture notes.">
+  <link rel="canonical" href="https://altorlab.dev/examples/offline-search.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #27272a; }
-code { font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 0.9rem; color: #e2e8f0; }
-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-th, td { border: 1px solid #27272a; padding: 10px; text-align: left; }
-strong { color: #f5f5f5; }
-li { margin-bottom: 0.5rem; }
-.callout { background: #111111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; margin: 18px 0; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Offline Search with Client-Side Vector Search", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
+th { background: #141418; }
+ul { padding-left: 20px; }
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Offline Search with altor-vec", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "publisher": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/examples/offline-search.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does altor-vec need a network connection after load?", "acceptedAnswer": {"@type": "Answer", "text": "No. Once the WebAssembly and vector data are on device, search can run entirely offline."}}, {"@type": "Question", "name": "What else do I need for a real offline product?", "acceptedAnswer": {"@type": "Answer", "text": "Usually a cache strategy, asset versioning, and a refresh policy so users know when local content is current."}}, {"@type": "Question", "name": "When is offline vector search a bad fit?", "acceptedAnswer": {"@type": "Answer", "text": "When the corpus is too large to ship or must reflect sensitive server-only data in real time."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/examples/">Examples</a></nav>
 <article>
-<h1>Build Offline Search with altor-vec</h1>
-<p><strong>What you'll build:</strong> An offline-first search experience that loads once and keeps answering semantic queries with zero network access.</p>
-<p><strong>Bundle cost:</strong> 54KB · <strong>Query time:</strong> &lt;1ms · <strong>Backend:</strong> None required</p>
+  <p class="kicker">code example</p>
+  <h1>Build Offline Search with altor-vec</h1>
+  <p><strong>What this pattern solves:</strong> Cache-first semantic retrieval for PWAs, field apps, and packaged reference tools.</p>
+  <p>Offline products still need more than keyword search. Field teams, sales reps, and warehouse operators often remember a description of the answer they need, not the exact phrase printed in a manual.</p>
+  <p>altor-vec is naturally aligned with offline search because the index is designed to live in the browser or packaged app. Once cached, queries stay fast even without connectivity.</p>
 
-<h2>Install</h2>
-<pre><code>npm install altor-vec</code></pre>
+  <h2>Install</h2>
+  <pre><code>npm install altor-vec</code></pre>
 
-<h2>The Concept</h2>
-<p>Offline search matters when users travel, work in warehouses, or rely on unstable networks. If the index is already cached, local vector search gives them a graceful experience instead of a blank state.</p>
-<p>Because altor-vec runs entirely in the browser, the query path has no server dependency. You can cache the index with the rest of your static assets and continue serving semantic matches in airplane mode.</p>
-<p>This example demonstrates the minimal retrieval loop. In production, pair it with a service worker and a versioned index file so updates are explicit and cache-safe.</p>
-<div class="callout small">This page uses a deterministic embedding helper so the snippets are runnable with only <code>altor-vec</code>. For production ranking quality, replace that helper with a real embedding model or precomputed vectors.</div>
+  <h2>Concept explanation</h2>
+  <p>In a offline search workflow, users usually describe intent in their own words. That is why vector search works well here: each record is turned into an embedding, the embeddings are indexed once, and later queries retrieve the nearest semantic neighbors instead of relying only on exact tokens. In practice this means the interface can respond to paraphrases, shorthand, and partial descriptions far better than a literal-only search box.</p>
+  <p>The browser is often the right place to do this when the corpus is moderate in size and safe to ship. The instant benefit is lower latency. The architectural benefit is that you remove a whole search service from the request path. That matters for keystroke-heavy interactions, offline-capable apps, and product surfaces where search should feel like a UI primitive rather than a network round trip.</p>
+  <p>This page uses a deterministic embedding helper so the sample is runnable with only <code>altor-vec</code> installed. That keeps the example honest and easy to paste into a demo project. Most teams pair this with a service worker or static asset cache so the vectors download once and survive intermittent connectivity.</p>
+  <div class="callout small">Representative browser benchmark: ~54KB gzipped library payload, sub-millisecond local query time on a moderate corpus, and no per-query API dependency. Exact numbers depend on vector dimensions, index parameters, and device class.</div>
 
-<h2>Full Code Example</h2>
-<pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+  <h2>Runnable JavaScript example</h2>
+  <p>The following snippet indexes a small in-memory dataset, performs a semantic lookup for <code>safety checklist before opening machine panel</code>, and prints the nearest matches. It uses the real <code>altor-vec</code> API, including <code>init()</code>, <code>WasmSearchEngine.from_vectors()</code>, and <code>search()</code>.</p>
+  <pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
 
-const dims = 8;
-const records = [
+        const dims = 12;
+        const records = [
   {
-    &quot;title&quot;: &quot;Expense reimbursement&quot;,
-    &quot;text&quot;: &quot;Explains which meals, flights, and hotel charges employees can claim.&quot;,
-    &quot;meta&quot;: &quot;policy&quot;
+    &quot;title&quot;: &quot;Panel safety checklist&quot;,
+    &quot;text&quot;: &quot;Lockout, gloves, and voltage checks before opening electrical panels.&quot;,
+    &quot;meta&quot;: &quot;safety&quot;
   },
   {
-    &quot;title&quot;: &quot;Safety checklist&quot;,
-    &quot;text&quot;: &quot;Pre-departure inspection steps for field equipment and vehicles.&quot;,
-    &quot;meta&quot;: &quot;operations&quot;
+    &quot;title&quot;: &quot;Battery replacement guide&quot;,
+    &quot;text&quot;: &quot;Procedure for swapping the handheld scanner battery in the field.&quot;,
+    &quot;meta&quot;: &quot;hardware&quot;
   },
   {
-    &quot;title&quot;: &quot;Incident response card&quot;,
-    &quot;text&quot;: &quot;Who to call and what to document during outages.&quot;,
+    &quot;title&quot;: &quot;Cold-start troubleshooting&quot;,
+    &quot;text&quot;: &quot;Steps when a machine fails to boot after overnight storage.&quot;,
+    &quot;meta&quot;: &quot;maintenance&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Calibration workflow&quot;,
+    &quot;text&quot;: &quot;How to recalibrate sensors after a parts replacement.&quot;,
+    &quot;meta&quot;: &quot;maintenance&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Warranty claim intake&quot;,
+    &quot;text&quot;: &quot;Required photos, serial numbers, and customer notes.&quot;,
     &quot;meta&quot;: &quot;support&quot;
   },
   {
-    &quot;title&quot;: &quot;Remote login guide&quot;,
-    &quot;text&quot;: &quot;How to authenticate securely when using hotel or airport Wi-Fi.&quot;,
-    &quot;meta&quot;: &quot;security&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Travel booking policy&quot;,
-    &quot;text&quot;: &quot;Booking windows, fare classes, and approval thresholds for travel.&quot;,
-    &quot;meta&quot;: &quot;policy&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Device replacement flow&quot;,
-    &quot;text&quot;: &quot;Steps for replacing lost or damaged laptops during travel.&quot;,
-    &quot;meta&quot;: &quot;it&quot;
+    &quot;title&quot;: &quot;Spare parts lookup&quot;,
+    &quot;text&quot;: &quot;How to identify replacement parts from assembly diagrams.&quot;,
+    &quot;meta&quot;: &quot;inventory&quot;
   }
 ];
 
-function embedText(text) {
+        function embedText(text) {
   const vector = new Float32Array(dims);
   for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
     let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-async function main() {
-  await init();
-
-  const flat = new Float32Array(
-    records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-  );
-
-  const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-  const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;expense reimbursement rules&#x27;)), 4));
-
-  const results = hits.map(([id, distance]) =&gt; ({
-    ...records[id],
-    similarity: Number((1 - distance).toFixed(3)),
-  }));
-
-  console.table(results);
-  engine.free();
-}
-
-main();</code></pre>
-
-<h2>React Component</h2>
-<pre><code>import { useEffect, useState } from &#x27;react&#x27;;
-import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
-
-const dims = 8;
-const records = [
-  {
-    &quot;title&quot;: &quot;Expense reimbursement&quot;,
-    &quot;text&quot;: &quot;Explains which meals, flights, and hotel charges employees can claim.&quot;,
-    &quot;meta&quot;: &quot;policy&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Safety checklist&quot;,
-    &quot;text&quot;: &quot;Pre-departure inspection steps for field equipment and vehicles.&quot;,
-    &quot;meta&quot;: &quot;operations&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Incident response card&quot;,
-    &quot;text&quot;: &quot;Who to call and what to document during outages.&quot;,
-    &quot;meta&quot;: &quot;support&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Remote login guide&quot;,
-    &quot;text&quot;: &quot;How to authenticate securely when using hotel or airport Wi-Fi.&quot;,
-    &quot;meta&quot;: &quot;security&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Travel booking policy&quot;,
-    &quot;text&quot;: &quot;Booking windows, fare classes, and approval thresholds for travel.&quot;,
-    &quot;meta&quot;: &quot;policy&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Device replacement flow&quot;,
-    &quot;text&quot;: &quot;Steps for replacing lost or damaged laptops during travel.&quot;,
-    &quot;meta&quot;: &quot;it&quot;
-  }
-];
-
-function embedText(text) {
-  const vector = new Float32Array(dims);
-  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
-    let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-export function OfflineSearchExample() {
-  const [engine, setEngine] = useState(null);
-  const [query, setQuery] = useState(&#x27;&#x27;);
-  const [results, setResults] = useState([]);
-
-  useEffect(() =&gt; {
-    let cancelled = false;
-    let instance;
-
-    (async () =&gt; {
-      await init();
-      const flat = new Float32Array(
-        records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-      );
-      instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-      if (!cancelled) setEngine(instance);
-    })();
-
-    return () =&gt; {
-      cancelled = true;
-      instance?.free();
-    };
-  }, []);
-
-  useEffect(() =&gt; {
-    if (!engine || query.trim().length &lt; 2) {
-      setResults([]);
-      return;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
     }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
 
-    const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
-    setResults(
-      hits.map(([id, distance]) =&gt; ({
-        ...records[id],
-        similarity: Number((1 - distance).toFixed(3)),
-      }))
-    );
-  }, [engine, query]);
+        async function main() {
+          await init();
 
-  return (
-    &lt;section&gt;
-      &lt;input
-        value={query}
-        onChange={(event) =&gt; setQuery(event.target.value)}
-        placeholder=&quot;Search while offline&quot;
-      /&gt;
-      &lt;ul&gt;
-        {results.map((result) =&gt; (
-          &lt;li key={result.title}&gt;
-            &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
-          &lt;/li&gt;
-        ))}
-      &lt;/ul&gt;
-    &lt;/section&gt;
-  );
-}</code></pre>
+          const flat = new Float32Array(
+            records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+          );
 
-<h2>How It Works</h2>
-<p>The flow is the same pattern you would use in production: turn each record into an embedding vector, build an HNSW graph with <code>WasmSearchEngine.from_vectors()</code>, and query it with the embedding for the current search text. HNSW keeps approximate nearest-neighbor search fast by traversing a layered graph instead of scanning every vector linearly.</p>
-<p>Similarity scoring here is derived from the returned distance with <code>1 - distance</code> so the UI can show an intuitive confidence number. If you swap in a real embedding model such as MiniLM, multilingual-e5, or precomputed server-generated vectors, the surrounding indexing and querying code stays almost identical.</p>
+          const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+          const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;safety checklist before opening machine panel&#x27;)), 4));
 
-<h2>When to Use This Pattern</h2>
-<ul><li>Field service and logistics apps</li>
-<li>Travel apps or in-flight product experiences</li>
-<li>Desktop PWAs for support or operations teams</li>
-<li>Kiosk applications with intermittent connectivity</li></ul>
+          const results = hits.map(([id, distance]) =&gt; ({
+            ...records[id],
+            similarity: Number((1 - distance).toFixed(3)),
+          }));
 
-<h2>Limitations</h2>
-<p>Offline search only works for data you already shipped to the client. Fresh content requires a resync, and large indexes can slow initial downloads or take too much device storage.</p>
+          console.table(results);
+          engine.free();
+        }
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+        main();</code></pre>
+
+  <h2>React component version</h2>
+  <p>The React version keeps the same index build but wires it into component state so the UI can query on input changes. That is usually how teams introduce semantic retrieval into an existing product: initialize once, keep the engine in memory, and map nearest-neighbor hits back to the original records.</p>
+  <pre><code>import { useEffect, useState } from &#x27;react&#x27;;
+        import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+        const dims = 12;
+        const records = [
+  {
+    &quot;title&quot;: &quot;Panel safety checklist&quot;,
+    &quot;text&quot;: &quot;Lockout, gloves, and voltage checks before opening electrical panels.&quot;,
+    &quot;meta&quot;: &quot;safety&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Battery replacement guide&quot;,
+    &quot;text&quot;: &quot;Procedure for swapping the handheld scanner battery in the field.&quot;,
+    &quot;meta&quot;: &quot;hardware&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Cold-start troubleshooting&quot;,
+    &quot;text&quot;: &quot;Steps when a machine fails to boot after overnight storage.&quot;,
+    &quot;meta&quot;: &quot;maintenance&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Calibration workflow&quot;,
+    &quot;text&quot;: &quot;How to recalibrate sensors after a parts replacement.&quot;,
+    &quot;meta&quot;: &quot;maintenance&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Warranty claim intake&quot;,
+    &quot;text&quot;: &quot;Required photos, serial numbers, and customer notes.&quot;,
+    &quot;meta&quot;: &quot;support&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Spare parts lookup&quot;,
+    &quot;text&quot;: &quot;How to identify replacement parts from assembly diagrams.&quot;,
+    &quot;meta&quot;: &quot;inventory&quot;
+  }
+];
+
+        function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+        export function OfflineSearchExample() {
+          const [engine, setEngine] = useState(null);
+          const [query, setQuery] = useState(&#x27;&#x27;);
+          const [results, setResults] = useState([]);
+
+          useEffect(() =&gt; {
+            let cancelled = false;
+            let instance;
+
+            (async () =&gt; {
+              await init();
+              const flat = new Float32Array(
+                records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+              );
+              instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+              if (!cancelled) setEngine(instance);
+            })();
+
+            return () =&gt; {
+              cancelled = true;
+              instance?.free();
+            };
+          }, []);
+
+          useEffect(() =&gt; {
+            if (!engine || query.trim().length &lt; 2) {
+              setResults([]);
+              return;
+            }
+
+            const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
+            setResults(
+              hits.map(([id, distance]) =&gt; ({
+                ...records[id],
+                similarity: Number((1 - distance).toFixed(3)),
+              }))
+            );
+          }, [engine, query]);
+
+          return (
+            &lt;section&gt;
+              &lt;input
+                value={query}
+                onChange={(event) =&gt; setQuery(event.target.value)}
+                placeholder=&quot;Search while offline&quot;
+              /&gt;
+              &lt;ul&gt;
+                {results.map((result) =&gt; (
+                  &lt;li key={result.title}&gt;
+                    &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
+                  &lt;/li&gt;
+                ))}
+              &lt;/ul&gt;
+            &lt;/section&gt;
+          );
+        }</code></pre>
+
+  <h2>How this example works</h2>
+  <p>The pattern has three moving parts. First, you choose what text represents each record: title, description, metadata, or a chunk of content. Second, you turn that text into vectors and flatten them into one <code>Float32Array</code>. Third, you build the HNSW graph and query it with a vector created from the user input. The library returns nearest-neighbor IDs and distances, and your app decides how to display or post-process them.</p>
+  <p>Because the retrieval step is approximate nearest-neighbor search, it stays fast even as the dataset grows beyond trivial linear scans. The most important quality lever is still the embedding model. Better vectors usually matter more than micro-optimizing ANN parameters, so teams should benchmark retrieval quality on real user phrasing before shipping the experience widely.</p>
+
+  <h2>When to use this pattern</h2>
+  <p>This is a practical fit when the search corpus is small to medium, shipped with the app, and searched frequently enough that backend latency would be noticeable. Common examples include docs portals, embedded support widgets, local-first assistants, and curated catalogs.</p>
+  <ul><li>PWAs</li><li>Field manuals</li><li>Kiosk apps</li><li>Sales enablement bundles</li></ul>
+
+  <h2>Limitations</h2>
+  <p>Offline search only covers the content already synced to the device. If the source material changes often, you need a reliable refresh story and clear UI to indicate staleness.</p>
+  <p>Be especially careful about corpus size, update frequency, and data sensitivity. Browser vector search is excellent when those three constraints are favorable, but it is not the right answer when the dataset is huge, private, or changing constantly for every user.</p>
+
+  <h2>FAQ</h2>
+  <h3>Does altor-vec need a network connection after load?</h3>
+<p>No. Once the WebAssembly and vector data are on device, search can run entirely offline.</p>
+<h3>What else do I need for a real offline product?</h3>
+<p>Usually a cache strategy, asset versioning, and a refresh policy so users know when local content is current.</p>
+<h3>When is offline vector search a bad fit?</h3>
+<p>When the corpus is too large to ship or must reflect sensitive server-only data in real time.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

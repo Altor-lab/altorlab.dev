@@ -1,62 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>altor-vec vs Milvus Lite — Performance Comparison | altorlab.dev</title>
-<meta name="description" content="Honest altor-vec vs Milvus Lite comparison covering bundle size, query latency, memory usage, and feature tradeoffs.">
-<link rel="canonical" href="https://altorlab.dev/benchmarks/vs-milvus-lite">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.9rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>altor-vec vs Milvus Lite — Honest Comparison | altorlab.dev</title>
+  <meta name="description" content="Honest altor-vec vs Milvus Lite comparison covering bundle size, latency, memory usage, features, and where each approach wins.">
+  <link rel="canonical" href="https://altorlab.dev/benchmarks/vs-milvus-lite.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-p, li { color: #d4d4d8; }
-pre, .note { background: #111111; padding: 14px; border-radius: 8px; border: 1px solid #27272a; }
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
 table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
 th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
-th { color: #f5f5f5; background: #131316; }
-strong { color: #f5f5f5; }
+th { background: #141418; }
 ul { padding-left: 20px; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
-.card { background: #111111; border: 1px solid #27272a; border-radius: 10px; padding: 16px; }
-.kicker { color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs Milvus Lite \u2014 Performance Comparison", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs Milvus Lite", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/benchmarks/vs-milvus-lite.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Why compare Milvus Lite and altor-vec?", "acceptedAnswer": {"@type": "Answer", "text": "Because both may appear 'lightweight' compared with large hosted systems, but they still target different runtime models."}}, {"@type": "Question", "name": "When is Milvus Lite the better fit?", "acceptedAnswer": {"@type": "Answer", "text": "When you need database semantics or local/server-side storage that should not be bundled into the browser."}}, {"@type": "Question", "name": "When is altor-vec the better fit?", "acceptedAnswer": {"@type": "Answer", "text": "When the end product is a browser app that should search locally without another runtime boundary."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/benchmarks/">Benchmarks</a></nav>
 <article>
-<p class="kicker">benchmark comparison</p>
-<h1>altor-vec vs Milvus Lite</h1>
-<p>Embedded/server vector database tradeoffs versus fully in-browser retrieval. This is not an apples-to-apples benchmark in every category: the tools solve different jobs. The right choice depends on whether your search problem belongs in the browser or in infrastructure.</p>
-<div class="note small">Representative numbers only. Exact bundle size, latency, and memory usage vary with hardware, build flags, vector dimensions, index parameters, and whether embeddings are generated locally or remotely.</div>
+  <p class="kicker">benchmark comparison</p>
+  <h1>altor-vec vs Milvus Lite</h1>
+  <p>Embedded/server vector database tradeoffs versus fully in-browser retrieval.</p>
+  <p>Milvus Lite narrows the gap between heavyweight database infrastructure and lightweight local experimentation, but it still occupies a different place in the stack than a browser bundle you ship to every user.</p>
+  <div class="note small">These numbers are representative, not universal. Bundle size, query latency, and memory usage all vary with vector dimensions, index parameters, browser runtime, hardware, and whether embeddings are generated on device or ahead of time.</div>
 
-<h2>Comparison table</h2>
-<table>
-  <thead>
-    <tr><th>Category</th><th>altor-vec</th><th>Milvus Lite</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>Runtime model</strong></td><td>Browser WASM (HNSW) with no backend required</td><td>Embedded or local vector database runtime</td></tr>
-<tr><td><strong>Bundle / delivery</strong></td><td>54KB gzipped WebAssembly</td><td>Milvus Lite is not meant to be shipped as a tiny browser asset.</td></tr>
-<tr><td><strong>Query latency</strong></td><td>~0.6ms p95 local search on 10K vectors / 384d (excluding embedding generation)</td><td>Good local/server retrieval, but it still behaves more like a database than an in-tab UI primitive.</td></tr>
-<tr><td><strong>Memory usage</strong></td><td>~17MB index asset for 10K vectors / 384d; browser memory scales with corpus size</td><td>Runs outside the browser and supports larger evolving collections.</td></tr>
-<tr><td><strong>Dataset sweet spot</strong></td><td>Best for static or moderately sized corpora that are safe to ship to the client</td><td>Better for local server, edge, or embedded app scenarios with bigger corpora.</td></tr>
-<tr><td><strong>Feature set</strong></td><td>Nearest-neighbor search, serialization, offline/browser delivery; not a full vector database</td><td>Database-style collection management, persistence, and larger-scale operational headroom.</td></tr>
-  </tbody>
-</table>
+  <h2>Comparison table</h2>
+  <table>
+    <thead>
+      <tr><th>Category</th><th>altor-vec</th><th>Milvus Lite</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Runtime model</strong></td><td>Client-side WebAssembly ANN in the user&#x27;s browser.</td><td>Embedded or lightweight database-style vector runtime outside the normal browser-delivery model.</td></tr>
+      <tr><td><strong>Bundle size / delivery</strong></td><td>~54KB gzipped plus vector asset.</td><td>Not typically framed as a tiny client bundle; deployment model is closer to an embedded or server-side service.</td></tr>
+      <tr><td><strong>Query latency</strong></td><td>Immediate local lookup for the current session.</td><td>Fast in its own environment, but not aimed at the exact same in-browser interaction pattern.</td></tr>
+      <tr><td><strong>Memory usage</strong></td><td>Client memory bound by the shipped corpus.</td><td>Memory managed by the embedded or server runtime instead of the browser tab.</td></tr>
+      <tr><td><strong>Features</strong></td><td>ANN retrieval and serialization only.</td><td>Database-style vector storage and operational patterns beyond a small browser primitive.</td></tr>
+      <tr><td><strong>Dataset sweet spot</strong></td><td>Safe-to-ship, moderate-size corpora.</td><td>Larger or more mutable datasets where database semantics matter.</td></tr>
+    </tbody>
+  </table>
 
-<h2>Where altor-vec wins</h2>
-<ul><li>Zero-server browser deployment</li><li>Smaller download and faster frontend setup</li><li>Private local retrieval inside the user session</li></ul>
+  <h2>Where altor-vec wins</h2>
+  <ul><li>True browser-native delivery.</li><li>Offline-capable local UX.</li><li>No service boundary between the UI and search.</li></ul>
 
-<h2>Where Milvus Lite wins</h2>
-<ul><li>Bigger corpora and write-heavy local deployments</li><li>Apps that need a database more than a browser library</li><li>Teams planning to grow toward a fuller vector backend</li></ul>
+  <h2>Where Milvus Lite wins</h2>
+  <ul><li>Better fit for mutable and backend-managed data.</li><li>More database-like operational model.</li><li>Stronger when the dataset should not be bundled into the client.</li></ul>
 
-<h2>Decision guide</h2>
-<p>Milvus Lite is the better stepping stone to a vector backend. altor-vec is the better fit for pure frontend retrieval.</p>
-<p><strong>Honest takeaway:</strong> If you need ACLs, huge datasets, hybrid ranking, or continuous writes, a server-side or database-style tool usually wins. If you need a tiny browser bundle, offline support, and zero backend search cost, altor-vec is the more natural fit.</p>
+  <h2>Honest decision guide</h2>
+  <p>Milvus Lite is closer to embedded database infrastructure. altor-vec is closer to a frontend dependency. The right choice depends on which role you actually need.</p>
+  <p>The honest pattern across all of these benchmark pages is simple: if the search corpus should stay on the server, choose server-oriented infrastructure. If the search corpus is intentionally shipped with the product and the UX benefit of local retrieval matters more than backend scale, altor-vec is usually the more natural fit.</p>
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+  <h2>FAQ</h2>
+  <h3>Why compare Milvus Lite and altor-vec?</h3>
+<p>Because both may appear &#x27;lightweight&#x27; compared with large hosted systems, but they still target different runtime models.</p>
+<h3>When is Milvus Lite the better fit?</h3>
+<p>When you need database semantics or local/server-side storage that should not be bundled into the browser.</p>
+<h3>When is altor-vec the better fit?</h3>
+<p>When the end product is a browser app that should search locally without another runtime boundary.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

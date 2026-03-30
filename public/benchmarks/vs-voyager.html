@@ -1,62 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>altor-vec vs Voyager — Performance Comparison | altorlab.dev</title>
-<meta name="description" content="Honest altor-vec vs Voyager comparison covering bundle size, query latency, memory usage, and feature tradeoffs.">
-<link rel="canonical" href="https://altorlab.dev/benchmarks/vs-voyager">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.9rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>altor-vec vs Voyager — Honest Comparison | altorlab.dev</title>
+  <meta name="description" content="Honest altor-vec vs Voyager comparison covering bundle size, latency, memory usage, features, and where each approach wins.">
+  <link rel="canonical" href="https://altorlab.dev/benchmarks/vs-voyager.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-p, li { color: #d4d4d8; }
-pre, .note { background: #111111; padding: 14px; border-radius: 8px; border: 1px solid #27272a; }
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
 table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
 th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
-th { color: #f5f5f5; background: #131316; }
-strong { color: #f5f5f5; }
+th { background: #141418; }
 ul { padding-left: 20px; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
-.card { background: #111111; border: 1px solid #27272a; border-radius: 10px; padding: 16px; }
-.kicker { color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs Voyager \u2014 Performance Comparison", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs Voyager", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/benchmarks/vs-voyager.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is one clearly better than the other?", "acceptedAnswer": {"@type": "Answer", "text": "Not without a corpus-specific benchmark. Browser ANN comparisons are highly dependent on vector shape and index parameters."}}, {"@type": "Question", "name": "What matters more than theoretical speed?", "acceptedAnswer": {"@type": "Answer", "text": "How easy it is to ship, load, and operate in the product bundle."}}, {"@type": "Question", "name": "Why can a smaller library win even if raw performance is similar?", "acceptedAnswer": {"@type": "Answer", "text": "Because frontend teams also pay in startup time, build complexity, and maintenance overhead."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/benchmarks/">Benchmarks</a></nav>
 <article>
-<p class="kicker">benchmark comparison</p>
-<h1>altor-vec vs Voyager</h1>
-<p>Browser-first vector search alternatives with different algorithm and packaging tradeoffs. This is not an apples-to-apples benchmark in every category: the tools solve different jobs. The right choice depends on whether your search problem belongs in the browser or in infrastructure.</p>
-<div class="note small">Representative numbers only. Exact bundle size, latency, and memory usage vary with hardware, build flags, vector dimensions, index parameters, and whether embeddings are generated locally or remotely.</div>
+  <p class="kicker">benchmark comparison</p>
+  <h1>altor-vec vs Voyager</h1>
+  <p>Browser-first vector search alternatives with different algorithm and packaging tradeoffs.</p>
+  <p>When both options are already browser-aware, the decision usually becomes empirical. Small differences in packaging, defaults, and recall/latency tradeoffs matter more than sweeping architectural arguments.</p>
+  <div class="note small">These numbers are representative, not universal. Bundle size, query latency, and memory usage all vary with vector dimensions, index parameters, browser runtime, hardware, and whether embeddings are generated on device or ahead of time.</div>
 
-<h2>Comparison table</h2>
-<table>
-  <thead>
-    <tr><th>Category</th><th>altor-vec</th><th>Voyager</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>Runtime model</strong></td><td>Browser WASM (HNSW) with no backend required</td><td>Browser-first vector search library</td></tr>
-<tr><td><strong>Bundle / delivery</strong></td><td>54KB gzipped WebAssembly</td><td>Voyager-style browser vector tools often land in the same rough class, but altor-vec publishes a 54KB gzipped WASM target.</td></tr>
-<tr><td><strong>Query latency</strong></td><td>~0.6ms p95 local search on 10K vectors / 384d (excluding embedding generation)</td><td>Both are fast enough for UI search; exact results depend on algorithm choice, vector shape, and browser engine.</td></tr>
-<tr><td><strong>Memory usage</strong></td><td>~17MB index asset for 10K vectors / 384d; browser memory scales with corpus size</td><td>Both live in client memory. Data size and graph/index strategy dominate more than library name alone.</td></tr>
-<tr><td><strong>Dataset sweet spot</strong></td><td>Best for static or moderately sized corpora that are safe to ship to the client</td><td>Good for lightweight browser retrieval, recommendation, and semantic UI patterns.</td></tr>
-<tr><td><strong>Feature set</strong></td><td>Nearest-neighbor search, serialization, offline/browser delivery; not a full vector database</td><td>Voyager can be attractive if you prefer its API or algorithm choices; altor-vec emphasizes HNSW plus compact delivery.</td></tr>
-  </tbody>
-</table>
+  <h2>Comparison table</h2>
+  <table>
+    <thead>
+      <tr><th>Category</th><th>altor-vec</th><th>Voyager</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Runtime model</strong></td><td>Client-side WASM ANN focused on a small integration surface.</td><td>Browser-capable vector search alternative with its own algorithm and packaging assumptions.</td></tr>
+      <tr><td><strong>Bundle size / delivery</strong></td><td>~54KB gzipped representative payload.</td><td>Often somewhat larger depending on packaging and chosen build output.</td></tr>
+      <tr><td><strong>Query latency</strong></td><td>Fast local lookups intended for interactive frontend UX.</td><td>Also optimized for local search; benchmark directly because browser performance is corpus-specific.</td></tr>
+      <tr><td><strong>Memory usage</strong></td><td>Index lives in client memory.</td><td>Similar client-memory story with implementation-specific overhead.</td></tr>
+      <tr><td><strong>Features</strong></td><td>Compact ANN API and serialized local index workflow.</td><td>Competing browser vector search capabilities with different integration choices.</td></tr>
+      <tr><td><strong>Dataset sweet spot</strong></td><td>Moderate corpora bundled into the app.</td><td>Similar browser-delivered dataset sizes.</td></tr>
+    </tbody>
+  </table>
 
-<h2>Where altor-vec wins</h2>
-<ul><li>Published 54KB gzipped WASM package</li><li>HNSW-based positioning for high-recall semantic search</li><li>Clear messaging around no-backend deployment</li></ul>
+  <h2>Where altor-vec wins</h2>
+  <ul><li>Small payload and simple API shape.</li><li>Strong fit when browser delivery friction is the first concern.</li><li>Good option for teams that want minimal surface area.</li></ul>
 
-<h2>Where Voyager wins</h2>
-<ul><li>Projects already invested in Voyager tooling</li><li>Cases where its API or algorithm characteristics fit your evaluation better</li><li>Teams comparing multiple lightweight browser libraries head-to-head</li></ul>
+  <h2>Where Voyager wins</h2>
+  <ul><li>May hit better recall or latency on some corpora.</li><li>Alternative algorithmic tradeoffs could suit certain embedding distributions better.</li><li>Existing user familiarity may reduce switching costs.</li></ul>
 
-<h2>Decision guide</h2>
-<p>For browser-to-browser comparisons, benchmark on your own corpus. At this tier, developer experience and bundle budget often decide more than theoretical algorithm differences.</p>
-<p><strong>Honest takeaway:</strong> If you need ACLs, huge datasets, hybrid ranking, or continuous writes, a server-side or database-style tool usually wins. If you need a tiny browser bundle, offline support, and zero backend search cost, altor-vec is the more natural fit.</p>
+  <h2>Honest decision guide</h2>
+  <p>At this tier, benchmark on your own corpus. Developer experience, bundle budget, and how predictable the results feel in the browser often decide more than theory alone.</p>
+  <p>The honest pattern across all of these benchmark pages is simple: if the search corpus should stay on the server, choose server-oriented infrastructure. If the search corpus is intentionally shipped with the product and the UX benefit of local retrieval matters more than backend scale, altor-vec is usually the more natural fit.</p>
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+  <h2>FAQ</h2>
+  <h3>Is one clearly better than the other?</h3>
+<p>Not without a corpus-specific benchmark. Browser ANN comparisons are highly dependent on vector shape and index parameters.</p>
+<h3>What matters more than theoretical speed?</h3>
+<p>How easy it is to ship, load, and operate in the product bundle.</p>
+<h3>Why can a smaller library win even if raw performance is similar?</h3>
+<p>Because frontend teams also pay in startup time, build complexity, and maintenance overhead.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

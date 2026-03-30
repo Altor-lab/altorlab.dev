@@ -1,62 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>altor-vec vs Pinecone — Performance Comparison | altorlab.dev</title>
-<meta name="description" content="Honest altor-vec vs Pinecone comparison covering bundle size, query latency, memory usage, and feature tradeoffs.">
-<link rel="canonical" href="https://altorlab.dev/benchmarks/vs-pinecone">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.9rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>altor-vec vs Pinecone — Honest Comparison | altorlab.dev</title>
+  <meta name="description" content="Honest altor-vec vs Pinecone comparison covering bundle size, latency, memory usage, features, and where each approach wins.">
+  <link rel="canonical" href="https://altorlab.dev/benchmarks/vs-pinecone.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-p, li { color: #d4d4d8; }
-pre, .note { background: #111111; padding: 14px; border-radius: 8px; border: 1px solid #27272a; }
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
 table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
 th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
-th { color: #f5f5f5; background: #131316; }
-strong { color: #f5f5f5; }
+th { background: #141418; }
 ul { padding-left: 20px; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
-.card { background: #111111; border: 1px solid #27272a; border-radius: 10px; padding: 16px; }
-.kicker { color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs Pinecone \u2014 Performance Comparison", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs Pinecone", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/benchmarks/vs-pinecone.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is altor-vec a Pinecone replacement?", "acceptedAnswer": {"@type": "Answer", "text": "Not broadly. They solve different layers of the stack. altor-vec handles local retrieval; Pinecone handles hosted vector infrastructure."}}, {"@type": "Question", "name": "When does Pinecone clearly win?", "acceptedAnswer": {"@type": "Answer", "text": "When the corpus is large, private, access-controlled, or updated continuously."}}, {"@type": "Question", "name": "When does altor-vec clearly win?", "acceptedAnswer": {"@type": "Answer", "text": "When the search experience itself belongs in the browser and local latency matters more than backend scale."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/benchmarks/">Benchmarks</a></nav>
 <article>
-<p class="kicker">benchmark comparison</p>
-<h1>altor-vec vs Pinecone</h1>
-<p>Managed vector database versus browser-native retrieval. This is not an apples-to-apples benchmark in every category: the tools solve different jobs. The right choice depends on whether your search problem belongs in the browser or in infrastructure.</p>
-<div class="note small">Representative numbers only. Exact bundle size, latency, and memory usage vary with hardware, build flags, vector dimensions, index parameters, and whether embeddings are generated locally or remotely.</div>
+  <p class="kicker">benchmark comparison</p>
+  <h1>altor-vec vs Pinecone</h1>
+  <p>Managed vector database versus browser-native retrieval.</p>
+  <p>This comparison is intentionally not framed as a universal winner. Pinecone is infrastructure. altor-vec is a client-side search primitive. The decision starts with where the corpus should live and who should pay the latency cost.</p>
+  <div class="note small">These numbers are representative, not universal. Bundle size, query latency, and memory usage all vary with vector dimensions, index parameters, browser runtime, hardware, and whether embeddings are generated on device or ahead of time.</div>
 
-<h2>Comparison table</h2>
-<table>
-  <thead>
-    <tr><th>Category</th><th>altor-vec</th><th>Pinecone</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>Runtime model</strong></td><td>Browser WASM (HNSW) with no backend required</td><td>Managed vector database API</td></tr>
-<tr><td><strong>Bundle / delivery</strong></td><td>54KB gzipped WebAssembly</td><td>No browser search bundle; requests go to a managed API.</td></tr>
-<tr><td><strong>Query latency</strong></td><td>~0.6ms p95 local search on 10K vectors / 384d (excluding embedding generation)</td><td>Usually tens of milliseconds plus network roundtrip; better for remote corpora than local interactivity.</td></tr>
-<tr><td><strong>Memory usage</strong></td><td>~17MB index asset for 10K vectors / 384d; browser memory scales with corpus size</td><td>Server-side memory and storage; almost nothing shipped to the browser.</td></tr>
-<tr><td><strong>Dataset sweet spot</strong></td><td>Best for static or moderately sized corpora that are safe to ship to the client</td><td>Designed for large, frequently updated, multi-tenant datasets.</td></tr>
-<tr><td><strong>Feature set</strong></td><td>Nearest-neighbor search, serialization, offline/browser delivery; not a full vector database</td><td>Strong hosted operations, metadata filters, namespaces, backups, and scaling controls.</td></tr>
-  </tbody>
-</table>
+  <h2>Comparison table</h2>
+  <table>
+    <thead>
+      <tr><th>Category</th><th>altor-vec</th><th>Pinecone</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Runtime model</strong></td><td>Browser WebAssembly HNSW running entirely on the client.</td><td>Managed vector database accessed over an API.</td></tr>
+      <tr><td><strong>Bundle size / delivery</strong></td><td>~54KB gzipped library payload plus your vector asset.</td><td>No client search bundle, but every query depends on a backend call.</td></tr>
+      <tr><td><strong>Query latency</strong></td><td>~0.6ms p95 local ANN lookup on a 10K / 384d benchmark excluding embedding generation.</td><td>Usually tens of milliseconds plus network roundtrip, which is acceptable for backend retrieval but not as snappy for keystroke UX.</td></tr>
+      <tr><td><strong>Memory usage</strong></td><td>Browser memory scales with the shipped corpus; roughly ~17MB for a 10K / 384d representative index.</td><td>Server-side memory and storage, with almost nothing held in the browser.</td></tr>
+      <tr><td><strong>Features</strong></td><td>Approximate nearest-neighbor search, serialization, local-first delivery, no hosted ops.</td><td>Metadata filtering, namespaces, scaling, backups, observability, and hosted operations.</td></tr>
+      <tr><td><strong>Dataset sweet spot</strong></td><td>Best for moderate corpora that are safe to ship to the user.</td><td>Best for large, private, multi-tenant, or frequently updated corpora.</td></tr>
+    </tbody>
+  </table>
 
-<h2>Where altor-vec wins</h2>
-<ul><li>Zero per-query cost and no API dependency</li><li>Offline or low-latency local UX</li><li>Privacy-sensitive search where queries should stay in the browser</li></ul>
+  <h2>Where altor-vec wins</h2>
+  <ul><li>Instant local UX without an API dependency.</li><li>Zero per-query infrastructure cost after shipping the asset.</li><li>Good fit for offline or privacy-sensitive search experiences.</li></ul>
 
-<h2>Where Pinecone wins</h2>
-<ul><li>Large datasets that should never be shipped to clients</li><li>Metadata filtering, namespaces, and operational controls</li><li>Frequent writes, background indexing, and team workflows</li></ul>
+  <h2>Where Pinecone wins</h2>
+  <ul><li>Large private datasets and frequent writes.</li><li>Operational controls, filtering, and hosted scaling.</li><li>Clearer fit for multi-user backend retrieval and production RAG infrastructure.</li></ul>
 
-<h2>Decision guide</h2>
-<p>Choose Pinecone when retrieval is a backend system. Choose altor-vec when retrieval is a frontend feature and the corpus is safe to ship.</p>
-<p><strong>Honest takeaway:</strong> If you need ACLs, huge datasets, hybrid ranking, or continuous writes, a server-side or database-style tool usually wins. If you need a tiny browser bundle, offline support, and zero backend search cost, altor-vec is the more natural fit.</p>
+  <h2>Honest decision guide</h2>
+  <p>Choose Pinecone when search is part of your backend platform. Choose altor-vec when search is a frontend capability and the corpus is intentionally shipped to the browser.</p>
+  <p>The honest pattern across all of these benchmark pages is simple: if the search corpus should stay on the server, choose server-oriented infrastructure. If the search corpus is intentionally shipped with the product and the UX benefit of local retrieval matters more than backend scale, altor-vec is usually the more natural fit.</p>
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+  <h2>FAQ</h2>
+  <h3>Is altor-vec a Pinecone replacement?</h3>
+<p>Not broadly. They solve different layers of the stack. altor-vec handles local retrieval; Pinecone handles hosted vector infrastructure.</p>
+<h3>When does Pinecone clearly win?</h3>
+<p>When the corpus is large, private, access-controlled, or updated continuously.</p>
+<h3>When does altor-vec clearly win?</h3>
+<p>When the search experience itself belongs in the browser and local latency matters more than backend scale.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

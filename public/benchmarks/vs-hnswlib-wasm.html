@@ -1,62 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>altor-vec vs hnswlib-wasm — Performance Comparison | altorlab.dev</title>
-<meta name="description" content="Honest altor-vec vs hnswlib-wasm comparison covering bundle size, query latency, memory usage, and feature tradeoffs.">
-<link rel="canonical" href="https://altorlab.dev/benchmarks/vs-hnswlib-wasm">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.9rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>altor-vec vs hnswlib-wasm — Honest Comparison | altorlab.dev</title>
+  <meta name="description" content="Honest altor-vec vs hnswlib-wasm comparison covering bundle size, latency, memory usage, features, and where each approach wins.">
+  <link rel="canonical" href="https://altorlab.dev/benchmarks/vs-hnswlib-wasm.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-p, li { color: #d4d4d8; }
-pre, .note { background: #111111; padding: 14px; border-radius: 8px; border: 1px solid #27272a; }
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
 table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
 th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
-th { color: #f5f5f5; background: #131316; }
-strong { color: #f5f5f5; }
+th { background: #141418; }
 ul { padding-left: 20px; }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 20px; }
-.card { background: #111111; border: 1px solid #27272a; border-radius: 10px; padding: 16px; }
-.kicker { color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.78rem; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs hnswlib-wasm \u2014 Performance Comparison", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "altor-vec vs hnswlib-wasm", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/benchmarks/vs-hnswlib-wasm.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Which is faster, altor-vec or hnswlib-wasm?", "acceptedAnswer": {"@type": "Answer", "text": "There is no universal answer. HNSW parameter choices, vector dimensions, and the browser runtime all affect the result."}}, {"@type": "Question", "name": "What tends to decide this comparison in practice?", "acceptedAnswer": {"@type": "Answer", "text": "Bundle size, build tooling, and how easy it is to integrate in a browser app."}}, {"@type": "Question", "name": "Are these better compared than server databases?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. This is a more direct comparison because both live in the local ANN category."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/benchmarks/">Benchmarks</a></nav>
 <article>
-<p class="kicker">benchmark comparison</p>
-<h1>altor-vec vs hnswlib-wasm</h1>
-<p>Two browser-capable HNSW approaches with different packaging tradeoffs. This is not an apples-to-apples benchmark in every category: the tools solve different jobs. The right choice depends on whether your search problem belongs in the browser or in infrastructure.</p>
-<div class="note small">Representative numbers only. Exact bundle size, latency, and memory usage vary with hardware, build flags, vector dimensions, index parameters, and whether embeddings are generated locally or remotely.</div>
+  <p class="kicker">benchmark comparison</p>
+  <h1>altor-vec vs hnswlib-wasm</h1>
+  <p>Two browser-capable HNSW options with different packaging tradeoffs.</p>
+  <p>This is one of the fairest head-to-head comparisons because both tools target approximate nearest-neighbor search in browser-friendly environments. The practical decision often comes down to packaging, ergonomics, and the exact performance profile on your corpus.</p>
+  <div class="note small">These numbers are representative, not universal. Bundle size, query latency, and memory usage all vary with vector dimensions, index parameters, browser runtime, hardware, and whether embeddings are generated on device or ahead of time.</div>
 
-<h2>Comparison table</h2>
-<table>
-  <thead>
-    <tr><th>Category</th><th>altor-vec</th><th>hnswlib-wasm</th></tr>
-  </thead>
-  <tbody>
-    <tr><td><strong>Runtime model</strong></td><td>Browser WASM (HNSW) with no backend required</td><td>Browser-capable HNSW via WebAssembly</td></tr>
-<tr><td><strong>Bundle / delivery</strong></td><td>54KB gzipped WebAssembly</td><td>Typically a larger WebAssembly payload than altor-vec, depending on the build you ship.</td></tr>
-<tr><td><strong>Query latency</strong></td><td>~0.6ms p95 local search on 10K vectors / 384d (excluding embedding generation)</td><td>Both can be fast locally; exact differences depend on build flags and dataset shape.</td></tr>
-<tr><td><strong>Memory usage</strong></td><td>~17MB index asset for 10K vectors / 384d; browser memory scales with corpus size</td><td>Both keep the index client-side; memory grows with vector count and graph density.</td></tr>
-<tr><td><strong>Dataset sweet spot</strong></td><td>Best for static or moderately sized corpora that are safe to ship to the client</td><td>Good for local ANN workloads; compare bundle budget, API ergonomics, and serialization needs.</td></tr>
-<tr><td><strong>Feature set</strong></td><td>Nearest-neighbor search, serialization, offline/browser delivery; not a full vector database</td><td>hnswlib lineage and mature ANN semantics; altor-vec focuses on a smaller browser-first package.</td></tr>
-  </tbody>
-</table>
+  <h2>Comparison table</h2>
+  <table>
+    <thead>
+      <tr><th>Category</th><th>altor-vec</th><th>hnswlib-wasm</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Runtime model</strong></td><td>Browser WebAssembly HNSW tuned for a compact client-side package.</td><td>Browser-capable HNSW wrapper around hnswlib concepts.</td></tr>
+      <tr><td><strong>Bundle size / delivery</strong></td><td>~54KB gzipped representative payload.</td><td>Often larger packaging footprint depending on build and wrapper details.</td></tr>
+      <tr><td><strong>Query latency</strong></td><td>Fast local lookup; benchmark on your corpus because HNSW tuning changes outcomes.</td><td>Also fast local lookup with performance shaped by its own index parameters and packaging.</td></tr>
+      <tr><td><strong>Memory usage</strong></td><td>Browser memory scales with vectors and graph parameters.</td><td>Similar browser-memory story; exact overhead depends on implementation details.</td></tr>
+      <tr><td><strong>Features</strong></td><td>Focused ANN API and serialization flow.</td><td>Focused ANN API with different integration ergonomics.</td></tr>
+      <tr><td><strong>Dataset sweet spot</strong></td><td>Frontend search experiences and shipped corpora.</td><td>Similar sweet spot: browser-friendly local ANN workloads.</td></tr>
+    </tbody>
+  </table>
 
-<h2>Where altor-vec wins</h2>
-<ul><li>Smaller published footprint for browser delivery</li><li>Simpler story for frontend SEO/demo pages and product widgets</li><li>A package positioned explicitly around browser-native vector search</li></ul>
+  <h2>Where altor-vec wins</h2>
+  <ul><li>Smaller delivery target is attractive when bundle budget is the primary constraint.</li><li>Straightforward fit for apps that want a narrow API and small payload.</li><li>Good default when product teams care most about shipping friction.</li></ul>
 
-<h2>Where hnswlib-wasm wins</h2>
-<ul><li>Teams already standardized on hnswlib APIs</li><li>Build pipelines that prefer hnswlib compatibility</li><li>Situations where you want to compare against a well-known ANN baseline</li></ul>
+  <h2>Where hnswlib-wasm wins</h2>
+  <ul><li>Developers already invested in hnswlib-style tooling may prefer familiarity.</li><li>May perform better on some corpora depending on tuning and implementation details.</li><li>Different wrapper choices may fit certain build systems or environments better.</li></ul>
 
-<h2>Decision guide</h2>
-<p>If both meet your recall target, bundle size and frontend ergonomics become the practical decision factors.</p>
-<p><strong>Honest takeaway:</strong> If you need ACLs, huge datasets, hybrid ranking, or continuous writes, a server-side or database-style tool usually wins. If you need a tiny browser bundle, offline support, and zero backend search cost, altor-vec is the more natural fit.</p>
+  <h2>Honest decision guide</h2>
+  <p>If both reach your recall target, frontend ergonomics and payload size become the real decision factors. Benchmark with your own vectors before claiming a winner.</p>
+  <p>The honest pattern across all of these benchmark pages is simple: if the search corpus should stay on the server, choose server-oriented infrastructure. If the search corpus is intentionally shipped with the product and the UX benefit of local retrieval matters more than backend scale, altor-vec is usually the more natural fit.</p>
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+  <h2>FAQ</h2>
+  <h3>Which is faster, altor-vec or hnswlib-wasm?</h3>
+<p>There is no universal answer. HNSW parameter choices, vector dimensions, and the browser runtime all affect the result.</p>
+<h3>What tends to decide this comparison in practice?</h3>
+<p>Bundle size, build tooling, and how easy it is to integrate in a browser app.</p>
+<h3>Are these better compared than server databases?</h3>
+<p>Yes. This is a more direct comparison because both live in the local ANN category.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

@@ -1,234 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Content Deduplication with Client-Side Vector Search — Code Example | altor-vec</title>
-<meta name="description" content="Build content deduplication with altor-vec — 54KB client-side vector search. Full code example with React/JavaScript. No backend required.">
-<link rel="canonical" href="https://altorlab.dev/examples/content-deduplication">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.8rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Content Deduplication with altor-vec — Code Example | altorlab.dev</title>
+  <meta name="description" content="Build content deduplication with altor-vec using a real runnable JavaScript example, React component, and browser-side vector search architecture notes.">
+  <link rel="canonical" href="https://altorlab.dev/examples/content-deduplication.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #27272a; }
-code { font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 0.9rem; color: #e2e8f0; }
-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-th, td { border: 1px solid #27272a; padding: 10px; text-align: left; }
-strong { color: #f5f5f5; }
-li { margin-bottom: 0.5rem; }
-.callout { background: #111111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; margin: 18px 0; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Content Deduplication with Client-Side Vector Search", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
+th { background: #141418; }
+ul { padding-left: 20px; }
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Content Deduplication with altor-vec", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "publisher": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/examples/content-deduplication.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is vector search enough to deduplicate content automatically?", "acceptedAnswer": {"@type": "Answer", "text": "Usually not. It is excellent for surfacing likely duplicates, but you still need review logic before deleting or merging records."}}, {"@type": "Question", "name": "What similarity threshold should I use?", "acceptedAnswer": {"@type": "Answer", "text": "There is no universal threshold. Benchmark it on your own corpus because writing style and chunk length change the right cutoff."}}, {"@type": "Question", "name": "Can this help before a CMS migration?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Candidate duplicate lists are a common way to shrink and clean a corpus before you move it."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/examples/">Examples</a></nav>
 <article>
-<h1>Build Content Deduplication with altor-vec</h1>
-<p><strong>What you'll build:</strong> A deduplication pass that compares a draft item against an existing corpus and surfaces near-duplicates.</p>
-<p><strong>Bundle cost:</strong> 54KB · <strong>Query time:</strong> &lt;1ms · <strong>Backend:</strong> None required</p>
+  <p class="kicker">code example</p>
+  <h1>Build Content Deduplication with altor-vec</h1>
+  <p><strong>What this pattern solves:</strong> Near-duplicate detection for editorial pipelines, datasets, and CMS migrations.</p>
+  <p>Duplicate content rarely matches word for word. Marketing teams rewrite headlines, support teams copy old answers, and migrations create slightly different versions of the same article. Vector similarity is a good first pass for spotting semantic overlap.</p>
+  <p>For a moderate review batch, local comparison is useful because editors can run it privately in the browser without provisioning a database just to score overlap.</p>
 
-<h2>Install</h2>
-<pre><code>npm install altor-vec</code></pre>
+  <h2>Install</h2>
+  <pre><code>npm install altor-vec</code></pre>
 
-<h2>The Concept</h2>
-<p>Content teams accidentally create duplicates because titles differ even when the meaning is the same. A vector index helps you catch semantic overlap early so you can merge, redirect, or rewrite before publishing another near-identical page.</p>
-<p>Browser-side dedupe is handy inside CMS tooling and editorial workflows. Editors can paste a draft title or summary and immediately see overlapping articles without waiting on an external service.</p>
-<p>The example below indexes existing pages and then queries the draft summary against them. It is intentionally simple but runnable, which makes it a good starting point for editorial QA tooling.</p>
-<div class="callout small">This page uses a deterministic embedding helper so the snippets are runnable with only <code>altor-vec</code>. For production ranking quality, replace that helper with a real embedding model or precomputed vectors.</div>
+  <h2>Concept explanation</h2>
+  <p>In a content deduplication workflow, users usually describe intent in their own words. That is why vector search works well here: each record is turned into an embedding, the embeddings are indexed once, and later queries retrieve the nearest semantic neighbors instead of relying only on exact tokens. In practice this means the interface can respond to paraphrases, shorthand, and partial descriptions far better than a literal-only search box.</p>
+  <p>The browser is often the right place to do this when the corpus is moderate in size and safe to ship. The instant benefit is lower latency. The architectural benefit is that you remove a whole search service from the request path. That matters for keystroke-heavy interactions, offline-capable apps, and product surfaces where search should feel like a UI primitive rather than a network round trip.</p>
+  <p>This page uses a deterministic embedding helper so the sample is runnable with only <code>altor-vec</code> installed. That keeps the example honest and easy to paste into a demo project. Most teams use vector similarity for candidate generation, then run a stricter review step before auto-merging or deleting anything important.</p>
+  <div class="callout small">Representative browser benchmark: ~54KB gzipped library payload, sub-millisecond local query time on a moderate corpus, and no per-query API dependency. Exact numbers depend on vector dimensions, index parameters, and device class.</div>
 
-<h2>Full Code Example</h2>
-<pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+  <h2>Runnable JavaScript example</h2>
+  <p>The following snippet indexes a small in-memory dataset, performs a semantic lookup for <code>remote work stipend policy</code>, and prints the nearest matches. It uses the real <code>altor-vec</code> API, including <code>init()</code>, <code>WasmSearchEngine.from_vectors()</code>, and <code>search()</code>.</p>
+  <pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
 
-const dims = 8;
-const records = [
+        const dims = 12;
+        const records = [
   {
-    &quot;title&quot;: &quot;Invoice storage policy&quot;,
-    &quot;text&quot;: &quot;How long finance records and customer invoices must be retained.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
+    &quot;title&quot;: &quot;Remote work reimbursement&quot;,
+    &quot;text&quot;: &quot;Policy describing stipends for desks, chairs, and home office accessories.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
   },
   {
-    &quot;title&quot;: &quot;Password reset guide&quot;,
-    &quot;text&quot;: &quot;Steps for account recovery when a user cannot log in.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
+    &quot;title&quot;: &quot;Home office allowance&quot;,
+    &quot;text&quot;: &quot;Guidelines for claiming remote setup expenses during the first ninety days.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
   },
   {
-    &quot;title&quot;: &quot;Vendor security review&quot;,
-    &quot;text&quot;: &quot;Checklist for onboarding new service providers securely.&quot;,
-    &quot;meta&quot;: &quot;operations&quot;
+    &quot;title&quot;: &quot;Travel expense rules&quot;,
+    &quot;text&quot;: &quot;Approved hotel, flight, and meal costs for business travel.&quot;,
+    &quot;meta&quot;: &quot;finance&quot;
   },
   {
-    &quot;title&quot;: &quot;Billing card updates&quot;,
-    &quot;text&quot;: &quot;Instructions for changing the payment method on an account.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
+    &quot;title&quot;: &quot;Laptop refresh process&quot;,
+    &quot;text&quot;: &quot;How employees request a replacement laptop after the standard lifecycle.&quot;,
+    &quot;meta&quot;: &quot;it&quot;
   },
   {
-    &quot;title&quot;: &quot;Data deletion timeline&quot;,
-    &quot;text&quot;: &quot;Explains deletion SLAs for churned customer data.&quot;,
-    &quot;meta&quot;: &quot;privacy&quot;
+    &quot;title&quot;: &quot;Equipment return checklist&quot;,
+    &quot;text&quot;: &quot;Steps for collecting laptops and badges during offboarding.&quot;,
+    &quot;meta&quot;: &quot;it&quot;
   },
   {
-    &quot;title&quot;: &quot;Account export guide&quot;,
-    &quot;text&quot;: &quot;How users can export analytics reports and billing history.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
+    &quot;title&quot;: &quot;Manager onboarding notes&quot;,
+    &quot;text&quot;: &quot;Guide for new managers running first-week team introductions.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
   }
 ];
 
-function embedText(text) {
+        function embedText(text) {
   const vector = new Float32Array(dims);
   for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
     let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-async function main() {
-  await init();
-
-  const flat = new Float32Array(
-    records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-  );
-
-  const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-  const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;new invoice retention article&#x27;)), 4));
-
-  const results = hits.map(([id, distance]) =&gt; ({
-    ...records[id],
-    similarity: Number((1 - distance).toFixed(3)),
-  }));
-
-  console.table(results);
-  engine.free();
-}
-
-main();</code></pre>
-
-<h2>React Component</h2>
-<pre><code>import { useEffect, useState } from &#x27;react&#x27;;
-import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
-
-const dims = 8;
-const records = [
-  {
-    &quot;title&quot;: &quot;Invoice storage policy&quot;,
-    &quot;text&quot;: &quot;How long finance records and customer invoices must be retained.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Password reset guide&quot;,
-    &quot;text&quot;: &quot;Steps for account recovery when a user cannot log in.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Vendor security review&quot;,
-    &quot;text&quot;: &quot;Checklist for onboarding new service providers securely.&quot;,
-    &quot;meta&quot;: &quot;operations&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Billing card updates&quot;,
-    &quot;text&quot;: &quot;Instructions for changing the payment method on an account.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Data deletion timeline&quot;,
-    &quot;text&quot;: &quot;Explains deletion SLAs for churned customer data.&quot;,
-    &quot;meta&quot;: &quot;privacy&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Account export guide&quot;,
-    &quot;text&quot;: &quot;How users can export analytics reports and billing history.&quot;,
-    &quot;meta&quot;: &quot;help-center&quot;
-  }
-];
-
-function embedText(text) {
-  const vector = new Float32Array(dims);
-  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
-    let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-export function ContentDeduplicationExample() {
-  const [engine, setEngine] = useState(null);
-  const [query, setQuery] = useState(&#x27;&#x27;);
-  const [results, setResults] = useState([]);
-
-  useEffect(() =&gt; {
-    let cancelled = false;
-    let instance;
-
-    (async () =&gt; {
-      await init();
-      const flat = new Float32Array(
-        records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-      );
-      instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-      if (!cancelled) setEngine(instance);
-    })();
-
-    return () =&gt; {
-      cancelled = true;
-      instance?.free();
-    };
-  }, []);
-
-  useEffect(() =&gt; {
-    if (!engine || query.trim().length &lt; 2) {
-      setResults([]);
-      return;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
     }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
 
-    const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
-    setResults(
-      hits.map(([id, distance]) =&gt; ({
-        ...records[id],
-        similarity: Number((1 - distance).toFixed(3)),
-      }))
-    );
-  }, [engine, query]);
+        async function main() {
+          await init();
 
-  return (
-    &lt;section&gt;
-      &lt;input
-        value={query}
-        onChange={(event) =&gt; setQuery(event.target.value)}
-        placeholder=&quot;Describe the draft content&quot;
-      /&gt;
-      &lt;ul&gt;
-        {results.map((result) =&gt; (
-          &lt;li key={result.title}&gt;
-            &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
-          &lt;/li&gt;
-        ))}
-      &lt;/ul&gt;
-    &lt;/section&gt;
-  );
-}</code></pre>
+          const flat = new Float32Array(
+            records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+          );
 
-<h2>How It Works</h2>
-<p>The flow is the same pattern you would use in production: turn each record into an embedding vector, build an HNSW graph with <code>WasmSearchEngine.from_vectors()</code>, and query it with the embedding for the current search text. HNSW keeps approximate nearest-neighbor search fast by traversing a layered graph instead of scanning every vector linearly.</p>
-<p>Similarity scoring here is derived from the returned distance with <code>1 - distance</code> so the UI can show an intuitive confidence number. If you swap in a real embedding model such as MiniLM, multilingual-e5, or precomputed server-generated vectors, the surrounding indexing and querying code stays almost identical.</p>
+          const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+          const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;remote work stipend policy&#x27;)), 4));
 
-<h2>When to Use This Pattern</h2>
-<ul><li>CMS authoring workflows</li>
-<li>Knowledge base maintenance</li>
-<li>Support article reviews before publishing</li>
-<li>Dataset hygiene checks for RAG corpora</li></ul>
+          const results = hits.map(([id, distance]) =&gt; ({
+            ...records[id],
+            similarity: Number((1 - distance).toFixed(3)),
+          }));
 
-<h2>Limitations</h2>
-<p>Deduplication thresholds are subjective, and good results require consistent embeddings plus editorial review. Exact duplicate detection, canonical URL decisions, and large corpus management often need backend batch jobs.</p>
+          console.table(results);
+          engine.free();
+        }
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+        main();</code></pre>
+
+  <h2>React component version</h2>
+  <p>The React version keeps the same index build but wires it into component state so the UI can query on input changes. That is usually how teams introduce semantic retrieval into an existing product: initialize once, keep the engine in memory, and map nearest-neighbor hits back to the original records.</p>
+  <pre><code>import { useEffect, useState } from &#x27;react&#x27;;
+        import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+        const dims = 12;
+        const records = [
+  {
+    &quot;title&quot;: &quot;Remote work reimbursement&quot;,
+    &quot;text&quot;: &quot;Policy describing stipends for desks, chairs, and home office accessories.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Home office allowance&quot;,
+    &quot;text&quot;: &quot;Guidelines for claiming remote setup expenses during the first ninety days.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Travel expense rules&quot;,
+    &quot;text&quot;: &quot;Approved hotel, flight, and meal costs for business travel.&quot;,
+    &quot;meta&quot;: &quot;finance&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Laptop refresh process&quot;,
+    &quot;text&quot;: &quot;How employees request a replacement laptop after the standard lifecycle.&quot;,
+    &quot;meta&quot;: &quot;it&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Equipment return checklist&quot;,
+    &quot;text&quot;: &quot;Steps for collecting laptops and badges during offboarding.&quot;,
+    &quot;meta&quot;: &quot;it&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Manager onboarding notes&quot;,
+    &quot;text&quot;: &quot;Guide for new managers running first-week team introductions.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
+  }
+];
+
+        function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+        export function ContentDeduplicationExample() {
+          const [engine, setEngine] = useState(null);
+          const [query, setQuery] = useState(&#x27;&#x27;);
+          const [results, setResults] = useState([]);
+
+          useEffect(() =&gt; {
+            let cancelled = false;
+            let instance;
+
+            (async () =&gt; {
+              await init();
+              const flat = new Float32Array(
+                records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+              );
+              instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+              if (!cancelled) setEngine(instance);
+            })();
+
+            return () =&gt; {
+              cancelled = true;
+              instance?.free();
+            };
+          }, []);
+
+          useEffect(() =&gt; {
+            if (!engine || query.trim().length &lt; 2) {
+              setResults([]);
+              return;
+            }
+
+            const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
+            setResults(
+              hits.map(([id, distance]) =&gt; ({
+                ...records[id],
+                similarity: Number((1 - distance).toFixed(3)),
+              }))
+            );
+          }, [engine, query]);
+
+          return (
+            &lt;section&gt;
+              &lt;input
+                value={query}
+                onChange={(event) =&gt; setQuery(event.target.value)}
+                placeholder=&quot;Find semantically similar content&quot;
+              /&gt;
+              &lt;ul&gt;
+                {results.map((result) =&gt; (
+                  &lt;li key={result.title}&gt;
+                    &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
+                  &lt;/li&gt;
+                ))}
+              &lt;/ul&gt;
+            &lt;/section&gt;
+          );
+        }</code></pre>
+
+  <h2>How this example works</h2>
+  <p>The pattern has three moving parts. First, you choose what text represents each record: title, description, metadata, or a chunk of content. Second, you turn that text into vectors and flatten them into one <code>Float32Array</code>. Third, you build the HNSW graph and query it with a vector created from the user input. The library returns nearest-neighbor IDs and distances, and your app decides how to display or post-process them.</p>
+  <p>Because the retrieval step is approximate nearest-neighbor search, it stays fast even as the dataset grows beyond trivial linear scans. The most important quality lever is still the embedding model. Better vectors usually matter more than micro-optimizing ANN parameters, so teams should benchmark retrieval quality on real user phrasing before shipping the experience widely.</p>
+
+  <h2>When to use this pattern</h2>
+  <p>This is a practical fit when the search corpus is small to medium, shipped with the app, and searched frequently enough that backend latency would be noticeable. Common examples include docs portals, embedded support widgets, local-first assistants, and curated catalogs.</p>
+  <ul><li>CMS cleanup</li><li>Editorial QA</li><li>Dataset curation</li><li>Knowledge-base migrations</li></ul>
+
+  <h2>Limitations</h2>
+  <p>A nearest-neighbor match is not proof that two documents are safe to collapse. Legal wording, version history, and ownership still matter, so keep a human review step for consequential content decisions.</p>
+  <p>Be especially careful about corpus size, update frequency, and data sensitivity. Browser vector search is excellent when those three constraints are favorable, but it is not the right answer when the dataset is huge, private, or changing constantly for every user.</p>
+
+  <h2>FAQ</h2>
+  <h3>Is vector search enough to deduplicate content automatically?</h3>
+<p>Usually not. It is excellent for surfacing likely duplicates, but you still need review logic before deleting or merging records.</p>
+<h3>What similarity threshold should I use?</h3>
+<p>There is no universal threshold. Benchmark it on your own corpus because writing style and chunk length change the right cutoff.</p>
+<h3>Can this help before a CMS migration?</h3>
+<p>Yes. Candidate duplicate lists are a common way to shrink and clean a corpus before you move it.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>

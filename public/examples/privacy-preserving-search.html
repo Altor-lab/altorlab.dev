@@ -1,234 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Privacy-Preserving Search with Client-Side Vector Search — Code Example | altor-vec</title>
-<meta name="description" content="Build privacy-preserving search with altor-vec — 54KB client-side vector search. Full code example with React/JavaScript. No backend required.">
-<link rel="canonical" href="https://altorlab.dev/examples/privacy-preserving-search">
-<style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
-h1 { font-size: 1.8rem; color: #f5f5f5; }
-h2 { font-size: 1.3rem; color: #a78bfa; margin-top: 2rem; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Privacy-Preserving Search with altor-vec — Code Example | altorlab.dev</title>
+  <meta name="description" content="Build privacy-preserving search with altor-vec using a real runnable JavaScript example, React component, and browser-side vector search architecture notes.">
+  <link rel="canonical" href="https://altorlab.dev/examples/privacy-preserving-search.html">
+  <style>body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  background: #0a0a0a;
+}
 a { color: #a78bfa; }
-pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; border: 1px solid #27272a; }
-code { font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: 0.9rem; color: #e2e8f0; }
-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-th, td { border: 1px solid #27272a; padding: 10px; text-align: left; }
-strong { color: #f5f5f5; }
-li { margin-bottom: 0.5rem; }
-.callout { background: #111111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; margin: 18px 0; }
-.small { color: #94a3b8; font-size: 0.95rem; }</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Privacy-Preserving Search with Client-Side Vector Search", "author": {"@type": "Organization", "name": "AltorLab"}, "datePublished": "2026-03-25"}</script>
+h1 { font-size: 2rem; line-height: 1.2; color: #f5f5f5; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; color: #a78bfa; margin-top: 2.2rem; }
+h3 { font-size: 1.05rem; color: #f5f5f5; margin-top: 1.5rem; }
+p, li, td { color: #d4d4d8; }
+strong, th { color: #f5f5f5; }
+pre, .note, .callout {
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+pre { overflow-x: auto; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 0.92rem;
+  color: #ede9fe;
+}
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; }
+th, td { border: 1px solid #27272a; padding: 10px; text-align: left; vertical-align: top; }
+th { background: #141418; }
+ul { padding-left: 20px; }
+nav { margin-bottom: 1.5rem; }
+.kicker {
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+}
+.small { color: #94a3b8; font-size: 0.95rem; }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 1.25rem;
+}
+.card {
+  display: block;
+  text-decoration: none;
+  background: #111111;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+  padding: 16px;
+}
+.card:hover { border-color: #a78bfa; }</style>
+  <script type="application/ld+json">[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Privacy-Preserving Search with altor-vec", "datePublished": "2026-03-30", "dateModified": "2026-03-30", "author": {"@type": "Organization", "name": "AltorLab"}, "publisher": {"@type": "Organization", "name": "AltorLab"}, "url": "https://altorlab.dev/examples/privacy-preserving-search.html"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does browser search automatically make a product private?", "acceptedAnswer": {"@type": "Answer", "text": "No. It reduces query exposure, but you still need to consider where vectors come from, how files are cached, and whether the corpus itself is safe to download."}}, {"@type": "Question", "name": "Can I keep both queries and content on device?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, if you ship the vectors locally and avoid remote embedding generation at query time."}}, {"@type": "Question", "name": "When should I choose a server instead?", "acceptedAnswer": {"@type": "Answer", "text": "Choose a server when the dataset should not be distributed to clients or when permissions differ per user."}}]}]</script>
 </head>
 <body>
 <nav><a href="/">← altor-vec</a> · <a href="/examples/">Examples</a></nav>
 <article>
-<h1>Build Privacy-Preserving Search with altor-vec</h1>
-<p><strong>What you'll build:</strong> A private search surface for sensitive notes or policies where the query vector and index stay on the device.</p>
-<p><strong>Bundle cost:</strong> 54KB · <strong>Query time:</strong> &lt;1ms · <strong>Backend:</strong> None required</p>
+  <p class="kicker">code example</p>
+  <h1>Build Privacy-Preserving Search with altor-vec</h1>
+  <p><strong>What this pattern solves:</strong> Local semantic retrieval for sensitive notes, contracts, and on-device assistants.</p>
+  <p>Some search experiences lose value the moment queries leave the device. Employees searching compensation guidelines, users exploring personal notes, or legal teams reviewing contract clauses often need the retrieval layer to stay local.</p>
+  <p>Because altor-vec can run entirely in-browser, the query text and the search index do not need to transit a third-party search API. That changes the privacy story substantially for certain products.</p>
 
-<h2>Install</h2>
-<pre><code>npm install altor-vec</code></pre>
+  <h2>Install</h2>
+  <pre><code>npm install altor-vec</code></pre>
 
-<h2>The Concept</h2>
-<p>Some search surfaces carry sensitive intent: legal notes, health content, internal strategy docs, or customer records. Sending every query to a hosted vector API can create governance and audit overhead that is unnecessary for moderate datasets.</p>
-<p>Client-side vector search keeps retrieval local. That does not solve every privacy problem, but it does mean the search string, embedding, and nearest-neighbor computation can stay inside the browser session.</p>
-<p>The example uses a local HNSW index built at runtime for clarity. Production systems often ship a prebuilt encrypted or access-controlled index, then layer analytics carefully so raw queries are not leaked through telemetry.</p>
-<div class="callout small">This page uses a deterministic embedding helper so the snippets are runnable with only <code>altor-vec</code>. For production ranking quality, replace that helper with a real embedding model or precomputed vectors.</div>
+  <h2>Concept explanation</h2>
+  <p>In a privacy-preserving search workflow, users usually describe intent in their own words. That is why vector search works well here: each record is turned into an embedding, the embeddings are indexed once, and later queries retrieve the nearest semantic neighbors instead of relying only on exact tokens. In practice this means the interface can respond to paraphrases, shorthand, and partial descriptions far better than a literal-only search box.</p>
+  <p>The browser is often the right place to do this when the corpus is moderate in size and safe to ship. The instant benefit is lower latency. The architectural benefit is that you remove a whole search service from the request path. That matters for keystroke-heavy interactions, offline-capable apps, and product surfaces where search should feel like a UI primitive rather than a network round trip.</p>
+  <p>This page uses a deterministic embedding helper so the sample is runnable with only <code>altor-vec</code> installed. That keeps the example honest and easy to paste into a demo project. Privacy-preserving search still requires careful thought about how embeddings are generated, stored, and refreshed. Local retrieval is only one part of the privacy model.</p>
+  <div class="callout small">Representative browser benchmark: ~54KB gzipped library payload, sub-millisecond local query time on a moderate corpus, and no per-query API dependency. Exact numbers depend on vector dimensions, index parameters, and device class.</div>
 
-<h2>Full Code Example</h2>
-<pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+  <h2>Runnable JavaScript example</h2>
+  <p>The following snippet indexes a small in-memory dataset, performs a semantic lookup for <code>termination clause with 30 day notice</code>, and prints the nearest matches. It uses the real <code>altor-vec</code> API, including <code>init()</code>, <code>WasmSearchEngine.from_vectors()</code>, and <code>search()</code>.</p>
+  <pre><code>import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
 
-const dims = 8;
-const records = [
+        const dims = 12;
+        const records = [
   {
-    &quot;title&quot;: &quot;Data retention clause&quot;,
-    &quot;text&quot;: &quot;Defines how long customer account and billing records remain stored.&quot;,
+    &quot;title&quot;: &quot;Termination clause&quot;,
+    &quot;text&quot;: &quot;Contract language covering notice periods and convenience termination rights.&quot;,
+    &quot;meta&quot;: &quot;contracts&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Data processing addendum&quot;,
+    &quot;text&quot;: &quot;Terms about subprocessors, retention, and deletion obligations.&quot;,
+    &quot;meta&quot;: &quot;privacy&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Expense reimbursement note&quot;,
+    &quot;text&quot;: &quot;Internal policy on meal limits, airfare class, and receipt rules.&quot;,
+    &quot;meta&quot;: &quot;policy&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Manager feedback journal&quot;,
+    &quot;text&quot;: &quot;Private note summarizing performance conversations and follow-ups.&quot;,
+    &quot;meta&quot;: &quot;notes&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Offer approval checklist&quot;,
+    &quot;text&quot;: &quot;Compensation review flow for recruiting and finance sign-off.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
+  },
+  {
+    &quot;title&quot;: &quot;M&amp;A diligence memo&quot;,
+    &quot;text&quot;: &quot;Summary of outstanding legal and data room questions.&quot;,
     &quot;meta&quot;: &quot;legal&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Subprocessor disclosure&quot;,
-    &quot;text&quot;: &quot;Lists third-party vendors involved in hosting, analytics, and email.&quot;,
-    &quot;meta&quot;: &quot;privacy&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Security incident notice&quot;,
-    &quot;text&quot;: &quot;Timeline and communication requirements after a reportable breach.&quot;,
-    &quot;meta&quot;: &quot;security&quot;
-  },
-  {
-    &quot;title&quot;: &quot;DPA template&quot;,
-    &quot;text&quot;: &quot;Data processing addendum terms for enterprise contracts.&quot;,
-    &quot;meta&quot;: &quot;compliance&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Employee access policy&quot;,
-    &quot;text&quot;: &quot;Rules for privileged access and periodic review.&quot;,
-    &quot;meta&quot;: &quot;internal&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Regional deletion schedule&quot;,
-    &quot;text&quot;: &quot;Country-specific retention and deletion windows for customer data.&quot;,
-    &quot;meta&quot;: &quot;privacy&quot;
   }
 ];
 
-function embedText(text) {
+        function embedText(text) {
   const vector = new Float32Array(dims);
   for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
     let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-async function main() {
-  await init();
-
-  const flat = new Float32Array(
-    records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-  );
-
-  const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-  const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;contract clause about data retention&#x27;)), 4));
-
-  const results = hits.map(([id, distance]) =&gt; ({
-    ...records[id],
-    similarity: Number((1 - distance).toFixed(3)),
-  }));
-
-  console.table(results);
-  engine.free();
-}
-
-main();</code></pre>
-
-<h2>React Component</h2>
-<pre><code>import { useEffect, useState } from &#x27;react&#x27;;
-import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
-
-const dims = 8;
-const records = [
-  {
-    &quot;title&quot;: &quot;Data retention clause&quot;,
-    &quot;text&quot;: &quot;Defines how long customer account and billing records remain stored.&quot;,
-    &quot;meta&quot;: &quot;legal&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Subprocessor disclosure&quot;,
-    &quot;text&quot;: &quot;Lists third-party vendors involved in hosting, analytics, and email.&quot;,
-    &quot;meta&quot;: &quot;privacy&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Security incident notice&quot;,
-    &quot;text&quot;: &quot;Timeline and communication requirements after a reportable breach.&quot;,
-    &quot;meta&quot;: &quot;security&quot;
-  },
-  {
-    &quot;title&quot;: &quot;DPA template&quot;,
-    &quot;text&quot;: &quot;Data processing addendum terms for enterprise contracts.&quot;,
-    &quot;meta&quot;: &quot;compliance&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Employee access policy&quot;,
-    &quot;text&quot;: &quot;Rules for privileged access and periodic review.&quot;,
-    &quot;meta&quot;: &quot;internal&quot;
-  },
-  {
-    &quot;title&quot;: &quot;Regional deletion schedule&quot;,
-    &quot;text&quot;: &quot;Country-specific retention and deletion windows for customer data.&quot;,
-    &quot;meta&quot;: &quot;privacy&quot;
-  }
-];
-
-function embedText(text) {
-  const vector = new Float32Array(dims);
-  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
-    let hash = 2166136261;
-    for (const char of token) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
-    const slot = Math.abs(hash) % dims;
-    vector[slot] += 1;
-    vector[(slot + token.length) % dims] += token.length / 10;
-  }
-  const magnitude = Math.hypot(...vector) || 1;
-  return Array.from(vector, (value) =&gt; value / magnitude);
-}
-
-export function PrivacyPreservingSearchExample() {
-  const [engine, setEngine] = useState(null);
-  const [query, setQuery] = useState(&#x27;&#x27;);
-  const [results, setResults] = useState([]);
-
-  useEffect(() =&gt; {
-    let cancelled = false;
-    let instance;
-
-    (async () =&gt; {
-      await init();
-      const flat = new Float32Array(
-        records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
-      );
-      instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
-      if (!cancelled) setEngine(instance);
-    })();
-
-    return () =&gt; {
-      cancelled = true;
-      instance?.free();
-    };
-  }, []);
-
-  useEffect(() =&gt; {
-    if (!engine || query.trim().length &lt; 2) {
-      setResults([]);
-      return;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
     }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
 
-    const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
-    setResults(
-      hits.map(([id, distance]) =&gt; ({
-        ...records[id],
-        similarity: Number((1 - distance).toFixed(3)),
-      }))
-    );
-  }, [engine, query]);
+        async function main() {
+          await init();
 
-  return (
-    &lt;section&gt;
-      &lt;input
-        value={query}
-        onChange={(event) =&gt; setQuery(event.target.value)}
-        placeholder=&quot;Search locally&quot;
-      /&gt;
-      &lt;ul&gt;
-        {results.map((result) =&gt; (
-          &lt;li key={result.title}&gt;
-            &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
-          &lt;/li&gt;
-        ))}
-      &lt;/ul&gt;
-    &lt;/section&gt;
-  );
-}</code></pre>
+          const flat = new Float32Array(
+            records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+          );
 
-<h2>How It Works</h2>
-<p>The flow is the same pattern you would use in production: turn each record into an embedding vector, build an HNSW graph with <code>WasmSearchEngine.from_vectors()</code>, and query it with the embedding for the current search text. HNSW keeps approximate nearest-neighbor search fast by traversing a layered graph instead of scanning every vector linearly.</p>
-<p>Similarity scoring here is derived from the returned distance with <code>1 - distance</code> so the UI can show an intuitive confidence number. If you swap in a real embedding model such as MiniLM, multilingual-e5, or precomputed server-generated vectors, the surrounding indexing and querying code stays almost identical.</p>
+          const engine = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+          const hits = JSON.parse(engine.search(new Float32Array(embedText(&#x27;termination clause with 30 day notice&#x27;)), 4));
 
-<h2>When to Use This Pattern</h2>
-<ul><li>Employee policy or legal search portals</li>
-<li>Healthcare and finance note viewers</li>
-<li>Personal knowledge management apps</li>
-<li>Security-conscious enterprise desktop apps</li></ul>
+          const results = hits.map(([id, distance]) =&gt; ({
+            ...records[id],
+            similarity: Number((1 - distance).toFixed(3)),
+          }));
 
-<h2>Limitations</h2>
-<p>If the browser downloads the underlying content, users can inspect it, so this pattern is not a substitute for access control. Sensitive telemetry, crash reporting, or third-party scripts can also leak query data if you do not audit them carefully.</p>
+          console.table(results);
+          engine.free();
+        }
 
-<p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
+        main();</code></pre>
+
+  <h2>React component version</h2>
+  <p>The React version keeps the same index build but wires it into component state so the UI can query on input changes. That is usually how teams introduce semantic retrieval into an existing product: initialize once, keep the engine in memory, and map nearest-neighbor hits back to the original records.</p>
+  <pre><code>import { useEffect, useState } from &#x27;react&#x27;;
+        import init, { WasmSearchEngine } from &#x27;altor-vec&#x27;;
+
+        const dims = 12;
+        const records = [
+  {
+    &quot;title&quot;: &quot;Termination clause&quot;,
+    &quot;text&quot;: &quot;Contract language covering notice periods and convenience termination rights.&quot;,
+    &quot;meta&quot;: &quot;contracts&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Data processing addendum&quot;,
+    &quot;text&quot;: &quot;Terms about subprocessors, retention, and deletion obligations.&quot;,
+    &quot;meta&quot;: &quot;privacy&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Expense reimbursement note&quot;,
+    &quot;text&quot;: &quot;Internal policy on meal limits, airfare class, and receipt rules.&quot;,
+    &quot;meta&quot;: &quot;policy&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Manager feedback journal&quot;,
+    &quot;text&quot;: &quot;Private note summarizing performance conversations and follow-ups.&quot;,
+    &quot;meta&quot;: &quot;notes&quot;
+  },
+  {
+    &quot;title&quot;: &quot;Offer approval checklist&quot;,
+    &quot;text&quot;: &quot;Compensation review flow for recruiting and finance sign-off.&quot;,
+    &quot;meta&quot;: &quot;people&quot;
+  },
+  {
+    &quot;title&quot;: &quot;M&amp;A diligence memo&quot;,
+    &quot;text&quot;: &quot;Summary of outstanding legal and data room questions.&quot;,
+    &quot;meta&quot;: &quot;legal&quot;
+  }
+];
+
+        function embedText(text) {
+  const vector = new Float32Array(dims);
+  for (const token of text.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)) {
+    let hash = 2166136261;
+    for (const char of token) {
+      hash = Math.imul(hash ^ char.charCodeAt(0), 16777619);
+    }
+    const slot = Math.abs(hash) % dims;
+    vector[slot] += 1;
+    vector[(slot + token.length) % dims] += token.length / 10;
+  }
+  const magnitude = Math.hypot(...vector) || 1;
+  return Array.from(vector, (value) =&gt; value / magnitude);
+}
+
+        export function PrivacyPreservingSearchExample() {
+          const [engine, setEngine] = useState(null);
+          const [query, setQuery] = useState(&#x27;&#x27;);
+          const [results, setResults] = useState([]);
+
+          useEffect(() =&gt; {
+            let cancelled = false;
+            let instance;
+
+            (async () =&gt; {
+              await init();
+              const flat = new Float32Array(
+                records.flatMap((record) =&gt; embedText(`${record.title} ${record.text} ${record.meta}`))
+              );
+              instance = WasmSearchEngine.from_vectors(flat, dims, 16, 200, 64);
+              if (!cancelled) setEngine(instance);
+            })();
+
+            return () =&gt; {
+              cancelled = true;
+              instance?.free();
+            };
+          }, []);
+
+          useEffect(() =&gt; {
+            if (!engine || query.trim().length &lt; 2) {
+              setResults([]);
+              return;
+            }
+
+            const hits = JSON.parse(engine.search(new Float32Array(embedText(query)), 5));
+            setResults(
+              hits.map(([id, distance]) =&gt; ({
+                ...records[id],
+                similarity: Number((1 - distance).toFixed(3)),
+              }))
+            );
+          }, [engine, query]);
+
+          return (
+            &lt;section&gt;
+              &lt;input
+                value={query}
+                onChange={(event) =&gt; setQuery(event.target.value)}
+                placeholder=&quot;Search locally on this device&quot;
+              /&gt;
+              &lt;ul&gt;
+                {results.map((result) =&gt; (
+                  &lt;li key={result.title}&gt;
+                    &lt;strong&gt;{result.title}&lt;/strong&gt; — {result.meta} (score {result.similarity})
+                  &lt;/li&gt;
+                ))}
+              &lt;/ul&gt;
+            &lt;/section&gt;
+          );
+        }</code></pre>
+
+  <h2>How this example works</h2>
+  <p>The pattern has three moving parts. First, you choose what text represents each record: title, description, metadata, or a chunk of content. Second, you turn that text into vectors and flatten them into one <code>Float32Array</code>. Third, you build the HNSW graph and query it with a vector created from the user input. The library returns nearest-neighbor IDs and distances, and your app decides how to display or post-process them.</p>
+  <p>Because the retrieval step is approximate nearest-neighbor search, it stays fast even as the dataset grows beyond trivial linear scans. The most important quality lever is still the embedding model. Better vectors usually matter more than micro-optimizing ANN parameters, so teams should benchmark retrieval quality on real user phrasing before shipping the experience widely.</p>
+
+  <h2>When to use this pattern</h2>
+  <p>This is a practical fit when the search corpus is small to medium, shipped with the app, and searched frequently enough that backend latency would be noticeable. Common examples include docs portals, embedded support widgets, local-first assistants, and curated catalogs.</p>
+  <ul><li>Personal knowledge bases</li><li>Client-side legal review</li><li>Private journals</li><li>On-device enterprise assistants</li></ul>
+
+  <h2>Limitations</h2>
+  <p>If you compute embeddings in a remote service, the pipeline is no longer fully local. You also need to protect the downloaded corpus itself; client-side search is not appropriate if the underlying material should never be present on the device.</p>
+  <p>Be especially careful about corpus size, update frequency, and data sensitivity. Browser vector search is excellent when those three constraints are favorable, but it is not the right answer when the dataset is huge, private, or changing constantly for every user.</p>
+
+  <h2>FAQ</h2>
+  <h3>Does browser search automatically make a product private?</h3>
+<p>No. It reduces query exposure, but you still need to consider where vectors come from, how files are cached, and whether the corpus itself is safe to download.</p>
+<h3>Can I keep both queries and content on device?</h3>
+<p>Yes, if you ship the vectors locally and avoid remote embedding generation at query time.</p>
+<h3>When should I choose a server instead?</h3>
+<p>Choose a server when the dataset should not be distributed to clients or when permissions differ per user.</p>
+
+  <p><strong>Get started:</strong> <code>npm install altor-vec</code> · <a href="https://github.com/Altor-lab/altor-vec">GitHub</a></p>
 </article>
 </body>
 </html>
