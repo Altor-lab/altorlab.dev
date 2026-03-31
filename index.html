@@ -22,6 +22,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="alternate" hreflang="en-us" href="https://altorlab.dev" />
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       .seo-links {
@@ -78,6 +79,38 @@
           "contactType": "sales",
           "availableLanguage": "English"
         }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is client-side vector search?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Client-side vector search runs embedding similarity search directly in the browser, so users can query semantic indexes without sending each request to a server."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does altor-vec compare to Pinecone?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "altor-vec is designed for browser-native vector search with no hosted infrastructure, while Pinecone is a managed server-side vector database for larger centralized workloads."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I use vector search without a server?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. altor-vec lets you ship vector search entirely in the browser, which is useful for demos, documentation search, offline experiences, and privacy-sensitive applications."
+            }
+          }
+        ]
       }
     </script>
   </head>
