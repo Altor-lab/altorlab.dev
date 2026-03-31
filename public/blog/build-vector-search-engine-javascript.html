@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a Vector Search Engine in JavaScript (Browser AI)</title>
+<meta name="description" content="Learn to build a semantic search engine that runs entirely in the browser using embeddings and client-side vector search with JavaScript.">
+<link rel="canonical" href="https://altorlab.dev/blog/build-vector-search-engine-javascript">
+<meta property="og:title" content="Build a Vector Search Engine in JavaScript (Browser AI)">
+<meta property="og:description" content="Learn to build a semantic search engine that runs entirely in the browser using embeddings and client-side vector search with JavaScript.">
+<meta property="og:url" content="https://altorlab.dev/blog/build-vector-search-engine-javascript">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Build a Vector Search Engine in JavaScript (Browser AI)",
+  "author": {"@type": "Organization", "name": "AltorLab"},
+  "publisher": {"@type": "Organization", "name": "AltorLab"},
+  "datePublished": "2026-03-31",
+  "url": "https://altorlab.dev/blog/build-vector-search-engine-javascript"
+}
+</script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 2rem; line-height: 1.3; color: #f5f5f5; }
+h2 { font-size: 1.5rem; color: #f5f5f5; margin-top: 2rem; }
+h3 { font-size: 1.2rem; color: #d4a574; }
+a { color: #d4a574; }
+pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; }
+code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<nav><a href="/">← Home</a> · <a href="/blog/">Blog</a></nav>
+<article>
+<h1>How to Build a Search Engine in JavaScript</h1>
+
+<p>Most tutorials on building a search engine in JavaScript teach you to filter arrays with <code>.includes()</code> or wire up Elasticsearch. Neither approach actually shows you how search engines work. One is too simple to be useful beyond a hundred records. The other offloads the interesting problem to a black box running in Docker.</p>
+
+<p>If you want to understand semantic search — the kind that returns "react hooks tutorial" when someone types "modern state management guide" — you need to build with vectors. This tutorial walks through building a client-side search engine using embeddings, cosine similarity, and zero external APIs. Everything runs in the browser. You'll generate vectors, index documents, and query semantically in under 200 lines of JavaScript.</p>
+
+<h2>Why Vectors Instead of Keywords</h2>
+
+<p>Traditional search matches strings. "JavaScript performance" finds documents containing those exact words. It misses "optimizing JS bundle size" even though that's clearly related. Vector search converts text into numerical representations (embeddings) that capture meaning. Documents about the same concept cluster together in high-dimensional space. Your search query becomes a vector, and you rank results by geometric proximity.</p>
+
+<p>The trade-off: vector search requires more upfront computation and approximately 1KB of storage per document for a 384-dimension embedding. For client-side use cases under 10,000 documents, that's perfectly viable. A blog with 500 posts needs roughly 500KB of vector data — less than a single hero image.</p>
+
+<h2>Architecture Overview</h2>
+
+<p>We're building three pieces:</p>
+
+<p><strong>1. Embedding generator:</strong> Convert text to vectors using a small transformer model (all-MiniLM-L6-v2, 23MB) running via ONNX Runtime in the browser.</p>
+
+<p><strong>2. Vector index:</strong> Store document vectors with metadata in a flat array. For sub-10K document collections, brute-force cosine similarity is fast enough. No need for HNSW graphs yet.</p>
+
+<p><strong>3. Query engine:</strong> Embed the search query, compute similarity scores against all indexed vectors, return top-k results sorted by relevance.</p>
+
+<h2>Step 1: Generate Embeddings</h2>
+
+<p>First, install Transformers.js, which gives us access to pre-trained models that run entirely in the browser via WebAssembly:</p>
+
+<pre><code>npm install @xenova/transformers</code></pre>
+
+<p>Create an embedder module:</p>
+
+<pre><code>// embedder.js
+import { pipeline } from '@xenova/transformers';
+
+let embedder = null;
+
+export async function initEmbedder() {
+  if (!embedder) {
+    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  return embedder;
+}
+
+export async function embed(text) {
+  const model = await initEmbedder();
+  const output = await model(text, { pooling: 'mean', normalize: true });
+  return Array.from(output.data);
+}</code></pre>
+
+<p>The <code>all-MiniLM-L6-v2</code> model produces 384-dimensional embeddings. It's small enough to load in a few seconds on decent connections. The <code>normalize: true</code> flag ensures vectors have unit length, which lets us use dot product instead of cosine similarity (they're equivalent for normalized vectors, but dot product is faster).</p>
+
+<h2>Step 2: Index Your Documents</h2>
+
+<p>Assume you have an array of blog posts or documentation pages. Each needs an ID, content, and any metadata you want to filter on:</p>
+
+<pre><code>const documents = [
+  { id: 1, title: 'React Hooks Guide', content: 'Learn about useState, useEffect...' },
+  { id: 2, title: 'Vue Composition API', content: 'Modern reactive patterns in Vue 3...' },
+  // ...
+];
+
+async function buildIndex(docs) {
+  const index = [];
+  
+  for (const doc of docs) {
+    const text = `${doc.title} ${doc.content}`.slice(0, 500); // Use first 500 chars
+    const vector = await embed(text);
+    
+    index.push({
+      id: doc.id,
+      vector,
+      title: doc.title,
+      content: doc.content.slice(0, 200) // Store snippet for display
+    });
+  }
+  
+  return index;
+}</code></pre>
+
+<p>This takes a few seconds for 100 documents, maybe 30 seconds for 1,000. You'd typically run this at build time and serialize the index to JSON. Load it at runtime instead of recomputing embeddings on every page load:</p>
+
+<pre><code>// At build time
+const index = await buildIndex(documents);
+fs.writeFileSync('search-index.json', JSON.stringify(index));
+
+// At runtime
+const index = await fetch('/search-index.json').then(r => r.json());</code></pre>
+
+<h2>Step 3: Implement Similarity Search</h2>
+
+<p>Dot product between normalized vectors gives us a similarity score from -1 to 1. Higher is more similar:</p>
+
+<pre><code>function dotProduct(a, b) {
+  return a.reduce((sum, val, i) => sum + val * b[i], 0);
+}
+
+async function search(query, index, topK = 10) {
+  const queryVector = await embed(query);
+  
+  const results = index.map(doc => ({
+    ...doc,
+    score: dotProduct(queryVector, doc.vector)
+  }));
+  
+  results.sort((a, b) => b.score - a.score);
+  return results.slice(0, topK);
+}</code></pre>
+
+<p>That's it. This brute-force approach computes 384 multiplications and additions per document. On a modern CPU, that's around 50,000 comparisons per millisecond. Even 5,000 documents search in under 100ms.</p>
+
+<h2>Making It Production-Ready</h2>
+
+<p>The code above works but needs a few refinements:</p>
+
+<p><strong>Chunking large documents:</strong> If your docs exceed 512 tokens (roughly 400 words), split them into overlapping chunks and index each separately. When a chunk matches, return its parent document.</p>
+
+<p><strong>Hybrid search:</strong> Combine vector similarity with keyword filters. If someone searches "react hooks 2024," filter by date first, then rank by semantic similarity within that subset.</p>
+
+<p><strong>Web Workers:</strong> Move embedding and search to a worker thread so they don't block the UI. Transformers.js already supports this via <code>env.allowLocalModels</code>.</p>
+
+<p><strong>Caching embeddings:</strong> Store the query vector for common searches in IndexedDB. "getting started" probably gets searched a lot — no need to re-embed it every time.</p>
+
+<h2>When This Approach Breaks Down</h2>
+
+<p>Client-side vector search stops making sense around 50,000 documents. At that scale, you're pushing 50MB of vector data to the client and search latency creeps above 500ms. You'd want to move to a server-side solution with approximate nearest neighbor indices (HNSW, IVF) like Qdrant or Weaviate.</p>
+
+<p>But for documentation sites, personal blogs, product catalogs under 10K items, or any use case where you want instant search without server costs, this architecture works beautifully. GitHub Pages, Netlify, Vercel — all just serving static JSON.</p>
+
+<h2>Working Example</h2>
+
+<p>Here's a minimal HTML page that ties everything together:</p>
+
+<pre><code>&lt;input type="text" id="query" placeholder="Search..." /&gt;
+&lt;div id="results"&gt;&lt;/div&gt;
+
+&lt;script type="module"&gt;
+import { embed } from './embedder.js';
+
+const index = await fetch('/search-index.json').then(r => r.json());
+
+document.getElementById('query').addEventListener('input', async (e) => {
+  const query = e.target.value;
+  if (query.length < 3) return;
+  
+  const results = await search(query, index, 5);
+  
+  document.getElementById('results').innerHTML = results
+    .map(r => `&lt;div&gt;&lt;strong&gt;${r.title}&lt;/strong&gt; (${r.score.toFixed(2)})&lt;/div&gt;`)
+    .join('');
+});
+&lt;/script&gt;</code></pre>
+
+<p>Type "state management," and you'll see results ranked by semantic similarity, not keyword overlap. It feels like magic the first time you search for "beginner JS tutorial" and get back "Introduction to JavaScript" even though those phrases share only one word.</p>
+
+<section aria-label="FAQ">
+<h2>FAQ</h2>
+
+<h3>Can I use OpenAI embeddings instead of running a local model?</h3>
+<p>Yes, but you'd need to call their API server-side at build time to generate embeddings. The advantage of Transformers.js is everything runs in the browser with no API keys or ongoing costs. For private data or air-gapped environments, local models are the only option.</p>
+
+<h3>How accurate is semantic search compared to Elasticsearch?</h3>
+<p>For pure semantic matching, vector search often outperforms keyword-based BM25 scoring. Elasticsearch 8+ supports vector search via kNN plugins, combining both approaches. A small local model like MiniLM won't match GPT-4 embeddings in nuance, but it's surprisingly good for most domains.</p>
+
+<h3>What if I need to update the index frequently?</h3>
+<p>Regenerate the index and push the new JSON file. With a build step, this happens automatically on content changes. For truly dynamic data (user-generated content changing every second), you'd need a different architecture — probably server-side with incremental index updates.</p>
+
+<h3>Does this work on mobile browsers?</h3>
+<p>Yes. ONNX Runtime targets WebAssembly, which runs on iOS Safari and Android Chrome. The initial model download (23MB) is the main concern on slower connections. Consider lazy-loading the search feature or showing a loading state.</p>
+</section>
+
+<p>If you'd rather skip the setup, <strong>altor-vec</strong> packages this entire pattern into a single npm install. It handles model loading, indexing, persistence, and exposes a clean search API. Check it out: <code>npm install altor-vec</code> — <a href="https://github.com/Altor-lab/altor-vec">https://github.com/Altor-lab/altor-vec</a></p>
+</article>
+<footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
+Published March 31, 2026 · Auto-generated from search data
+</footer>
+</body>
+</html>
