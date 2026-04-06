@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Build a Vector Search Engine in JavaScript (Browser AI)</title>
-<meta name="description" content="Learn to build a semantic search engine that runs entirely in the browser using embeddings and client-side vector search with JavaScript.">
+<title>Build a Vector Search Engine in JavaScript (2024)</title>
+<meta name="description" content="Learn to build a semantic search engine in the browser using embeddings and vector similarity. Pure JavaScript implementation with examples.">
 <link rel="canonical" href="https://altorlab.dev/blog/build-vector-search-engine-javascript">
-<meta property="og:title" content="Build a Vector Search Engine in JavaScript (Browser AI)">
-<meta property="og:description" content="Learn to build a semantic search engine that runs entirely in the browser using embeddings and client-side vector search with JavaScript.">
+<meta property="og:title" content="Build a Vector Search Engine in JavaScript (2024)">
+<meta property="og:description" content="Learn to build a semantic search engine in the browser using embeddings and vector similarity. Pure JavaScript implementation with examples.">
 <meta property="og:url" content="https://altorlab.dev/blog/build-vector-search-engine-javascript">
 <meta property="og:type" content="article">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "Build a Vector Search Engine in JavaScript (Browser AI)",
+  "headline": "Build a Vector Search Engine in JavaScript (2024)",
   "author": {"@type": "Organization", "name": "AltorLab"},
   "publisher": {"@type": "Organization", "name": "AltorLab"},
-  "datePublished": "2026-03-31",
+  "datePublished": "2026-04-06",
   "url": "https://altorlab.dev/blog/build-vector-search-engine-javascript"
 }
 </script>
@@ -36,177 +36,236 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 <article>
 <h1>How to Build a Search Engine in JavaScript</h1>
 
-<p>Most tutorials on building a search engine in JavaScript teach you to filter arrays with <code>.includes()</code> or wire up Elasticsearch. Neither approach actually shows you how search engines work. One is too simple to be useful beyond a hundred records. The other offloads the interesting problem to a black box running in Docker.</p>
+<p>Most tutorials on building a search engine in JavaScript end with a basic string-matching function that breaks the moment your dataset exceeds 100 items or users type something slightly off from your indexed terms. You get a working demo, sure, but not something you'd ship to production. The real challenge isn't making search work—it's making it <em>feel</em> intelligent without sending every keystroke to a remote API.</p>
 
-<p>If you want to understand semantic search — the kind that returns "react hooks tutorial" when someone types "modern state management guide" — you need to build with vectors. This tutorial walks through building a client-side search engine using embeddings, cosine similarity, and zero external APIs. Everything runs in the browser. You'll generate vectors, index documents, and query semantically in under 200 lines of JavaScript.</p>
+<p>This guide walks through building a client-side vector search engine that runs entirely in the browser. No backend calls. No latency. Just semantic understanding of what users actually mean, powered by embeddings and cosine similarity. We'll use JavaScript, the Web Worker API for performance, and a lightweight vector library to handle the math.</p>
 
-<h2>Why Vectors Instead of Keywords</h2>
+<h2>Why Vector Search Beats String Matching</h2>
 
-<p>Traditional search matches strings. "JavaScript performance" finds documents containing those exact words. It misses "optimizing JS bundle size" even though that's clearly related. Vector search converts text into numerical representations (embeddings) that capture meaning. Documents about the same concept cluster together in high-dimensional space. Your search query becomes a vector, and you rank results by geometric proximity.</p>
+<p>Traditional search relies on exact or fuzzy text matches. Search for "JS frameworks" and you'll miss documents that say "JavaScript libraries" or "React ecosystems." Vector search converts text into numerical representations—embeddings—that capture semantic meaning. Documents about similar concepts cluster together in high-dimensional space, even if they use completely different words.</p>
 
-<p>The trade-off: vector search requires more upfront computation and approximately 1KB of storage per document for a 384-dimension embedding. For client-side use cases under 10,000 documents, that's perfectly viable. A blog with 500 posts needs roughly 500KB of vector data — less than a single hero image.</p>
+<p>The trade-off: you need to generate embeddings for your content upfront. But once you have them, search becomes a simple distance calculation. No regex parsing, no inverted indices, no fragile synonym dictionaries.</p>
+
+<p>This approach makes sense when you have 100 to 50,000 documents, you control the content pipeline, and you want sub-50ms query response times. Think documentation sites, internal wikis, product catalogs, or any app where users expect instant filtering.</p>
 
 <h2>Architecture Overview</h2>
 
-<p>We're building three pieces:</p>
+<p>Our search engine has three pieces:</p>
 
-<p><strong>1. Embedding generator:</strong> Convert text to vectors using a small transformer model (all-MiniLM-L6-v2, 23MB) running via ONNX Runtime in the browser.</p>
+<p><strong>Embedding generation.</strong> At build time, convert each document into a vector using a model like OpenAI's text-embedding-3-small or Cohere's embed-light. Store these vectors in a JSON file bundled with your app.</p>
 
-<p><strong>2. Vector index:</strong> Store document vectors with metadata in a flat array. For sub-10K document collections, brute-force cosine similarity is fast enough. No need for HNSW graphs yet.</p>
+<p><strong>Query encoding.</strong> When a user types a search term, encode it into a vector using the same model. This happens client-side if you're using a WASM-based model, or via a single API call if you're using a hosted service.</p>
 
-<p><strong>3. Query engine:</strong> Embed the search query, compute similarity scores against all indexed vectors, return top-k results sorted by relevance.</p>
+<p><strong>Similarity ranking.</strong> Calculate cosine similarity between the query vector and every document vector. Sort by score. Return top N results.</p>
 
-<h2>Step 1: Generate Embeddings</h2>
+<p>The entire process runs in a Web Worker so the UI stays responsive during large searches.</p>
 
-<p>First, install Transformers.js, which gives us access to pre-trained models that run entirely in the browser via WebAssembly:</p>
+<h2>Step 1: Generate Embeddings for Your Content</h2>
 
-<pre><code>npm install @xenova/transformers</code></pre>
+<p>Start with a Node script that reads your documents and calls an embedding API. Here's a minimal version using OpenAI:</p>
 
-<p>Create an embedder module:</p>
+<pre><code>import fs from 'fs';
+import OpenAI from 'openai';
 
-<pre><code>// embedder.js
-import { pipeline } from '@xenova/transformers';
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-let embedder = null;
-
-export async function initEmbedder() {
-  if (!embedder) {
-    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  }
-  return embedder;
-}
-
-export async function embed(text) {
-  const model = await initEmbedder();
-  const output = await model(text, { pooling: 'mean', normalize: true });
-  return Array.from(output.data);
-}</code></pre>
-
-<p>The <code>all-MiniLM-L6-v2</code> model produces 384-dimensional embeddings. It's small enough to load in a few seconds on decent connections. The <code>normalize: true</code> flag ensures vectors have unit length, which lets us use dot product instead of cosine similarity (they're equivalent for normalized vectors, but dot product is faster).</p>
-
-<h2>Step 2: Index Your Documents</h2>
-
-<p>Assume you have an array of blog posts or documentation pages. Each needs an ID, content, and any metadata you want to filter on:</p>
-
-<pre><code>const documents = [
-  { id: 1, title: 'React Hooks Guide', content: 'Learn about useState, useEffect...' },
-  { id: 2, title: 'Vue Composition API', content: 'Modern reactive patterns in Vue 3...' },
-  // ...
+const documents = [
+  { id: 1, title: 'React Server Components', text: 'RSCs let you fetch data...' },
+  { id: 2, title: 'Vite vs Webpack', text: 'Build tools compared...' },
+  // ... more docs
 ];
 
-async function buildIndex(docs) {
-  const index = [];
+async function generateEmbeddings() {
+  const embeddings = [];
   
-  for (const doc of docs) {
-    const text = `${doc.title} ${doc.content}`.slice(0, 500); // Use first 500 chars
-    const vector = await embed(text);
+  for (const doc of documents) {
+    const response = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: `${doc.title} ${doc.text}`,
+    });
     
-    index.push({
+    embeddings.push({
       id: doc.id,
-      vector,
-      title: doc.title,
-      content: doc.content.slice(0, 200) // Store snippet for display
+      vector: response.data[0].embedding,
+      metadata: { title: doc.title },
     });
   }
   
-  return index;
-}</code></pre>
-
-<p>This takes a few seconds for 100 documents, maybe 30 seconds for 1,000. You'd typically run this at build time and serialize the index to JSON. Load it at runtime instead of recomputing embeddings on every page load:</p>
-
-<pre><code>// At build time
-const index = await buildIndex(documents);
-fs.writeFileSync('search-index.json', JSON.stringify(index));
-
-// At runtime
-const index = await fetch('/search-index.json').then(r => r.json());</code></pre>
-
-<h2>Step 3: Implement Similarity Search</h2>
-
-<p>Dot product between normalized vectors gives us a similarity score from -1 to 1. Higher is more similar:</p>
-
-<pre><code>function dotProduct(a, b) {
-  return a.reduce((sum, val, i) => sum + val * b[i], 0);
+  fs.writeFileSync('embeddings.json', JSON.stringify(embeddings));
 }
 
-async function search(query, index, topK = 10) {
-  const queryVector = await embed(query);
+generateEmbeddings();</code></pre>
+
+<p>Run this during your build step. The output is a single JSON file with document IDs, vectors (arrays of 1536 floats for text-embedding-3-small), and any metadata you want to display in results.</p>
+
+<p>Cost: roughly $0.02 per 1,000 documents with OpenAI's smallest model. Re-run only when content changes.</p>
+
+<h2>Step 2: Load Embeddings in the Browser</h2>
+
+<p>Import the embeddings file and initialize your search index. If you're bundling with Vite or Next.js, you can import JSON directly:</p>
+
+<pre><code>import embeddingsData from './embeddings.json';
+
+class VectorSearch {
+  constructor(embeddings) {
+    this.embeddings = embeddings;
+  }
   
-  const results = index.map(doc => ({
-    ...doc,
-    score: dotProduct(queryVector, doc.vector)
-  }));
+  cosineSimilarity(vecA, vecB) {
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
+    }
+    
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
   
-  results.sort((a, b) => b.score - a.score);
-  return results.slice(0, topK);
+  search(queryVector, topK = 10) {
+    const results = this.embeddings
+      .map(doc => ({
+        ...doc,
+        score: this.cosineSimilarity(queryVector, doc.vector),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topK);
+    
+    return results;
+  }
+}
+
+const searchEngine = new VectorSearch(embeddingsData);</code></pre>
+
+<p>This class handles the core ranking logic. The <code>cosineSimilarity</code> function is the entire "algorithm"—dot product divided by magnitude product. Simple enough that you could write it in a job interview.</p>
+
+<h2>Step 3: Encode User Queries</h2>
+
+<p>When the user types a search, you need to convert their query string into a vector. You have two options:</p>
+
+<p><strong>Option A: API call.</strong> Send the query to your embedding provider. Adds 100-300ms latency but requires zero client-side compute.</p>
+
+<pre><code>async function encodeQuery(query) {
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'text-embedding-3-small',
+      input: query,
+    }),
+  });
+  
+  const data = await response.json();
+  return data.data[0].embedding;
 }</code></pre>
 
-<p>That's it. This brute-force approach computes 384 multiplications and additions per document. On a modern CPU, that's around 50,000 comparisons per millisecond. Even 5,000 documents search in under 100ms.</p>
+<p><strong>Option B: Local model.</strong> Use a WASM-compiled model like Transformers.js or ONNX Runtime Web. Runs entirely in the browser but requires loading a 20-40MB model file on first use.</p>
 
-<h2>Making It Production-Ready</h2>
+<pre><code>import { pipeline } from '@xenova/transformers';
 
-<p>The code above works but needs a few refinements:</p>
+let embedder;
 
-<p><strong>Chunking large documents:</strong> If your docs exceed 512 tokens (roughly 400 words), split them into overlapping chunks and index each separately. When a chunk matches, return its parent document.</p>
+async function initEmbedder() {
+  embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+}
 
-<p><strong>Hybrid search:</strong> Combine vector similarity with keyword filters. If someone searches "react hooks 2024," filter by date first, then rank by semantic similarity within that subset.</p>
+async function encodeQuery(query) {
+  const output = await embedder(query, { pooling: 'mean', normalize: true });
+  return Array.from(output.data);
+}</code></pre>
 
-<p><strong>Web Workers:</strong> Move embedding and search to a worker thread so they don't block the UI. Transformers.js already supports this via <code>env.allowLocalModels</code>.</p>
+<p>For most use cases, the API approach is faster unless users are making dozens of searches per session. The hybrid option: cache the model in IndexedDB after first load.</p>
 
-<p><strong>Caching embeddings:</strong> Store the query vector for common searches in IndexedDB. "getting started" probably gets searched a lot — no need to re-embed it every time.</p>
+<h2>Step 4: Wire It Up with a Web Worker</h2>
 
-<h2>When This Approach Breaks Down</h2>
+<p>Searching through 10,000+ vectors can block the main thread. Offload the work to a Web Worker:</p>
 
-<p>Client-side vector search stops making sense around 50,000 documents. At that scale, you're pushing 50MB of vector data to the client and search latency creeps above 500ms. You'd want to move to a server-side solution with approximate nearest neighbor indices (HNSW, IVF) like Qdrant or Weaviate.</p>
+<pre><code>// search-worker.js
+import embeddingsData from './embeddings.json';
 
-<p>But for documentation sites, personal blogs, product catalogs under 10K items, or any use case where you want instant search without server costs, this architecture works beautifully. GitHub Pages, Netlify, Vercel — all just serving static JSON.</p>
+const searchEngine = new VectorSearch(embeddingsData);
 
-<h2>Working Example</h2>
-
-<p>Here's a minimal HTML page that ties everything together:</p>
-
-<pre><code>&lt;input type="text" id="query" placeholder="Search..." /&gt;
-&lt;div id="results"&gt;&lt;/div&gt;
-
-&lt;script type="module"&gt;
-import { embed } from './embedder.js';
-
-const index = await fetch('/search-index.json').then(r => r.json());
-
-document.getElementById('query').addEventListener('input', async (e) => {
-  const query = e.target.value;
-  if (query.length < 3) return;
-  
-  const results = await search(query, index, 5);
-  
-  document.getElementById('results').innerHTML = results
-    .map(r => `&lt;div&gt;&lt;strong&gt;${r.title}&lt;/strong&gt; (${r.score.toFixed(2)})&lt;/div&gt;`)
-    .join('');
+self.addEventListener('message', (e) => {
+  const { queryVector } = e.data;
+  const results = searchEngine.search(queryVector, 10);
+  self.postMessage(results);
 });
-&lt;/script&gt;</code></pre>
 
-<p>Type "state management," and you'll see results ranked by semantic similarity, not keyword overlap. It feels like magic the first time you search for "beginner JS tutorial" and get back "Introduction to JavaScript" even though those phrases share only one word.</p>
+// main.js
+const worker = new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' });
+
+async function performSearch(query) {
+  const queryVector = await encodeQuery(query);
+  
+  return new Promise((resolve) => {
+    worker.onmessage = (e) => resolve(e.data);
+    worker.postMessage({ queryVector });
+  });
+}</code></pre>
+
+<p>Now your search runs in parallel with UI rendering. Users can type freely without jank.</p>
+
+<h2>Optimizations Worth Considering</h2>
+
+<p>Once the basic engine works, there are three upgrades that make a noticeable difference:</p>
+
+<p><strong>Quantization.</strong> Reduce vector precision from 32-bit floats to 8-bit integers. Cuts storage by 75% and speeds up similarity calculations. Accuracy drop is negligible for most use cases. The <code>altor-vec</code> library handles this automatically with <code>quantize: true</code> in the config.</p>
+
+<p><strong>Hybrid scoring.</strong> Combine vector similarity with traditional keyword matching for best results. Weight them 70/30. This catches exact product codes or acronyms that embeddings sometimes blur.</p>
+
+<p><strong>Prefiltering.</strong> If you have metadata like categories or dates, filter the document set before calculating similarity. Searching 1,000 docs is faster than 10,000, and users often want scoped results anyway.</p>
+
+<h2>When This Approach Fails</h2>
+
+<p>Client-side vector search stops making sense above 100,000 documents. The embedding file becomes too large to bundle (20-30MB+), and even with Web Workers, similarity calculations start taking 500ms+. At that scale, reach for a proper vector database like Pinecone, Weaviate, or Qdrant running server-side with approximate nearest neighbor algorithms.</p>
+
+<p>It also struggles with multilingual content unless you use a multilingual embedding model. And if your content updates frequently—several times per day—you'll need a build pipeline that regenerates embeddings fast.</p>
+
+<h2>Alternative: Skip the Complexity</h2>
+
+<p>If you want vector search without writing the cosine similarity loop yourself, <code>altor-vec</code> packages this entire pattern into a 4KB library. It handles quantization, hybrid scoring, and Web Worker orchestration:</p>
+
+<pre><code>import { createSearchEngine } from 'altor-vec';
+
+const engine = await createSearchEngine({
+  embeddings: './embeddings.json',
+  quantize: true,
+  hybrid: { keywords: 0.3 },
+});
+
+const results = await engine.search('react state management');</code></pre>
+
+<p>The API is deliberately minimal. You provide embeddings, it provides results. No configuration sprawl, no framework lock-in.</p>
 
 <section aria-label="FAQ">
-<h2>FAQ</h2>
+<h2>Frequently Asked Questions</h2>
 
-<h3>Can I use OpenAI embeddings instead of running a local model?</h3>
-<p>Yes, but you'd need to call their API server-side at build time to generate embeddings. The advantage of Transformers.js is everything runs in the browser with no API keys or ongoing costs. For private data or air-gapped environments, local models are the only option.</p>
+<h3>Can I use this for fuzzy text search without embeddings?</h3>
+<p>Technically yes—use TF-IDF vectors instead of semantic embeddings—but at that point libraries like Fuse.js or FlexSearch are simpler. Vector search shines when you need semantic understanding, not just typo tolerance.</p>
 
-<h3>How accurate is semantic search compared to Elasticsearch?</h3>
-<p>For pure semantic matching, vector search often outperforms keyword-based BM25 scoring. Elasticsearch 8+ supports vector search via kNN plugins, combining both approaches. A small local model like MiniLM won't match GPT-4 embeddings in nuance, but it's surprisingly good for most domains.</p>
+<h3>What's the minimum number of documents where this makes sense?</h3>
+<p>Around 50. Below that, a basic filter function is faster to implement and good enough. The overhead of generating embeddings and setting up workers isn't worth it for tiny datasets.</p>
 
-<h3>What if I need to update the index frequently?</h3>
-<p>Regenerate the index and push the new JSON file. With a build step, this happens automatically on content changes. For truly dynamic data (user-generated content changing every second), you'd need a different architecture — probably server-side with incremental index updates.</p>
+<h3>How do I handle search result relevance tuning?</h3>
+<p>Log queries and clicks. If certain documents rank high but never get clicked, either their metadata is misleading or the embedding model isn't capturing the right semantics. Sometimes manually boosting specific docs by 0.1-0.2 in the similarity score fixes edge cases faster than retraining models.</p>
 
-<h3>Does this work on mobile browsers?</h3>
-<p>Yes. ONNX Runtime targets WebAssembly, which runs on iOS Safari and Android Chrome. The initial model download (23MB) is the main concern on slower connections. Consider lazy-loading the search feature or showing a loading state.</p>
+<h3>Does this work offline?</h3>
+<p>Completely, if you use a local embedding model and bundle the vectors with your app. The entire search stack runs without network access. Perfect for Electron apps or PWAs.</p>
+
+<h3>What about privacy?</h3>
+<p>User queries never leave the browser unless you choose the API-based encoding route. If privacy matters, use Transformers.js for local encoding and keep everything client-side.</p>
 </section>
 
-<p>If you'd rather skip the setup, <strong>altor-vec</strong> packages this entire pattern into a single npm install. It handles model loading, indexing, persistence, and exposes a clean search API. Check it out: <code>npm install altor-vec</code> — <a href="https://github.com/Altor-lab/altor-vec">https://github.com/Altor-lab/altor-vec</a></p>
+<p>Need vector search without the setup overhead? <code>npm install altor-vec</code> gives you a production-ready implementation in one line. Check the repo at <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a> for API docs and advanced configuration examples.</p>
 </article>
 <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
-Published March 31, 2026 · Auto-generated from search data
+Published April 06, 2026 · Auto-generated from search data
 </footer>
 </body>
 </html>
