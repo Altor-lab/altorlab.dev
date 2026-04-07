@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a JavaScript Search Engine with AI Embeddings</title>
+<meta name="description" content="Learn to create a browser-based semantic search engine using vector embeddings and client-side AI. No server required, pure JavaScript.">
+<link rel="canonical" href="https://altorlab.dev/blog/build-javascript-search-engine-ai-embeddings">
+<meta property="og:title" content="Build a JavaScript Search Engine with AI Embeddings">
+<meta property="og:description" content="Learn to create a browser-based semantic search engine using vector embeddings and client-side AI. No server required, pure JavaScript.">
+<meta property="og:url" content="https://altorlab.dev/blog/build-javascript-search-engine-ai-embeddings">
+<meta property="og:type" content="article">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Build a JavaScript Search Engine with AI Embeddings",
+  "author": {"@type": "Organization", "name": "AltorLab"},
+  "publisher": {"@type": "Organization", "name": "AltorLab"},
+  "datePublished": "2026-04-07",
+  "url": "https://altorlab.dev/blog/build-javascript-search-engine-ai-embeddings"
+}
+</script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.7; color: #e0e0e0; background: #0a0a0a; }
+h1 { font-size: 2rem; line-height: 1.3; color: #f5f5f5; }
+h2 { font-size: 1.5rem; color: #f5f5f5; margin-top: 2rem; }
+h3 { font-size: 1.2rem; color: #d4a574; }
+a { color: #d4a574; }
+pre { background: #1a1a1a; padding: 16px; border-radius: 8px; overflow-x: auto; }
+code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<nav><a href="/">← Home</a> · <a href="/blog/">Blog</a></nav>
+<article>
+<h1>How to Build a Search Engine in JavaScript (Without a Backend)</h1>
+
+<p>Most tutorials on building a search engine in JavaScript start with Express, a database, and some variation of "now just plug in Elasticsearch." That's not a search engine. That's a thin client wrapping someone else's infrastructure.</p>
+
+<p>Here's a different approach: build a legitimate semantic search engine that runs entirely in the browser using vector embeddings, cosine similarity, and client-side indexing. No server. No API calls after the initial page load. Just JavaScript, Web Workers, and about 300 lines of code.</p>
+
+<p>This isn't a toy. GitHub uses client-side search for repository file navigation. Algolia's InstantSearch can run entirely browser-side for small datasets. The constraint isn't capability—it's that most developers never learned how vector search actually works under the hood.</p>
+
+<h2>Why Client-Side Vector Search Matters</h2>
+
+<p>Traditional keyword search matches exact strings. Vector search converts text into high-dimensional numerical representations (embeddings) and finds semantically similar content through distance calculations. When you search "fix broken authentication" and it surfaces a doc titled "Troubleshooting login errors," that's vector search working.</p>
+
+<p>Running this in the browser means:</p>
+
+<p>Zero latency after initial load. No network roundtrips.</p>
+
+<p>Privacy by default. User queries never leave their machine.</p>
+
+<p>No backend costs. Host static files on Cloudflare Pages and call it done.</p>
+
+<p>The tradeoff is dataset size. You're limited to what fits in browser memory—call it 50MB of embeddings maximum, which covers roughly 10,000 documents at 384-dimensional vectors. For documentation sites, internal tools, or product catalogs, that's plenty.</p>
+
+<h2>The Architecture in Three Pieces</h2>
+
+<p>First, generate embeddings offline using a model like all-MiniLM-L6-v2. This produces 384-dimensional vectors that capture semantic meaning. You do this once during build time, not in the browser.</p>
+
+<p>Second, ship those embeddings as a compact binary format or JSON to the client. Use a Web Worker to avoid blocking the main thread during indexing.</p>
+
+<p>Third, when a user searches, convert their query to a vector using the same model (via ONNX Runtime or transformers.js), then calculate cosine similarity against your index. Return the top K results ranked by similarity score.</p>
+
+<p>Let's build it.</p>
+
+<h2>Step 1: Generate Embeddings Offline</h2>
+
+<p>You need Node.js and a sentence transformer model. Install <code>@xenova/transformers</code>, which runs models via ONNX:</p>
+
+<pre><code>npm install @xenova/transformers</code></pre>
+
+<p>Create a build script that processes your documents:</p>
+
+<pre><code>import { pipeline } from '@xenova/transformers';
+
+const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+const documents = [
+  { id: 1, text: "JavaScript closures explained with examples" },
+  { id: 2, text: "Understanding async/await in Node.js" },
+  { id: 3, text: "How to debug memory leaks in Chrome DevTools" }
+];
+
+const embeddings = await Promise.all(
+  documents.map(async (doc) => {
+    const output = await extractor(doc.text, { pooling: 'mean', normalize: true });
+    return {
+      id: doc.id,
+      vector: Array.from(output.data)
+    };
+  })
+);
+
+console.log(JSON.stringify(embeddings));</code></pre>
+
+<p>This generates normalized 384-dimensional vectors. The <code>normalize: true</code> flag is critical—it lets you use dot product instead of cosine similarity later, which is faster.</p>
+
+<p>Save this output to <code>embeddings.json</code> and ship it with your frontend bundle.</p>
+
+<h2>Step 2: Build the Browser Search Index</h2>
+
+<p>In your main application, load the embeddings and set up a Web Worker to handle search without freezing the UI:</p>
+
+<pre><code>// search-worker.js
+let index = [];
+
+self.addEventListener('message', async (e) => {
+  if (e.data.type === 'init') {
+    index = e.data.embeddings;
+    self.postMessage({ type: 'ready' });
+  }
+  
+  if (e.data.type === 'search') {
+    const results = search(e.data.queryVector, 10);
+    self.postMessage({ type: 'results', results });
+  }
+});
+
+function search(queryVector, topK) {
+  const scores = index.map(item => ({
+    id: item.id,
+    score: dotProduct(queryVector, item.vector)
+  }));
+  
+  return scores
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK);
+}
+
+function dotProduct(a, b) {
+  return a.reduce((sum, val, i) => sum + val * b[i], 0);
+}</code></pre>
+
+<p>Initialize the worker in your main thread:</p>
+
+<pre><code>const worker = new Worker('search-worker.js');
+
+fetch('/embeddings.json')
+  .then(r => r.json())
+  .then(embeddings => {
+    worker.postMessage({ type: 'init', embeddings });
+  });
+
+worker.addEventListener('message', (e) => {
+  if (e.data.type === 'results') {
+    displayResults(e.data.results);
+  }
+});</code></pre>
+
+<h2>Step 3: Convert Queries to Vectors in Real-Time</h2>
+
+<p>When the user types a search query, you need to convert it to a vector using the same model. This is where <code>transformers.js</code> shines—it runs inference directly in the browser via WebAssembly.</p>
+
+<pre><code>import { pipeline } from '@xenova/transformers';
+
+let queryExtractor;
+
+async function initSearch() {
+  queryExtractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+}
+
+async function handleSearch(queryText) {
+  const output = await queryExtractor(queryText, { pooling: 'mean', normalize: true });
+  const queryVector = Array.from(output.data);
+  
+  worker.postMessage({ type: 'search', queryVector });
+}</code></pre>
+
+<p>First load takes 2-3 seconds as the model downloads (about 23MB for all-MiniLM-L6-v2). Cache it in IndexedDB or rely on browser HTTP cache. Subsequent queries return in under 100ms.</p>
+
+<h2>Optimization: Quantization and Compression</h2>
+
+<p>Shipping 10,000 embeddings at 384 dimensions in JSON is roughly 15MB uncompressed. Two quick wins:</p>
+
+<p>Use Float32Array instead of JSON arrays. Binary formats compress better and parse faster.</p>
+
+<p>Quantize vectors to 8-bit integers. You lose about 2% accuracy but cut size by 75%. Libraries like <code>faiss.js</code> handle this, but you can roll your own with simple min-max scaling.</p>
+
+<p>Here's a minimal quantization approach:</p>
+
+<pre><code>function quantize(vector) {
+  const min = Math.min(...vector);
+  const max = Math.max(...vector);
+  return vector.map(v => 
+    Math.round(((v - min) / (max - min)) * 255)
+  );
+}</code></pre>
+
+<p>Store min/max values alongside the quantized vector, then dequantize during similarity calculation.</p>
+
+<h2>When to Skip the DIY Route</h2>
+
+<p>If you need approximate nearest neighbor search for 100K+ documents, build-it-yourself stops making sense. At that scale, you want HNSW indexes, SIMD optimizations, and memory-mapped file I/O—basically, you want a library.</p>
+
+<p>For client-side TypeScript projects under 10K documents, <code>altor-vec</code> handles the quantization, indexing, and worker management out of the box. It's 12KB gzipped and works with any sentence transformer model:</p>
+
+<pre><code>npm install altor-vec</code></pre>
+
+<p>It gives you the same architecture described here but with better compression and a cleaner API. Check the repo for examples: <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a>.</p>
+
+<h2>What You Actually Built</h2>
+
+<p>This isn't a search box with autocomplete. It's a semantic search engine that understands intent, runs privately in the user's browser, and returns results in under 100ms after initial load. You converted text to meaning, indexed meaning as vectors, and ranked results by semantic similarity—all without touching a server.</p>
+
+<p>The same principles scale to image search (CLIP embeddings), code search (CodeBERT), or multilingual search (multilingual sentence transformers). The constraint is dataset size, not capability.</p>
+
+<p>Most developers never build this because they assume search requires infrastructure. It doesn't. It requires math, a good model, and 300 lines of JavaScript.</p>
+
+<section aria-label="FAQ">
+<h2>Frequently Asked Questions</h2>
+
+<h3>Can I use this for a production app with thousands of users?</h3>
+<p>Yes, if your dataset fits in browser memory (under 50MB of embeddings). GitHub does this for file search in repos. The bottleneck is initial model download time, which you mitigate with aggressive HTTP caching and service workers.</p>
+
+<h3>How do I handle typos or exact keyword matches?</h3>
+<p>Vector search handles typos naturally through semantic similarity. For exact matches, run a parallel BM25 index using something like <code>fuzzysort</code> or <code>flexsearch</code>, then blend results. Hybrid search (vector + keyword) consistently outperforms either alone.</p>
+
+<h3>What's the performance difference between dot product and cosine similarity?</h3>
+<p>If your vectors are normalized (which they should be), dot product and cosine similarity produce identical rankings. Dot product is faster because it skips the magnitude calculation. Always normalize during embedding generation, not at query time.</p>
+
+<h3>Do I need TypeScript for this?</h3>
+<p>No, but you'll want it. Vector operations involve a lot of array manipulation, and TypeScript catches dimension mismatches at compile time. The <code>altor-vec</code> library is fully typed if you go that route.</p>
+</section>
+
+<p><strong>Start building:</strong> <code>npm install altor-vec</code> — Full examples and API docs at <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
+</article>
+<footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
+Published April 07, 2026 · Auto-generated from search data
+</footer>
+</body>
+</html>
