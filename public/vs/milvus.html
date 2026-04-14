@@ -1,0 +1,57 @@
+<!doctype html><html lang="en-US"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>altor-vec vs Milvus — Client-Side vs Distributed Vector Database</title><meta name="description" content="Compare altor-vec and Milvus: browser-native 54KB semantic search versus enterprise-grade distributed vector database. When to use each for JavaScript applications." /><meta name="keywords" content="altor-vec vs milvus, milvus alternative, client-side vector search, browser semantic search javascript" /><meta name="geo.region" content="US" /><link rel="canonical" href="https://altorlab.dev/vs/milvus.html" /><meta property="og:type" content="article" /><meta property="og:title" content="altor-vec vs Milvus — Client-Side vs Distributed Vector Database" /><meta property="og:description" content="Compare altor-vec and Milvus: browser-native semantic search versus enterprise distributed vector DB." /><meta property="og:url" content="https://altorlab.dev/vs/milvus.html" /><link rel="preconnect" href="https://fonts.googleapis.com" /><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>:root { --bg:#080a09; --surface:#0e1210; --surface-raised:#141a17; --border:#1e2823; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --altor-glow:rgba(110,231,183,.07); --code:#c3e88d; } * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',system-ui,sans-serif; line-height:1.74; } a { color:var(--altor); text-decoration:none; } a:hover { text-decoration:underline; } main { max-width:920px; margin:0 auto; padding:30px 22px 78px; } .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; } .mono, code, pre { font-family:'JetBrains Mono',monospace; } h1 { font-family:'Instrument Serif',serif; font-size:clamp(2rem,5vw,3.4rem); line-height:1.08; margin:.55rem 0 1rem; } h2 { margin-top:2.35rem; font-size:1.55rem; } p, li, td, th { color:var(--text-secondary); } pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:var(--code); line-height:1.6; } code { color:#d9f99d; } .table-wrap { overflow:auto; } table { width:100%; border-collapse:collapse; margin:14px 0; background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; overflow:hidden; } th, td { padding:12px 14px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; } th { color:var(--text); background:#111814; } tr:last-child td { border-bottom:none; } .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; } .lead { font-size:1.03rem; } .install, .callout { background:var(--surface-raised); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; } .callout { background:var(--altor-glow); } .footer-nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"altor-vec vs Milvus — Client-Side vs Distributed Vector Database","url":"https://altorlab.dev/vs/milvus.html","datePublished":"2026-04-14","dateModified":"2026-04-14","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"keywords":["milvus","altor-vec","vector search","browser","comparison"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Milvus better than altor-vec?","acceptedAnswer":{"@type":"Answer","text":"They serve different use cases. Milvus is a distributed vector database for server-side, high-scale workloads with billions of vectors. altor-vec runs entirely in the browser, requires no server, and is 54KB. For JavaScript applications needing client-side semantic search, altor-vec is the right choice. For shared, server-side vector infrastructure at scale, Milvus is better."}},{"@type":"Question","name":"Can altor-vec replace Milvus?","acceptedAnswer":{"@type":"Answer","text":"Only for browser-side use cases with public data and moderate corpus sizes. Milvus handles billions of vectors, concurrent writes, and enterprise-scale filtering. altor-vec is optimized for frontend semantic search without any backend dependency."}},{"@type":"Question","name":"Which is easier to set up?","acceptedAnswer":{"@type":"Answer","text":"altor-vec requires only npm install and works in the browser immediately. Milvus requires deploying a distributed system with multiple components (etcd, MinIO, and Milvus nodes) — typically a multi-hour setup with Kubernetes or Docker Compose."}}]}</script>
+</head><body><main>
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a class="mono" href="/">Home</a><span>&gt;</span><a class="mono" href="/vs/">Comparisons</a><span>&gt;</span><span>altor-vec vs Milvus</span></nav>
+<p class="k">altor-vec vs milvus</p>
+<h1>altor-vec vs Milvus — Client-Side vs Distributed Vector Database</h1>
+<p class="lead">Milvus is an open-source distributed vector database built for billion-scale server-side workloads. altor-vec is a 54KB WASM library that runs semantic search entirely in the browser with no server required. They are different tools solving different problems — but both appear when developers search for "vector search for JavaScript."</p>
+
+<div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code> &nbsp;|&nbsp; No server, no configuration, no API keys.</div>
+
+<h2>Feature comparison</h2>
+<div class="table-wrap"><table><thead><tr><th>Capability</th><th>altor-vec</th><th>Milvus</th></tr></thead><tbody>
+<tr><td>Runs in browser</td><td>Yes — 54KB WASM</td><td>No</td></tr>
+<tr><td>Server required</td><td>No</td><td>Yes — etcd, MinIO, Milvus nodes</td></tr>
+<tr><td>Setup time</td><td>&lt; 2 minutes</td><td>Hours (Docker Compose or Kubernetes)</td></tr>
+<tr><td>Max corpus size</td><td>~100K vectors (browser memory)</td><td>Billions of vectors</td></tr>
+<tr><td>Concurrent writes</td><td>Batch only (on deploy)</td><td>Continuous, high-throughput</td></tr>
+<tr><td>Filtering</td><td>Post-search metadata filter</td><td>Rich structured filtering at query time</td></tr>
+<tr><td>Cost</td><td>Zero API cost — compute is client-side</td><td>Infrastructure cost (self-hosted or Zilliz Cloud)</td></tr>
+<tr><td>Privacy</td><td>Data never leaves the browser</td><td>Server-side — data in your infrastructure</td></tr>
+<tr><td>TypeScript</td><td>Full type support</td><td>Python-first; JS SDK available</td></tr>
+<tr><td>Offline</td><td>Yes — works without network</td><td>No</td></tr>
+</tbody></table></div>
+
+<h2>Code comparison</h2>
+<h3>altor-vec (browser, no server)</h3>
+<pre><code>import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const engine = WasmSearchEngine.from_vectors(vectors, 384, 16, 200, 50);
+const results = JSON.parse(engine.search(queryVector, 5));</code></pre>
+
+<h3>Milvus (server-side)</h3>
+<pre><code>import { MilvusClient } from '@zilliz/milvus2-sdk-node';
+
+const client = new MilvusClient({ address: 'localhost:19530' });
+await client.search({
+  collection_name: 'docs',
+  vectors: [queryVector],
+  limit: 5,
+  output_fields: ['title', 'content'],
+});</code></pre>
+
+<p>The code difference reflects the architecture: altor-vec initializes locally and queries locally. Milvus requires a running server, collection management, and network round-trips. For a public documentation search or product catalog, altor-vec ships 10x faster with zero operational cost. For a shared AI platform with millions of private vectors and concurrent writes from multiple services, Milvus is the right foundation.</p>
+
+<h2>When to choose each</h2>
+<p><strong>Choose altor-vec when:</strong> You need semantic search in a JavaScript/TypeScript application, your corpus is public or device-local, you want zero backend infrastructure, and your dataset fits in browser memory (up to ~100K vectors).</p>
+<p><strong>Choose Milvus when:</strong> You need billion-scale vector storage, concurrent writes from multiple services, complex structured filtering at query time, or centralized vector infrastructure shared across multiple applications.</p>
+
+<h2>The hybrid approach</h2>
+<p>Many teams use both: altor-vec for public documentation search (shipped as a static asset, works offline, zero cost), and Milvus for private knowledge bases, recommendation engines, or AI features that require centralized data with access control. The boundary is usually: can the browser hold this data? If yes, altor-vec. If not, Milvus.</p>
+
+<div class="callout"><strong>Try it:</strong> <span class="mono">npm install altor-vec</span> — semantic search in your browser in under 5 minutes. No Kubernetes required.</div>
+<nav class="footer-nav"><a href="/">Homepage</a><a href="/vs/pinecone.html">vs Pinecone</a><a href="/vs/weaviate.html">vs Weaviate</a><a href="/vs/qdrant.html">vs Qdrant</a><a href="/blog/">Blog</a></nav>
+</main></body></html>

@@ -1,0 +1,57 @@
+<!doctype html><html lang="en-US"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>altor-vec vs Qdrant — Browser Vector Search vs Rust Vector Database</title><meta name="description" content="Compare altor-vec and Qdrant: 54KB browser WASM vector search versus Rust-powered vector database. Which is right for your JavaScript application?" /><meta name="keywords" content="altor-vec vs qdrant, qdrant alternative javascript, browser vector search, client-side semantic search" /><meta name="geo.region" content="US" /><link rel="canonical" href="https://altorlab.dev/vs/qdrant.html" /><meta property="og:type" content="article" /><meta property="og:title" content="altor-vec vs Qdrant — Browser Vector Search vs Rust Vector Database" /><meta property="og:description" content="altor-vec runs in the browser with no server. Qdrant is a high-performance Rust vector database for server workloads. Compare the two honestly." /><meta property="og:url" content="https://altorlab.dev/vs/qdrant.html" /><link rel="preconnect" href="https://fonts.googleapis.com" /><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>:root { --bg:#080a09; --surface:#0e1210; --surface-raised:#141a17; --border:#1e2823; --text:#edf0ee; --text-secondary:#8b9690; --muted:#556059; --altor:#6ee7b7; --altor-glow:rgba(110,231,183,.07); --code:#c3e88d; } * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:'Plus Jakarta Sans',system-ui,sans-serif; line-height:1.74; } a { color:var(--altor); text-decoration:none; } a:hover { text-decoration:underline; } main { max-width:920px; margin:0 auto; padding:30px 22px 78px; } .breadcrumbs { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:13px; } code, pre { font-family:'JetBrains Mono',monospace; } h1 { font-family:'Instrument Serif',serif; font-size:clamp(2rem,5vw,3.4rem); line-height:1.08; margin:.55rem 0 1rem; } h2 { margin-top:2.35rem; font-size:1.55rem; } p, li, td, th { color:var(--text-secondary); } pre { background:#0d1512; border:1px solid var(--border); border-radius:12px; padding:14px; overflow:auto; color:var(--code); } code { color:#d9f99d; } .table-wrap { overflow:auto; } table { width:100%; border-collapse:collapse; margin:14px 0; background:var(--surface-raised); border:1px solid var(--border); border-radius:12px; overflow:hidden; } th, td { padding:12px 14px; border-bottom:1px solid var(--border); text-align:left; vertical-align:top; } th { color:var(--text); background:#111814; } tr:last-child td { border-bottom:none; } .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; } .lead { font-size:1.03rem; } .install, .callout { background:var(--surface-raised); border:1px solid rgba(110,231,183,.2); border-radius:12px; padding:14px; } .callout { background:var(--altor-glow); } .footer-nav { display:flex; gap:14px; flex-wrap:wrap; margin-top:28px; font-size:14px; }</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"altor-vec vs Qdrant — Browser Vector Search vs Rust Vector Database","url":"https://altorlab.dev/vs/qdrant.html","datePublished":"2026-04-14","dateModified":"2026-04-14","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"keywords":["qdrant","altor-vec","vector search","javascript","comparison"]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can altor-vec replace Qdrant?","acceptedAnswer":{"@type":"Answer","text":"For browser-side semantic search over public data, yes. altor-vec runs in the browser with no server, handles up to ~100K vectors, and delivers sub-millisecond queries. Qdrant is designed for server-side workloads with rich filtering, payload storage, and high-throughput writes. They are not direct substitutes."}},{"@type":"Question","name":"Is Qdrant available for JavaScript?","acceptedAnswer":{"@type":"Answer","text":"Qdrant has a JavaScript/TypeScript client for Node.js and server environments. It does not run in the browser. altor-vec is the only production-ready WASM vector search library that runs in the browser."}},{"@type":"Question","name":"Which is faster?","acceptedAnswer":{"@type":"Answer","text":"altor-vec delivers sub-millisecond query latency from the browser — no network round-trip. Qdrant is extremely fast server-side but adds network latency. For browser applications, altor-vec wins on perceived speed."}}]}</script>
+</head><body><main>
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span>&gt;</span><a href="/vs/">Comparisons</a><span>&gt;</span><span>altor-vec vs Qdrant</span></nav>
+<p class="k">altor-vec vs qdrant</p>
+<h1>altor-vec vs Qdrant — Browser WASM vs Rust Vector Database</h1>
+<p class="lead">Qdrant is a high-performance vector database written in Rust, designed for server-side retrieval with payload filtering and production-grade reliability. altor-vec is a 54KB WASM library that runs HNSW vector search entirely in the browser. Both use HNSW indexing — but they serve fundamentally different deployment contexts.</p>
+
+<div class="install"><strong>altor-vec:</strong> <code>npm install altor-vec</code> — works in the browser immediately. No Qdrant server, no Docker, no config.</div>
+
+<h2>Feature comparison</h2>
+<div class="table-wrap"><table><thead><tr><th>Capability</th><th>altor-vec</th><th>Qdrant</th></tr></thead><tbody>
+<tr><td>Indexing algorithm</td><td>HNSW (WASM)</td><td>HNSW (Rust)</td></tr>
+<tr><td>Deployment</td><td>Browser (client-side)</td><td>Server (Docker, Kubernetes, Qdrant Cloud)</td></tr>
+<tr><td>Network required</td><td>No — runs offline</td><td>Yes — HTTP/gRPC to Qdrant server</td></tr>
+<tr><td>Query latency</td><td>Sub-millisecond (no network)</td><td>1-10ms + network round-trip</td></tr>
+<tr><td>Bundle size</td><td>54KB gzipped</td><td>Full server binary</td></tr>
+<tr><td>Payload filtering</td><td>Basic post-search filter</td><td>Rich structured filtering at index time</td></tr>
+<tr><td>Max vectors</td><td>~100K (browser memory)</td><td>Billions (distributed)</td></tr>
+<tr><td>JavaScript support</td><td>Native (WASM)</td><td>Node.js client (not browser)</td></tr>
+<tr><td>Privacy</td><td>Data stays in browser</td><td>Data on your server</td></tr>
+<tr><td>Cost</td><td>Zero API/infra cost</td><td>Self-hosted or Qdrant Cloud pricing</td></tr>
+</tbody></table></div>
+
+<h2>Code comparison</h2>
+<h3>altor-vec (browser, no server)</h3>
+<pre><code>import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const engine = WasmSearchEngine.from_vectors(embeddedVectors, 384, 16, 200, 50);
+const hits = JSON.parse(engine.search(queryEmbedding, 5));
+// Results in &lt;1ms, no network</code></pre>
+
+<h3>Qdrant (Node.js, server required)</h3>
+<pre><code>import { QdrantClient } from '@qdrant/js-client-rest';
+
+const client = new QdrantClient({ url: 'http://localhost:6333' });
+const results = await client.search('my_collection', {
+  vector: queryEmbedding,
+  limit: 5,
+  filter: { must: [{ key: 'category', match: { value: 'docs' } }] },
+});</code></pre>
+
+<p>Both use HNSW under the hood, but the deployment model is completely different. altor-vec bundles the index as a WASM asset that ships with your frontend. Qdrant runs as a persistent service that your application calls over HTTP or gRPC. For search that needs to work offline, stay in the browser, or avoid backend infrastructure costs, altor-vec is the right architecture. For search that needs to be shared across services, requires complex filtering, or must handle continuous writes, Qdrant fits better.</p>
+
+<h2>The HNSW connection</h2>
+<p>Both altor-vec and Qdrant use HNSW (Hierarchical Navigable Small World) indexing, which is why they appear together in searches for "best vector search library." HNSW gives near-perfect recall with sub-linear query time. The difference is where the graph lives: in your browser's WASM runtime with altor-vec, or in a Rust process on your server with Qdrant.</p>
+
+<h2>When to choose each</h2>
+<p><strong>Choose altor-vec when:</strong> your search is a frontend feature, data is public or device-local, you want offline capability, or you need zero-cost vector search without infrastructure management.</p>
+<p><strong>Choose Qdrant when:</strong> you need server-side vector retrieval, rich payload filtering (category, date range, metadata), billions of vectors, or search as shared infrastructure across multiple services.</p>
+
+<div class="callout"><strong>Get started with altor-vec:</strong> <code>npm install altor-vec</code> — HNSW in your browser, sub-millisecond queries, 54KB. No Qdrant server needed.</div>
+<nav class="footer-nav"><a href="/">Homepage</a><a href="/vs/pinecone.html">vs Pinecone</a><a href="/vs/milvus.html">vs Milvus</a><a href="/vs/weaviate.html">vs Weaviate</a><a href="/blog/">Blog</a></nav>
+</main></body></html>
