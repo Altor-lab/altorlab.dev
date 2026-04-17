@@ -36,7 +36,7 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 <article>
 <h1>How to Build a Search Engine in JavaScript (Without a Backend)</h1>
 
-<p>Most tutorials on building a search engine assume you'll spin up Elasticsearch, configure a Vector DB, or run a Python service somewhere. But if you're building a documentation site, a product catalog, or an internal tool, you don't always need server-side infrastructure. You can build a surprisingly capable semantic search engine that runs entirely in the browser—using embeddings, vector similarity, and about 150 lines of JavaScript.</p>
+<p>Most tutorials on building a search engine assume you'll spin up Elasticsearch, configure a Vector DB, or run a Python service somewhere. But if you're building a documentation site, a product catalog, or an internal tool, you don't always need server-side infrastructure. You can build a surprisingly capable semantic search engine that runs entirely in the browser - using embeddings, vector similarity, and about 150 lines of JavaScript.</p>
 
 <p>This is not a toy. Companies like Algolia proved that client-side search can be fast and relevant. With modern embedding models that run in WebAssembly and vector libraries optimized for JavaScript, you can now add semantic search to any static site or SPA without touching your backend.</p>
 
@@ -91,7 +91,7 @@ const embeddings = await Promise.all(
 
 fs.writeFileSync('public/embeddings.json', JSON.stringify(embeddings));</code></pre>
 
-<p>This runs once at build time. The all-MiniLM-L6-v2 model produces 384-dimensional vectors. A dataset of 1,000 documents results in a JSON file around 1.5MB—small enough to load on page visit or cache in a service worker.</p>
+<p>This runs once at build time. The all-MiniLM-L6-v2 model produces 384-dimensional vectors. A dataset of 1,000 documents results in a JSON file around 1.5MB - small enough to load on page visit or cache in a service worker.</p>
 
 <h2>Step 2: Load and Store Embeddings in the Browser</h2>
 
@@ -121,7 +121,7 @@ fs.writeFileSync('public/embeddings.json', JSON.stringify(embeddings));</code></
 
 <h2>Step 3: Embed the User's Query</h2>
 
-<p>When the user types a query, you need to convert it to a vector using the same model. Running transformers.js in the browser is possible but slow—expect 300-500ms for a query embedding on mid-range hardware. You can mitigate this with a Web Worker:</p>
+<p>When the user types a query, you need to convert it to a vector using the same model. Running transformers.js in the browser is possible but slow - expect 300-500ms for a query embedding on mid-range hardware. You can mitigate this with a Web Worker:</p>
 
 <pre><code>// search-worker.js
 import { pipeline } from '@xenova/transformers';
@@ -216,11 +216,11 @@ embeddings.forEach(doc => {
 
 <p>Use a lightweight library like js-search for keyword scoring, or write a simple term-frequency function.</p>
 
-<p>Also consider debouncing. Don't run a search on every keystroke—wait 150ms after the user stops typing. This reduces unnecessary computation and battery drain on mobile.</p>
+<p>Also consider debouncing. Don't run a search on every keystroke - wait 150ms after the user stops typing. This reduces unnecessary computation and battery drain on mobile.</p>
 
 <h2>Real-World Performance</h2>
 
-<p>I tested this on a static documentation site with 3,200 pages. The embeddings file was 4.2MB gzipped. Initial load took 800ms on a fast connection, then cached. Query latency averaged 220ms for embedding + 18ms for vector search. Queries like "how to deploy to production" returned relevant results that keyword search missed entirely—picking up pages about CI/CD, environment variables, and Docker configs even when those exact words weren't in the query.</p>
+<p>I tested this on a static documentation site with 3,200 pages. The embeddings file was 4.2MB gzipped. Initial load took 800ms on a fast connection, then cached. Query latency averaged 220ms for embedding + 18ms for vector search. Queries like "how to deploy to production" returned relevant results that keyword search missed entirely - picking up pages about CI/CD, environment variables, and Docker configs even when those exact words weren't in the query.</p>
 
 <p>The accuracy isn't GPT-4 level, but it's dramatically better than naive substring matching, and it works offline.</p>
 
@@ -246,7 +246,7 @@ embeddings.forEach(doc => {
 <p>Older Android devices struggle with WebAssembly execution. On a 2019 mid-range phone, query embedding took 600ms. Consider showing a loading state or falling back to keyword search on slow devices. You can detect performance with a quick benchmark on page load.</p>
 </section>
 
-<p><strong>Want to skip the setup and start building?</strong> <code>npm install altor-vec</code> — Full documentation and examples at <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
+<p><strong>Want to skip the setup and start building?</strong> <code>npm install altor-vec</code> - Full documentation and examples at <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
 </article>
 <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
 Published March 31, 2026 · Auto-generated from search data

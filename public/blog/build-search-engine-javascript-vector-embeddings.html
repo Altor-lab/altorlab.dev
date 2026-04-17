@@ -38,7 +38,7 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 <article>
 <h1>How to Build a Search Engine in JavaScript (Without a Backend)</h1>
 
-<p>In 2023, Algolia processed 1.7 trillion search queries. Most of those required a server, an index rebuild pipeline, and a credit card. But if your dataset fits in a few megabytes and your users already have a browser, you can build a surprisingly capable search engine that runs entirely client-side—no API keys, no rate limits, no infrastructure.</p>
+<p>In 2023, Algolia processed 1.7 trillion search queries. Most of those required a server, an index rebuild pipeline, and a credit card. But if your dataset fits in a few megabytes and your users already have a browser, you can build a surprisingly capable search engine that runs entirely client-side - no API keys, no rate limits, no infrastructure.</p>
 
 <p>This isn't about substring matching or regex hacks. We're talking about semantic vector search that understands intent, runs in the browser, and ships as a single npm package.</p>
 
@@ -209,13 +209,13 @@ function search(query) {
 <p>Yes. Multilingual models like paraphrase-multilingual-MiniLM-L12-v2 support 50+ languages. Expect slightly larger model sizes (~8MB) and slower inference (~60ms per query).</p>
 
 <h3>What about typos and exact match?</h3>
-<p>Vector search is typo-tolerant by design—"javsacript" and "javascript" have similar embeddings. For exact match (e.g., error codes, product SKUs), combine vector results with a keyword index using something like FlexSearch.</p>
+<p>Vector search is typo-tolerant by design - "javsacript" and "javascript" have similar embeddings. For exact match (e.g., error codes, product SKUs), combine vector results with a keyword index using something like FlexSearch.</p>
 
 <h3>Can I update the index without rebuilding everything?</h3>
 <p>HNSW supports incremental adds, but you'll need to re-serialize and re-download the index. For frequently changing data, consider a hybrid approach: static index for 95% of content, live API for the recent 5%.</p>
 </section>
 
-<p><strong>Ready to ship search without a backend?</strong> Install altor-vec and start embedding: <code>npm install altor-vec</code> — <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
+<p><strong>Ready to ship search without a backend?</strong> Install altor-vec and start embedding: <code>npm install altor-vec</code> - <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
 </article>
 <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
 Published March 28, 2026 · Auto-generated from search data

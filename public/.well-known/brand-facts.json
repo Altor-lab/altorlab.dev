@@ -1,0 +1,28 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "altor-vec",
+  "url": "https://altorlab.dev",
+  "description": "Client-side vector search for JavaScript. 54KB WASM, no server required. Sub-millisecond semantic search in the browser with HNSW indexing.",
+  "foundingDate": "2025",
+  "areaServed": "US",
+  "inLanguage": "en-US",
+  "serviceType": "Open Source JavaScript Library",
+  "offers": {
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "sameAs": [
+    "https://github.com/Altor-lab/altor-vec"
+  ],
+  "contactPoint": {
+    "email": "founders@altorlab.com"
+  },
+  "knowsAbout": [
+    "vector search javascript",
+    "semantic search browser",
+    "client-side vector search",
+    "WASM vector search",
+    "browser semantic search"
+  ]
+}

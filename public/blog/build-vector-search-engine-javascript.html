@@ -40,7 +40,7 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 
 <p>No API calls. No server. No infrastructure. Just a 43KB library and some surprisingly elegant math.</p>
 
-<p>The trick is understanding that modern search isn't about substring matching anymore. It's about meaning. When someone types "async bugs in React," they want results about concurrency issues, race conditions, useEffect cleanup—not just documents containing those exact words. Vector embeddings let you capture that semantic similarity, and browser-based vector search libraries like <code>altor-vec</code> let you do it without shipping queries to a third party.</p>
+<p>The trick is understanding that modern search isn't about substring matching anymore. It's about meaning. When someone types "async bugs in React," they want results about concurrency issues, race conditions, useEffect cleanup - not just documents containing those exact words. Vector embeddings let you capture that semantic similarity, and browser-based vector search libraries like <code>altor-vec</code> let you do it without shipping queries to a third party.</p>
 
 <h2>Why Client-Side Vector Search Works Now</h2>
 
@@ -131,7 +131,7 @@ fs.writeFileSync('search-index.json', JSON.stringify(index));
 
 <h2>Handling Multimodal Search</h2>
 
-<p>The same embedding model works for titles, descriptions, tags—anything textual. You can boost certain fields by concatenating them with weight multipliers:</p>
+<p>The same embedding model works for titles, descriptions, tags - anything textual. You can boost certain fields by concatenating them with weight multipliers:</p>
 
 <pre><code>const weightedText = `${doc.title} ${doc.title} ${doc.title} ${doc.content}`;
 const embedding = await embedder(weightedText, { pooling: 'mean', normalize: true });
@@ -166,13 +166,13 @@ const weighted = titleEmb.data.map((v, i) => v * 0.7 + contentEmb.data[i] * 0.3)
 <p>Incremental updates are tricky. The safest pattern is treating your index as immutable and regenerating it on content changes. For high-frequency updates, maintain a small "hot" index in memory and merge it with the main index at query time.</p>
 
 <h3>Can this scale to 100,000 documents?</h3>
-<p>With quantization and lazy loading, yes—but expect longer initial load times. At that scale, consider server-side rendering the index or using HNSW. The performance curve starts bending around 50k documents on average hardware.</p>
+<p>With quantization and lazy loading, yes - but expect longer initial load times. At that scale, consider server-side rendering the index or using HNSW. The performance curve starts bending around 50k documents on average hardware.</p>
 
 <h3>What's the mobile browser performance like?</h3>
 <p>The embedding model runs slower on mobile (300-500ms vs. 200ms on desktop), but the vector search itself is fast because it's just arithmetic. Quantized indexes work especially well on memory-constrained devices. Test on a mid-range Android phone, not just your MacBook.</p>
 </section>
 
-<p>Start building: <code>npm install altor-vec</code> — Full examples and API docs at <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
+<p>Start building: <code>npm install altor-vec</code> - Full examples and API docs at <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
 </article>
 <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
 Published April 11, 2026 · Auto-generated from search data

@@ -11,12 +11,12 @@
     <link rel="canonical" href="https://altorlab.dev/blog/vector-search-without-backend.html" />
     <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/vector-search-without-backend.html" />
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="Vector Search Without a Backend — Is It Possible?" />
+    <meta property="og:title" content="Vector Search Without a Backend - Is It Possible?" />
     <meta property="og:description" content="Detailed technical analysis of serverless retrieval with browser HNSW and altor-vec." />
     <meta property="og:url" content="https://altorlab.dev/blog/vector-search-without-backend.html" />
     <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Vector Search Without a Backend — Is It Possible?" />
+    <meta name="twitter:title" content="Vector Search Without a Backend - Is It Possible?" />
     <meta name="twitter:description" content="Cost, latency, and architecture trade-offs for browser-native vector retrieval." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,8 +41,8 @@
       .related-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
       .k { text-transform:uppercase; letter-spacing:.16em; color:var(--muted); font-size:11px; }
     </style>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search Without a Backend — Is It Possible?","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-without-backend.html","keywords":["vector search without server","browser vector search","hnsw"]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Vector Search Without a Backend — Is It Possible?","url":"https://altorlab.dev/blog/vector-search-without-backend.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search Without a Backend - Is It Possible?","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-without-backend.html","keywords":["vector search without server","browser vector search","hnsw"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Vector Search Without a Backend - Is It Possible?","url":"https://altorlab.dev/blog/vector-search-without-backend.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can vector search run without a server?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can load a static HNSW index in the browser and execute nearest-neighbor queries locally."}},{"@type":"Question","name":"What do you still need a backend for?","acceptedAnswer":{"@type":"Answer","text":"You may still need backend jobs for indexing pipelines, access control, analytics, or very large datasets."}},{"@type":"Question","name":"Is browser retrieval private by default?","acceptedAnswer":{"@type":"Answer","text":"Retrieval is local, so query text does not leave the device unless your app sends telemetry."}},{"@type":"Question","name":"How does latency compare with API-based search?","acceptedAnswer":{"@type":"Answer","text":"Local ANN lookup is often sub-millisecond, while network API calls add tens to hundreds of milliseconds."}}]}</script>
   </head>
   <body>
@@ -52,11 +52,11 @@
         <span>&gt;</span>
         <a class="mono" href="/blog/">Blog</a>
         <span>&gt;</span>
-        <span>Vector Search Without a Backend — Is It Possible?</span>
+        <span>Vector Search Without a Backend - Is It Possible?</span>
       </nav>
       <p class="k">vector search without server</p>
-      <h1>Vector Search Without a Backend — Is It Possible?</h1>
-      <p>Short answer: yes, for a large class of products. Long answer: it depends on dataset size, update frequency, and your control-plane needs. For developer docs, app command palettes, local knowledge bases, onboarding assistants, and many internal tools, browser-native retrieval is not just feasible—it can be the better default. You avoid per-query infrastructure, reduce privacy risk surface, and remove network latency from the critical path. This article explains when serverless vector search works, why HNSW is the right primitive in browser environments, and where the boundaries are.</p>
+      <h1>Vector Search Without a Backend - Is It Possible?</h1>
+      <p>Short answer: yes, for a large class of products. Long answer: it depends on dataset size, update frequency, and your control-plane needs. For developer docs, app command palettes, local knowledge bases, onboarding assistants, and many internal tools, browser-native retrieval is not just feasible - it can be the better default. You avoid per-query infrastructure, reduce privacy risk surface, and remove network latency from the critical path. This article explains when serverless vector search works, why HNSW is the right primitive in browser environments, and where the boundaries are.</p>
       <div class="install"><strong>Install altor-vec:</strong> <code>npm install altor-vec</code></div>
 
       <h2>Why teams want serverless retrieval</h2>
@@ -99,9 +99,9 @@ function retrieve(queryVec, topK = 8) {
           <tr><th>Path</th><th>Search Compute</th><th>Network</th><th>Total p95</th></tr>
         </thead>
         <tbody>
-          <tr><td>Browser HNSW (altor-vec)</td><td>&lt; 1 ms</td><td>0 ms</td><td>~0.5–3 ms*</td></tr>
-          <tr><td>Server ANN API (same region)</td><td>3–15 ms</td><td>25–70 ms</td><td>30–100 ms</td></tr>
-          <tr><td>Server ANN API (cross-region/mobile)</td><td>3–15 ms</td><td>80–250 ms</td><td>90–280 ms</td></tr>
+          <tr><td>Browser HNSW (altor-vec)</td><td>&lt; 1 ms</td><td>0 ms</td><td>~0.5-3 ms*</td></tr>
+          <tr><td>Server ANN API (same region)</td><td>3-15 ms</td><td>25-70 ms</td><td>30-100 ms</td></tr>
+          <tr><td>Server ANN API (cross-region/mobile)</td><td>3-15 ms</td><td>80-250 ms</td><td>90-280 ms</td></tr>
         </tbody>
       </table>
       <p>*Excludes query embedding generation; embedding can be local, remote, or precomputed depending on app behavior.</p>
@@ -147,9 +147,9 @@ function retrieve(queryVec, topK = 8) {
       <section class="related" aria-labelledby="related-articles-title">
         <h2 id="related-articles-title">Related articles</h2>
         <div class="related-grid">
-          <a class="related-card" href="/blog/semantic-search-website.html">Semantic Search Tutorial — add local retrieval to a website in minutes</a>
-          <a class="related-card" href="/blog/offline-first-search.html">Offline-First Search — keep retrieval working without a network</a>
-          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">HNSW Explained — understand the graph behind fast browser ANN</a>
+          <a class="related-card" href="/blog/semantic-search-website.html">Semantic Search Tutorial - add local retrieval to a website in minutes</a>
+          <a class="related-card" href="/blog/offline-first-search.html">Offline-First Search - keep retrieval working without a network</a>
+          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">HNSW Explained - understand the graph behind fast browser ANN</a>
         </div>
       </section>
 

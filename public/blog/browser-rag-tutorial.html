@@ -129,9 +129,9 @@ ${contextBlock}`;
 </code></pre>
 
       <h2>Step 4: generation path options</h2>
-      <h3>Option A — local generation</h3>
+      <h3>Option A - local generation</h3>
       <p>Use an in-browser model runtime (WebGPU/WebAssembly) for full local flow. This maximizes privacy but is limited by device capability and model size.</p>
-      <h3>Option B — remote fallback</h3>
+      <h3>Option B - remote fallback</h3>
       <p>Keep retrieval local and send only compact, selected context to a hosted LLM endpoint. This often gives better output quality while still reducing egress scope.</p>
       <pre><code>async function answer(query) {
   const qVec = await embedLocal(query);
@@ -178,9 +178,9 @@ ${contextBlock}`;
       <section class="related" aria-labelledby="related-articles-title">
         <h2 id="related-articles-title">Related articles</h2>
         <div class="related-grid">
-          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">HNSW Explained — understand the retrieval primitive inside browser RAG</a>
-          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without Backend — decide when local retrieval is enough</a>
-          <a class="related-card" href="/blog/offline-first-search.html">Offline-First Search — cache indexes for resilient local assistants</a>
+          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">HNSW Explained - understand the retrieval primitive inside browser RAG</a>
+          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without Backend - decide when local retrieval is enough</a>
+          <a class="related-card" href="/blog/offline-first-search.html">Offline-First Search - cache indexes for resilient local assistants</a>
         </div>
       </section>
 

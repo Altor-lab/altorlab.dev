@@ -36,7 +36,7 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 <article>
 <h1>How to Build a Search Engine in JavaScript</h1>
 
-<p>Most tutorials on building a search engine in JavaScript teach you to tokenize strings, build an inverted index, and pray you never have to handle synonyms. That's fine if you're searching a todo list. But if you're building product search, documentation lookup, or anything users expect to work like Google, you need semantic understanding—and that means vector embeddings.</p>
+<p>Most tutorials on building a search engine in JavaScript teach you to tokenize strings, build an inverted index, and pray you never have to handle synonyms. That's fine if you're searching a todo list. But if you're building product search, documentation lookup, or anything users expect to work like Google, you need semantic understanding - and that means vector embeddings.</p>
 
 <p>The good news: you can now run a legitimate vector search engine entirely in the browser, no backend required. The bad news: most developers are still copying string-matching patterns from 2015.</p>
 
@@ -44,7 +44,7 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 
 <h2>Why Vector Search Beats String Matching</h2>
 
-<p>Traditional JavaScript search libraries—Fuse.js, Lunr.js, FlexSearch—work by counting character overlaps. They fail predictably:</p>
+<p>Traditional JavaScript search libraries - Fuse.js, Lunr.js, FlexSearch - work by counting character overlaps. They fail predictably:</p>
 
 <ul>
 <li>Query "car insurance" won't match documents about "auto coverage"</li>
@@ -245,7 +245,7 @@ const results = await search.query('lightweight search engine');
 <p>Yes, once the model and index are cached. Use a service worker to precache the ONNX model files and index JSON. The entire search engine runs without network access.</p>
 </section>
 
-<p>For production-ready client-side vector search with zero configuration: <code>npm install altor-vec</code> — <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
+<p>For production-ready client-side vector search with zero configuration: <code>npm install altor-vec</code> - <a href="https://github.com/Altor-lab/altor-vec">github.com/Altor-lab/altor-vec</a></p>
 </article>
 <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
 Published April 03, 2026 · Auto-generated from search data

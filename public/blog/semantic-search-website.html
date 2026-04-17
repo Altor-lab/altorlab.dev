@@ -99,15 +99,15 @@
       <h2>Architecture in one minute</h2>
       <p>A practical semantic retrieval stack has four parts: (1) content chunking, (2) embedding generation, (3) vector index construction, and (4) client-side querying. The first three can run in CI or local tooling, then you deploy two artifacts: <code>index.bin</code> and <code>metadata.json</code>. At runtime the browser loads both, computes a query embedding, and asks the WASM engine for top-k nearest vectors. Because search is local, latency is stable and independent of network roundtrips.</p>
       <div class="box">
-        <p><strong>Why this pattern is fast:</strong> network latency is usually 30–200ms end-to-end. Local ANN lookup is often below 1ms. If your embedding model is local too, you can keep total interactive latency surprisingly low while preserving user privacy.</p>
+        <p><strong>Why this pattern is fast:</strong> network latency is usually 30-200ms end-to-end. Local ANN lookup is often below 1ms. If your embedding model is local too, you can keep total interactive latency surprisingly low while preserving user privacy.</p>
       </div>
 
-      <h2>Step 1 — Install dependencies</h2>
+      <h2>Step 1 - Install dependencies</h2>
       <pre><code>npm install altor-vec @huggingface/transformers
 </code></pre>
       <p>You only need <code>altor-vec</code> for retrieval. We include <code>@huggingface/transformers</code> here for a local embedding path. In many teams, embeddings are generated offline in a Node pipeline so browser runtime stays lightweight.</p>
 
-      <h2>Step 2 — Build embeddings and index offline</h2>
+      <h2>Step 2 - Build embeddings and index offline</h2>
       <p>Below is a Node script that reads your content, generates normalized vectors, and creates an HNSW index with conservative defaults. The script writes files that your frontend can serve from <code>/public</code>.</p>
       <pre><code>import fs from 'node:fs/promises';
 import init, { WasmSearchEngine } from 'altor-vec';
@@ -136,7 +136,7 @@ await fs.writeFile('./public/metadata.json', JSON.stringify(metadata));
 </code></pre>
       <p>The two hyperparameters that matter most initially are <code>M</code> and <code>ef_search</code>. Higher values improve recall but increase memory and query cost. Start with defaults above, then tune using measured recall@k against your own query set.</p>
 
-      <h2>Step 3 — Query from the browser</h2>
+      <h2>Step 3 - Query from the browser</h2>
       <p>At runtime, load the index once and keep the engine in memory. Query vectors can come from a local browser model, from a server embedding API, or from precomputed vectors (for curated suggestions).</p>
       <pre><code>import init, { WasmSearchEngine } from 'altor-vec';
 
@@ -153,8 +153,8 @@ export function searchByVector(queryVector, topK = 5) {
 }
 </code></pre>
 
-      <h2>Step 4 — Compare before/after quality</h2>
-      <p>To verify impact, run a small benchmark with 30–50 representative user intents. Compare lexical ranking (BM25 or prefix) against vector retrieval. A common result is that semantic retrieval significantly improves queries with synonyms, abbreviations, and “problem description” phrasing. Example from docs search:</p>
+      <h2>Step 4 - Compare before/after quality</h2>
+      <p>To verify impact, run a small benchmark with 30-50 representative user intents. Compare lexical ranking (BM25 or prefix) against vector retrieval. A common result is that semantic retrieval significantly improves queries with synonyms, abbreviations, and “problem description” phrasing. Example from docs search:</p>
       <pre><code>Query: "index vectors in browser"
 
 Keyword baseline top result:
@@ -231,9 +231,9 @@ export function SearchBox({ embed }) {
       <section class="related" aria-labelledby="related-articles-title">
         <h2 id="related-articles-title">Related articles</h2>
         <div class="related-grid">
-          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without a Backend — cost, privacy, and latency trade-offs</a>
-          <a class="related-card" href="/blog/vector-search-react.html">Vector Search in React — wire retrieval into hooks and UI state</a>
-          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">How HNSW Works — understand the ANN graph behind local search</a>
+          <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without a Backend - cost, privacy, and latency trade-offs</a>
+          <a class="related-card" href="/blog/vector-search-react.html">Vector Search in React - wire retrieval into hooks and UI state</a>
+          <a class="related-card" href="/blog/hnsw-algorithm-explained.html">How HNSW Works - understand the ANN graph behind local search</a>
         </div>
       </section>
 

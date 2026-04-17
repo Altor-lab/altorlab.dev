@@ -174,13 +174,13 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 <p>Calculate the magnitude: <code>Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0))</code>. If the result is 1.0 (or within 0.0001 due to floating-point precision), your vectors are normalized. Most modern embedding APIs normalize automatically.</p>
 
 <h3>Does this apply to server-side Node.js search too?</h3>
-<p>Yes, but the performance difference is less dramatic. V8 optimizes both functions well on the server. The real win is in the browser where every millisecond affects perceived responsiveness. That said, faster is still faster—there's no downside to using Euclidean with normalized vectors.</p>
+<p>Yes, but the performance difference is less dramatic. V8 optimizes both functions well on the server. The real win is in the browser where every millisecond affects perceived responsiveness. That said, faster is still faster - there's no downside to using Euclidean with normalized vectors.</p>
 
 <h3>What about SIMD or WebAssembly for even faster search?</h3>
 <p>SIMD (Single Instruction Multiple Data) through WebAssembly can get you another 2-3x speedup on vector operations, but it adds build complexity and binary size. For most client-side search features with under 100,000 vectors, optimized JavaScript is fast enough. Profile first, optimize only if you have proof you need it.</p>
 </section>
 
-<p>Stop using cosine similarity because a tutorial from 2019 told you to. Check if your vectors are normalized, switch to Euclidean or dot product, and ship search that's 40% faster with zero accuracy trade-off. <code>npm install altor-vec</code> if you want this logic handled automatically — <a href="https://github.com/Altor-lab/altor-vec">https://github.com/Altor-lab/altor-vec</a></p>
+<p>Stop using cosine similarity because a tutorial from 2019 told you to. Check if your vectors are normalized, switch to Euclidean or dot product, and ship search that's 40% faster with zero accuracy trade-off. <code>npm install altor-vec</code> if you want this logic handled automatically - <a href="https://github.com/Altor-lab/altor-vec">https://github.com/Altor-lab/altor-vec</a></p>
 </article>
 <footer style="margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #333; color: #888; font-size: 0.85rem;">
 Published March 26, 2026 · Auto-generated from search data

@@ -40,11 +40,11 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 
 <p>Most tutorials on building a search engine in JavaScript end with a glorified filter function. You check if a substring exists, loop over 500 items, and call it "search." That's fine for a demo, but it doesn't scale, it doesn't understand meaning, and it breaks the moment someone types "refund policy" instead of "return."</p>
 
-<p>A real search engine handles typos, understands synonyms, and ranks results by relevance. In 2025, that means vector embeddings and semantic similarity—and you can build it entirely in the browser with JavaScript.</p>
+<p>A real search engine handles typos, understands synonyms, and ranks results by relevance. In 2025, that means vector embeddings and semantic similarity - and you can build it entirely in the browser with JavaScript.</p>
 
 <h2>Why Client-Side Vector Search Matters</h2>
 
-<p>Traditional search runs on the server. You send a query, hit an API, wait for Elasticsearch or Algolia to respond, and hope latency stays under 200ms. For small to medium datasets—product catalogs, documentation, support tickets—this is overkill.</p>
+<p>Traditional search runs on the server. You send a query, hit an API, wait for Elasticsearch or Algolia to respond, and hope latency stays under 200ms. For small to medium datasets - product catalogs, documentation, support tickets - this is overkill.</p>
 
 <p>Client-side vector search puts the entire index in the browser. No round trips. No rate limits. No backend to maintain. You ship embeddings as JSON, load them once, and search locally. For 10,000 items with 384-dimensional embeddings, you're looking at roughly 15MB gzipped. It loads in under 2 seconds on a decent connection and searches in under 50ms.</p>
 
@@ -56,7 +56,7 @@ code { font-family: 'SF Mono', monospace; font-size: 0.9rem; }
 
 <p><strong>1. An embedding model.</strong> You need something that converts text into vectors. Transformer.js runs ONNX models in the browser. Use <code>Xenova/all-MiniLM-L6-v2</code> for speed or <code>Xenova/bge-small-en-v1.5</code> for better quality. Both are under 30MB and run inference in ~100ms per query on a modern laptop.</p>
 
-<p><strong>2. A vector storage format.</strong> Precompute embeddings for your dataset at build time. Store them as a flat JSON array or use IndexedDB if you need offline persistence. Don't recompute embeddings on every page load—that's wasteful.</p>
+<p><strong>2. A vector storage format.</strong> Precompute embeddings for your dataset at build time. Store them as a flat JSON array or use IndexedDB if you need offline persistence. Don't recompute embeddings on every page load - that's wasteful.</p>
 
 <p><strong>3. A similarity function.</strong> Cosine similarity is the standard. Dot product works if your vectors are normalized. Euclidean distance is slower and less common in NLP contexts.</p>
 
