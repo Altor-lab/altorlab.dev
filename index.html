@@ -7,18 +7,18 @@
     <meta name="geo.region" content="US" />
     <meta name="geo.placename" content="United States" />
     <meta name="author" content="AltorLab" />
-    <meta name="description" content="altor-vec — Client-side vector search powered by HNSW. 54KB gzipped WASM. Sub-millisecond latency. No server. No API keys. No per-query billing." />
+    <meta name="description" content="altor-vec - Client-side vector search powered by HNSW. 54KB gzipped WASM. Sub-millisecond latency. No server. No API keys. No per-query billing." />
     <meta name="theme-color" content="#080a09" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="altor-vec — Client-Side Vector Search in 54KB" />
+    <meta property="og:title" content="altor-vec - Client-Side Vector Search in 54KB" />
     <meta property="og:description" content="Sub-millisecond vector search that runs entirely in the browser. No server required. npm install altor-vec" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="altor-vec — Stop Paying Per Search Query" />
+    <meta name="twitter:title" content="altor-vec - Stop Paying Per Search Query" />
     <meta name="twitter:description" content="HNSW vector search that runs entirely in the browser. 54KB WASM. Sub-millisecond latency. MIT licensed." />
 
-    <title>altor-vec — Client-side vector search. 54KB. Sub-millisecond.</title>
+    <title>altor-vec - Client-side vector search. 54KB. Sub-millisecond.</title>
     <link rel="canonical" href="https://altorlab.dev/" />
     <meta property="og:image" content="https://altorlab.dev/og-image.png">
 
@@ -107,7 +107,7 @@
             "name": "What is client-side vector search?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Client-side vector search runs embedding similarity search directly in the browser, so users can query semantic indexes without sending each request to a server."
+              "text": "Client-side vector search runs embedding similarity search directly in the browser, so users can query semantic indexes without sending each request to a server. altor-vec ships as 54KB of gzipped WASM and returns results in under a millisecond on typical hardware."
             }
           },
           {
@@ -115,7 +115,7 @@
             "name": "How does altor-vec compare to Pinecone?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "altor-vec is designed for browser-native vector search with no hosted infrastructure, while Pinecone is a managed server-side vector database for larger centralized workloads."
+              "text": "altor-vec runs entirely in the browser with zero per-query cost and zero network latency. Pinecone is a managed cloud vector database built for large-scale server-side workloads. Use altor-vec when you need privacy, offline support, or want to eliminate API billing."
             }
           },
           {
@@ -123,10 +123,75 @@
             "name": "Can I use vector search without a server?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. altor-vec lets you ship vector search entirely in the browser, which is useful for demos, documentation search, offline experiences, and privacy-sensitive applications."
+              "text": "Yes. altor-vec lets you ship vector search entirely in the browser with no backend. It is useful for documentation search, demos, offline-first apps, and any application where sending data to a server is undesirable."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does altor-vec work without a backend?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. altor-vec runs as a WASM module in the browser. You load it via npm, build your index from embeddings, and query it entirely client-side. No server, no API keys, no infrastructure required."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What embedding models work with altor-vec?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Any model that produces fixed-dimension float vectors works with altor-vec. Common choices include all-MiniLM-L6-v2 (384 dimensions) and nomic-embed-text (768 dimensions), both of which run in the browser via Transformers.js."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the maximum index size altor-vec can handle?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "altor-vec handles tens of thousands of vectors comfortably in a modern browser. For most documentation search and semantic search use cases, this is sufficient. Larger indexes may require chunking or offloading index construction to a build step."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is altor-vec MIT licensed?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. altor-vec is MIT licensed and free to use in commercial and open-source projects. No attribution required beyond the license file."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I install altor-vec?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Install via npm: npm install altor-vec. Import the HNSW index class, add your embedding vectors, and query with a target vector. Full API reference and examples are available at altorlab.dev."
             }
           }
         ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "altor-vec",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "description": "MIT licensed, free to use"
+        },
+        "url": "https://altorlab.dev",
+        "description": "Client-side vector search powered by HNSW. 54KB gzipped WASM. Sub-millisecond latency. No server, no API keys, no per-query billing.",
+        "author": {
+          "@type": "Organization",
+          "name": "AltorLab",
+          "url": "https://altorlab.com"
+        },
+        "license": "https://opensource.org/licenses/MIT",
+        "programmingLanguage": "JavaScript",
+        "runtimePlatform": "Browser (WASM)"
       }
     </script>
   </head>
