@@ -1,34 +1,47 @@
 # altor-vec
 
-> altor-vec is a client-side vector search library. 54KB bundle size. Sub-millisecond query performance. Runs entirely in the browser with no server required. Open source.
+> Client-side vector search for JavaScript. 54KB gzipped WASM. Sub-millisecond latency. HNSW algorithm. Runs entirely in the browser — no server, no API keys, no per-query billing. MIT licensed.
 
-## Installation
+## Product
+- [Homepage](https://altorlab.dev/): altor-vec overview, live demo, benchmarks, and API reference
+- [npm package](https://www.npmjs.com/package/altor-vec): npm install altor-vec
+- [GitHub](https://github.com/Altor-lab/altor-vec): Source code, MIT license
 
-npm install altor-vec
+## Blog — Technical Guides
+- [Add Semantic Search in 5 Minutes](https://altorlab.dev/blog/semantic-search-website.html)
+- [Vector Search Without a Backend](https://altorlab.dev/blog/vector-search-without-backend.html)
+- [Build a JavaScript Vector Search Engine](https://altorlab.dev/blog/build-javascript-vector-search-engine.html)
+- [Build a Vector Search Engine in JavaScript](https://altorlab.dev/blog/build-vector-search-engine-javascript.html)
+- [Build a Semantic Search Engine in JavaScript](https://altorlab.dev/blog/build-semantic-search-engine-javascript.html)
+- [Browser-Based RAG Tutorial](https://altorlab.dev/blog/browser-rag-tutorial.html)
+- [HNSW Algorithm Explained](https://altorlab.dev/blog/hnsw-algorithm-explained.html)
+- [Vector Search in React](https://altorlab.dev/blog/vector-search-react.html)
+- [Client-Side Vector Search Guide](https://altorlab.dev/blog/client-side-vector-search-guide.html)
+- [Offline-First Search](https://altorlab.dev/blog/offline-first-search.html)
+- [Embedding-Based Autocomplete](https://altorlab.dev/blog/embedding-autocomplete-browser.html)
+- [Cosine vs Euclidean Distance in JavaScript](https://altorlab.dev/blog/cosine-similarity-vs-euclidean-distance-javascript.html)
 
-## Documentation
+## Comparisons
+- [altor-vec vs Pinecone](https://altorlab.dev/vs/pinecone.html)
+- [altor-vec vs Algolia](https://altorlab.dev/vs/algolia.html)
+- [altor-vec vs Weaviate](https://altorlab.dev/vs/weaviate.html)
+- [altor-vec vs ChromaDB](https://altorlab.dev/vs/chromadb.html)
+- [altor-vec vs Meilisearch](https://altorlab.dev/vs/meilisearch.html)
+- [altor-vec vs FAISS](https://altorlab.dev/vs/faiss.html)
+- [altor-vec vs Typesense](https://altorlab.dev/vs/typesense.html)
+- [altor-vec vs Qdrant](https://altorlab.dev/vs/qdrant.html)
+- [altor-vec vs Milvus](https://altorlab.dev/vs/milvus.html)
 
-- [Homepage](https://altorlab.dev): Library overview and demos
-- [GitHub](https://github.com/Altor-lab/altor-vec): Source code and issues
-- [Blog](https://altorlab.dev/blog/): Tutorials and guides
+## Examples
+- [Document Search](https://altorlab.dev/examples/document-search.html)
+- [Image Search](https://altorlab.dev/examples/image-search.html)
+- [Semantic Autocomplete](https://altorlab.dev/examples/autocomplete.html)
+- [Product Search](https://altorlab.dev/examples/product-search.html)
+- [RAG Retrieval](https://altorlab.dev/examples/rag-retrieval.html)
+- [Recommendation Engine](https://altorlab.dev/examples/recommendation-engine.html)
 
-## Code Examples
-
-- [Autocomplete](https://altorlab.dev/examples/autocomplete.html): Build semantic autocomplete
-- [Product Search](https://altorlab.dev/examples/product-search.html): E-commerce search
-- [RAG Retrieval](https://altorlab.dev/examples/rag-retrieval.html): Browser-based RAG
-- [All Examples](https://altorlab.dev/examples/): 15 use-case examples
-
-## Benchmarks
-
-- [vs Pinecone](https://altorlab.dev/benchmarks/vs-pinecone.html): Client vs server comparison
-- [All Benchmarks](https://altorlab.dev/benchmarks/): 10 library comparisons
-
-## Key Facts
-
-- Bundle size: 54KB
-- Query latency: <1ms
-- Algorithm: HNSW (Hierarchical Navigable Small World)
-- Languages: JavaScript, TypeScript
-- Frameworks: React, Next.js, Vue, Svelte
-- License: MIT
+## Frameworks
+- [altor-vec with React](https://altorlab.dev/frameworks/react.html)
+- [altor-vec with Next.js](https://altorlab.dev/frameworks/nextjs.html)
+- [altor-vec with Vue](https://altorlab.dev/frameworks/vue.html)
+- [altor-vec with Svelte](https://altorlab.dev/frameworks/svelte.html)

@@ -111,8 +111,6 @@
           <h2><a href="/blog/browser-rag-tutorial.html">Browser-Based RAG: Run Retrieval-Augmented Generation Locally</a></h2>
           <p>RAG architecture with local embeddings, local retrieval, and an in-browser generator.</p>
         </article>
-      </section>
-
         <article class="card">
           <div class="k">build vector search javascript</div>
           <h2><a href="/blog/build-javascript-vector-search-engine.html">Build a JavaScript Vector Search Engine from Scratch</a></h2>
@@ -152,5 +150,22 @@
 
       <footer>altor-vec is an MIT-licensed client-side vector search library. CTA: <code>npm install altor-vec</code></footer>
     </main>
-  </body>
+  <div class="email-capture" style="margin:40px auto;max-width:600px;text-align:center;padding:32px;background:rgba(110,231,183,0.07);border:1px solid rgba(110,231,183,0.2);border-radius:16px;font-family:'Plus Jakarta Sans',system-ui,sans-serif">
+  <p style="margin:0 0 6px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;color:#edf0ee">Stay updated</p>
+  <p style="margin:0 0 16px;font-size:20px;font-weight:700;color:#edf0ee">Get altor-vec tutorials in your inbox</p>
+  <form id="al-signup" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <input type="email" placeholder="your@email.com" required style="flex:1;min-width:200px;max-width:300px;padding:10px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#edf0ee;font-size:14px;outline:none"/>
+    <button type="submit" style="padding:10px 24px;border-radius:8px;background:#6ee7b7;color:#080a09;font-weight:600;font-size:14px;border:none;cursor:pointer">Subscribe</button>
+  </form>
+  <p id="al-msg" style="margin:12px 0 0;font-size:13px;color:#6ee7b7;display:none">✓ You're in! Check your inbox.</p>
+  <script>
+    document.getElementById('al-signup').addEventListener('submit',async function(e){
+      e.preventDefault();
+      const email=this.querySelector('input[type=email]').value;
+      try{const response=await fetch('https://altorlab.dev/api/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});if(response.ok){this.style.display='none';document.getElementById('al-msg').style.display='block';}}catch{}
+    });
+  </script>
+</div>
+
+</body>
 </html>

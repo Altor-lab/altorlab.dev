@@ -502,17 +502,30 @@ const results = JSON.parse(
 
 function EmailSignup() {
   const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const trimmedEmail = email.trim();
-    const body = trimmedEmail
-      ? `Please add me to the altor-vec mailing list.\n\nEmail: ${trimmedEmail}`
-      : "Please add me to the altor-vec mailing list";
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    setStatus("loading");
 
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("altor-vec updates signup")}&body=${encodeURIComponent(body)}`;
-    setSubmitted(true);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+
+      if (res.ok) {
+        setStatus("success");
+        setEmail("");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
   };
 
   return (
@@ -525,33 +538,38 @@ function EmailSignup() {
               Get notified about new features and tutorials
             </h2>
             <p className="text-sm text-text-secondary max-w-xl mx-auto mb-7">
-              Leave your email and your mail app opens with a pre-filled signup request.
+              No spam. Just altor-vec updates, tutorials, and new releases.
             </p>
 
-            <form
-              onSubmit={handleSubmit}
-              className="max-w-xl mx-auto flex flex-col sm:flex-row gap-3"
-            >
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Email input"
-                className="flex-1 rounded-xl border border-surface-border bg-bg px-4 py-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-altor"
-                aria-label="Email address"
-                required
-              />
-              <button
-                type="submit"
-                className="rounded-xl bg-altor px-6 py-3 text-sm font-semibold text-bg hover:brightness-110 transition"
-              >
-                Subscribe
-              </button>
-            </form>
+            {status === "success" ? (
+              <p className="text-altor font-semibold text-base">✓ You're in! Check your inbox.</p>
+            ) : (
+              <form onSubmit={handleSubmit} className="max-w-xl mx-auto flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="your@email.com"
+                  className="flex-1 rounded-xl border border-surface-border bg-bg px-4 py-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-altor"
+                  aria-label="Email address"
+                  required
+                  disabled={status === "loading"}
+                />
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="rounded-xl bg-altor px-6 py-3 text-sm font-semibold text-bg hover:brightness-110 transition disabled:opacity-60"
+                >
+                  {status === "loading" ? "Subscribing…" : "Subscribe"}
+                </button>
+              </form>
+            )}
 
-            <p className="mt-4 text-xs text-text-muted">
-              {submitted ? "Opening your email client…" : `Or email ${CONTACT_EMAIL} directly.`}
-            </p>
+            {status === "error" && (
+              <p className="mt-3 text-xs text-red-400">
+                Something went wrong. Try again or email {CONTACT_EMAIL}.
+              </p>
+            )}
           </div>
         </Reveal>
       </div>
