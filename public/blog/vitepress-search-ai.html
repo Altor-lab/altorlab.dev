@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.placename" content="United States" />
+  <title>AI-Powered Search for VitePress — Replace the Default in 10 Minutes</title>
+  <meta name="description" content="VitePress ships with MiniSearch keyword matching. Replace or augment it with altor-vec semantic search. Full setup guide: index build, theme extension, TypeScript." />
+  <meta name="geo.region" content="US" />
+  <meta name="keywords" content="vitepress search, vitepress ai search, vitepress semantic search, vitepress search plugin, replace vitepress search" />
+  <link rel="canonical" href="https://altorlab.dev/blog/vitepress-search-ai.html" />
+  <meta property="og:image" content="https://altorlab.dev/og-image.png">
+  <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/vitepress-search-ai.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AI-Powered Search for VitePress — Replace the Default in 10 Minutes" />
+  <meta property="og:description" content="Extend VitePress with semantic search using altor-vec. Build index from /dist, inject via theme extension, works with any VitePress site." />
+  <meta property="og:url" content="https://altorlab.dev/blog/vitepress-search-ai.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AI Search for VitePress" />
+  <meta name="twitter:description" content="Replace VitePress keyword search with semantic vector search. Full setup guide." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080a09;--surface:#0e1210;--surface-raised:#141a17;--border:#1e2823;--text:#edf0ee;--text-secondary:#8b9690;--muted:#556059;--altor:#6ee7b7;--altor-glow:rgba(110,231,183,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.74}
+    .wrap{max-width:880px;margin:0 auto;padding:28px 22px 72px}.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+    a{color:var(--altor);text-decoration:none}h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:22px 0 16px}
+    h2{margin-top:38px;font-size:1.5rem}h3{margin-top:24px;font-size:1.16rem}p,li{color:var(--text-secondary)}.lede{font-size:1.06rem}
+    pre{background:#0d1512;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;color:#c3e88d}code{font-family:'JetBrains Mono',monospace}
+    .box{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .cta{background:var(--altor-glow);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin-top:28px}
+    .nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}
+    .breadcrumbs{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .install{background:var(--surface-raised);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin:22px 0 0}
+    .related{margin-top:34px}.related-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .related-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kicker{text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-size:11px}
+    table{width:100%;border-collapse:collapse;margin:24px 0}
+    th{background:var(--surface-raised);padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);color:var(--text)}
+    td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:14px}
+    tr:last-child td{border-bottom:none}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"AI-Powered Search for VitePress — Replace the Default in 10 Minutes","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vitepress-search-ai.html","description":"Replace VitePress keyword search with semantic vector search using altor-vec.","keywords":["vitepress search","semantic search","altor-vec","vitepress plugin"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"AI-Powered Search for VitePress","url":"https://altorlab.dev/blog/vitepress-search-ai.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does this replace VitePress's built-in search entirely?","acceptedAnswer":{"@type":"Answer","text":"You can either replace it or run both side by side. Replacing it gives a cleaner UX with one search modal. Running both lets you A/B compare keyword vs semantic results. The guide shows the replacement approach but the theme extension pattern works either way."}},{"@type":"Question","name":"Will this work with VitePress's default theme?","acceptedAnswer":{"@type":"Answer","text":"Yes. VitePress theme extension lets you add components without ejecting from the default theme. You add files to .vitepress/theme/ and extend the Layout component. The default theme's sidebar, navigation, and styling all stay intact."}},{"@type":"Question","name":"How large does the index get for a typical VitePress docs site?","acceptedAnswer":{"@type":"Answer","text":"For a docs site with 100 pages at 384-dimension embeddings, the binary index is roughly 15-20MB. For 500 pages it's around 75-100MB. Cache the index aggressively — it only changes when docs change, which is typically on deploy."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"altor-vec","item":"https://altorlab.dev/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://altorlab.dev/blog/"},{"@type":"ListItem","position":3,"name":"AI-Powered Search for VitePress","item":"https://altorlab.dev/blog/vitepress-search-ai.html"}]}</script>
+</head>
+<body>
+<main class="wrap">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a class="mono" href="/">Home</a><span>&gt;</span>
+    <a class="mono" href="/blog/">Blog</a><span>&gt;</span>
+    <span>AI-Powered Search for VitePress</span>
+  </nav>
+  <p class="kicker">vitepress search</p>
+  <h1>AI-Powered Search for VitePress — Replace the Default in 10 Minutes</h1>
+  <p class="lede">VitePress ships with a local full-text search powered by MiniSearch. It's fast and zero-config, but it matches keywords — not intent. A user searching "how to configure rate limits" won't find your "request throttling" page unless those words overlap. This guide shows how to augment or replace VitePress search with semantic vector search using altor-vec, without ejecting from the default theme.</p>
+  <div class="install"><strong>Install:</strong> <code>npm install altor-vec @huggingface/transformers tsx</code></div>
+
+  <h2>What VitePress search does and doesn't do</h2>
+  <p>VitePress's built-in search uses MiniSearch under the hood — a solid 22KB inverted-index library. At build time it crawls your <code>.md</code> files and produces a search index. At runtime, queries are scored by BM25-style term frequency against the index.</p>
+  <p>This works well when users type exact terms from your documentation. It breaks down when user vocabulary doesn't match your content vocabulary — which is common in technical documentation, where users describe problems in their own words while documentation uses precise API terminology.</p>
+
+  <table>
+    <thead><tr><th>Approach</th><th>Handles typos</th><th>Understands intent</th><th>Bundle size</th><th>Setup</th></tr></thead>
+    <tbody>
+      <tr><td>VitePress default (MiniSearch)</td><td>No</td><td>No</td><td>22KB</td><td>Zero config</td></tr>
+      <tr><td>altor-vec (HNSW vector)</td><td>Yes (via embeddings)</td><td>Yes</td><td>54KB WASM</td><td>Build script + theme extension</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Overview: how this works</h2>
+  <p>The implementation has three parts:</p>
+  <ol>
+    <li><strong>Index build script</strong> — reads your <code>.vitepress/dist</code> output after <code>vitepress build</code>, extracts text content from HTML files, generates embeddings, writes a binary index to <code>public/</code></li>
+    <li><strong>Theme extension</strong> — adds a search component to VitePress's default theme via <code>.vitepress/theme/index.ts</code> without replacing the whole theme</li>
+    <li><strong>Search component</strong> — a Vue component (or vanilla JS) that loads the index, accepts queries, and renders results</li>
+  </ol>
+
+  <h2>Step 1: Build the search index from your compiled docs</h2>
+  <p>Create <code>scripts/build-search.mjs</code>. This runs <em>after</em> <code>vitepress build</code>, reading the compiled HTML output to extract clean text.</p>
+  <pre><code>// scripts/build-search.mjs
+import fs from 'node:fs/promises';
+import { glob } from 'glob';
+import { JSDOM } from 'jsdom';
+import { pipeline } from '@huggingface/transformers';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+// Read compiled HTML from the VitePress output directory
+const htmlFiles = await glob('.vitepress/dist/**/*.html');
+const vectors = [];
+const metadata = [];
+
+for (let i = 0; i &lt; htmlFiles.length; i++) {
+  const file = htmlFiles[i];
+  const html = await fs.readFile(file, 'utf8');
+  const dom = new JSDOM(html);
+  const doc = dom.window.document;
+
+  // Extract title and main content — skip nav, sidebar, footer
+  const title = doc.querySelector('h1')?.textContent?.trim() ?? 'Untitled';
+  const mainContent = doc.querySelector('.vp-doc') ?? doc.querySelector('main') ?? doc.body;
+
+  // Remove script and style tags
+  mainContent.querySelectorAll('script,style,nav,.aside,.sidebar').forEach(el => el.remove());
+  const text = mainContent.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+
+  if (!text || text.length &lt; 50) continue; // skip empty pages
+
+  const textToEmbed = `${title}\n${text.slice(0, 1000)}`;
+  const out = await embed(textToEmbed, { pooling: 'mean', normalize: true });
+  vectors.push(...Array.from(out.data));
+
+  // Build the URL from file path
+  const url = '/' + file
+    .replace('.vitepress/dist/', '')
+    .replace('index.html', '')
+    .replace('.html', '');
+
+  metadata.push({
+    id: vectors.length / 384 - 1,
+    title,
+    excerpt: text.slice(0, 200),
+    url,
+  });
+
+  if (i % 5 === 0) process.stdout.write(`\rProcessing ${i + 1}/${htmlFiles.length}...`);
+}
+
+const dim = 384;
+const engine = WasmSearchEngine.from_vectors(new Float32Array(vectors), dim, 16, 200, 50);
+
+await fs.writeFile('.vitepress/dist/search-index.bin', Buffer.from(engine.to_bytes()));
+await fs.writeFile('.vitepress/dist/search-metadata.json', JSON.stringify(metadata));
+console.log(`\nIndexed ${metadata.length} pages`);
+</code></pre>
+
+  <p>Install <code>jsdom</code> for HTML parsing:</p>
+  <pre><code>npm install -D jsdom @types/jsdom</code></pre>
+
+  <h2>Step 2: Wire the build script into your package.json</h2>
+  <pre><code>// package.json
+{
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build && node scripts/build-search.mjs",
+    "docs:preview": "vitepress preview"
+  }
+}
+</code></pre>
+  <p>Now every <code>docs:build</code> automatically generates the search index after VitePress finishes compiling.</p>
+
+  <h2>Step 3: Create the search component</h2>
+  <p>Create <code>.vitepress/theme/SearchModal.vue</code>:</p>
+  <pre><code>&lt;script setup lang="ts"&gt;
+import { ref, onMounted, onUnmounted } from 'vue';
+import init, { WasmSearchEngine } from 'altor-vec';
+import { pipeline } from '@huggingface/transformers';
+
+interface Result {
+  id: number;
+  title: string;
+  excerpt: string;
+  url: string;
+  score: number;
+}
+
+const open = ref(false);
+const query = ref('');
+const results = ref&lt;Result[]&gt;([]);
+const loading = ref(false);
+
+let engine: WasmSearchEngine | null = null;
+let metadata: Omit&lt;Result, 'score'&gt;[] = [];
+let embedder: Awaited&lt;ReturnType&lt;typeof pipeline&gt;&gt; | null = null;
+let debounceTimer: ReturnType&lt;typeof setTimeout&gt;;
+
+async function initEngine() {
+  if (engine) return;
+  await init();
+  const [indexBuf, meta] = await Promise.all([
+    fetch('/search-index.bin').then(r => r.arrayBuffer()),
+    fetch('/search-metadata.json').then(r => r.json()),
+  ]);
+  engine = new WasmSearchEngine(new Uint8Array(indexBuf));
+  metadata = meta;
+  embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+}
+
+async function runSearch(q: string) {
+  if (!engine || !embedder || !q.trim()) { results.value = []; return; }
+  loading.value = true;
+  const out = await embedder(q, { pooling: 'mean', normalize: true });
+  const hits = JSON.parse(engine.search(new Float32Array(out.data as Float32Array), 6)) as [number, number][];
+  results.value = hits.map(([id, dist]) => ({ ...metadata[id], score: 1 - dist }));
+  loading.value = false;
+}
+
+function onInput(e: Event) {
+  const val = (e.target as HTMLInputElement).value;
+  query.value = val;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => runSearch(val), 220);
+}
+
+function openModal() { open.value = true; initEngine(); }
+function closeModal() { open.value = false; query.value = ''; results.value = []; }
+
+function onKeydown(e: KeyboardEvent) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); open.value ? closeModal() : openModal(); }
+  if (e.key === 'Escape') closeModal();
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown));
+onUnmounted(() => window.removeEventListener('keydown', onKeydown));
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;button class="search-btn" @click="openModal" aria-label="Search (Cmd+K)"&gt;
+    &lt;svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;
+      &lt;circle cx="11" cy="11" r="8"/&gt;&lt;path d="m21 21-4.35-4.35"/&gt;
+    &lt;/svg&gt;
+    Search &lt;kbd&gt;⌘K&lt;/kbd&gt;
+  &lt;/button&gt;
+
+  &lt;Teleport to="body"&gt;
+    &lt;div v-if="open" class="search-overlay" @click.self="closeModal"&gt;
+      &lt;div class="search-modal"&gt;
+        &lt;input
+          autofocus
+          type="search"
+          placeholder="Search docs..."
+          :value="query"
+          @input="onInput"
+          class="search-input"
+        /&gt;
+        &lt;p v-if="loading" class="search-hint"&gt;Searching…&lt;/p&gt;
+        &lt;p v-else-if="query &amp;&amp; !results.length" class="search-hint"&gt;No results for "{{ query }}"&lt;/p&gt;
+        &lt;ul v-else class="search-results"&gt;
+          &lt;li v-for="r in results" :key="r.id"&gt;
+            &lt;a :href="r.url" @click="closeModal"&gt;
+              &lt;strong&gt;{{ r.title }}&lt;/strong&gt;
+              &lt;span&gt;{{ r.excerpt }}&lt;/span&gt;
+              &lt;small&gt;{{ (r.score * 100).toFixed(0) }}% match&lt;/small&gt;
+            &lt;/a&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/Teleport&gt;
+&lt;/template&gt;
+
+&lt;style scoped&gt;
+.search-btn { background: transparent; border: 1px solid var(--vp-c-border); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 14px; color: var(--vp-c-text-2); display: flex; align-items: center; gap: 6px; }
+.search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 9999; display: flex; align-items: flex-start; justify-content: center; padding-top: 80px; }
+.search-modal { background: var(--vp-c-bg); border: 1px solid var(--vp-c-border); border-radius: 12px; width: min(640px, 92vw); overflow: hidden; }
+.search-input { width: 100%; padding: 14px 18px; font-size: 16px; border: none; outline: none; background: transparent; color: var(--vp-c-text-1); border-bottom: 1px solid var(--vp-c-border); }
+.search-hint { padding: 16px 18px; color: var(--vp-c-text-3); margin: 0; font-size: 14px; }
+.search-results { list-style: none; margin: 0; padding: 8px; max-height: 400px; overflow-y: auto; }
+.search-results li a { display: block; padding: 10px 12px; border-radius: 8px; text-decoration: none; }
+.search-results li a:hover { background: var(--vp-c-bg-soft); }
+.search-results li a strong { display: block; color: var(--vp-c-text-1); font-size: 14px; margin-bottom: 2px; }
+.search-results li a span { display: block; color: var(--vp-c-text-3); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-results li a small { display: block; color: var(--vp-c-brand); font-size: 11px; margin-top: 2px; }
+&lt;/style&gt;
+</code></pre>
+
+  <h2>Step 4: Register the component via theme extension</h2>
+  <p>Create or update <code>.vitepress/theme/index.ts</code>:</p>
+  <pre><code>// .vitepress/theme/index.ts
+import DefaultTheme from 'vitepress/theme';
+import SearchModal from './SearchModal.vue';
+import type { Theme } from 'vitepress';
+
+export default {
+  extends: DefaultTheme,
+  enhanceApp({ app }) {
+    app.component('SearchModal', SearchModal);
+  },
+  Layout() {
+    return h(DefaultTheme.Layout, null, {
+      'nav-bar-content-before': () => h(SearchModal),
+    });
+  },
+} satisfies Theme;
+</code></pre>
+  <p>The <code>nav-bar-content-before</code> slot injects the search button into VitePress's navbar before the existing content. Other available slots are <code>nav-bar-content-after</code>, <code>sidebar-nav-before</code>, and <code>aside-top</code>. Pick whichever placement fits your design.</p>
+
+  <div class="box">
+    <p><strong>Note on disabling built-in search:</strong> To disable VitePress's default search while keeping the new one, add <code>themeConfig: { search: { provider: 'local', options: { detailedView: false } } }</code> or set <code>search: false</code> in your VitePress config. The built-in search and the custom component can coexist, but two search buttons in the nav is confusing for users.</p>
+  </div>
+
+  <h2>Step 5: Configure VitePress to handle WASM</h2>
+  <p>VitePress uses Vite under the hood. WASM imports from <code>altor-vec</code> need a small config addition:</p>
+  <pre><code>// .vitepress/config.ts
+import { defineConfig } from 'vitepress';
+
+export default defineConfig({
+  vite: {
+    optimizeDeps: {
+      exclude: ['altor-vec'],
+    },
+    assetsInclude: ['**/*.wasm'],
+  },
+  // ... rest of your config
+});
+</code></pre>
+
+  <h2>Handling hot reload in dev mode</h2>
+  <p>During <code>vitepress dev</code>, the <code>.vitepress/dist</code> directory doesn't exist yet — the dev server serves content directly from your Markdown files. The search index script reads from <code>dist</code>, so it can only run after a full build.</p>
+  <p>For development, you have two options:</p>
+  <ul>
+    <li>Run <code>docs:build</code> once to generate the index, then use <code>docs:dev</code> — the index is served statically and works in the dev server</li>
+    <li>Guard the search component with a check: if <code>/search-index.bin</code> returns 404, fall back to showing VitePress's default search or a "search coming soon" message</li>
+  </ul>
+  <pre><code>// In SearchModal.vue — graceful fallback
+async function initEngine() {
+  const probe = await fetch('/search-index.bin', { method: 'HEAD' });
+  if (!probe.ok) {
+    console.info('Search index not built yet. Run npm run docs:build.');
+    return;
+  }
+  // ... rest of init
+}
+</code></pre>
+
+  <h2>Serving the index from VitePress's public directory</h2>
+  <p>An alternative to writing to <code>.vitepress/dist</code> is writing to <code>public/</code> in your VitePress root. VitePress copies everything from <code>public/</code> to the output directory during build. This means you can run the index build script before <code>vitepress build</code> and have the files available in both dev and production:</p>
+  <pre><code>// package.json — alternative approach
+{
+  "scripts": {
+    "prebuild:search": "vitepress build",
+    "build:search": "node scripts/build-search-public.mjs",
+    "docs:build": "npm run prebuild:search && npm run build:search"
+  }
+}
+</code></pre>
+  <p>In <code>build-search-public.mjs</code>, write to <code>./public/search-index.bin</code> instead of <code>.vitepress/dist/</code>. This makes the file available via <code>/search-index.bin</code> in both dev server and production.</p>
+
+  <h2>Performance: index size and loading</h2>
+  <p>A VitePress docs site with 150 pages at 384 dimensions produces a binary index of approximately 22MB. This loads in about 2 seconds on a typical broadband connection. To keep perceived performance high:</p>
+  <ul>
+    <li>Initialize the engine only when the user opens the search modal, not on page load</li>
+    <li>Show a loading indicator while the index fetches</li>
+    <li>Cache the binary with a long-lived cache header — add a content hash to the filename if your content changes frequently</li>
+    <li>Use the <code>Xenova/all-MiniLM-L6-v2</code> model (23MB) rather than larger models for faster first-query times</li>
+  </ul>
+
+  <h2>FAQ</h2>
+  <h3>Does this replace VitePress's built-in search entirely?</h3>
+  <p>You can replace it or run both. To disable the built-in search, set <code>search: false</code> in your VitePress config. The custom component handles all searching independently. Running both is possible but adds UI clutter — most teams pick one.</p>
+  <h3>Will this work with VitePress's default theme?</h3>
+  <p>Yes. Theme extension via <code>.vitepress/theme/index.ts</code> is the standard VitePress pattern. You add files without ejecting from the default theme. All default theme features — sidebar, navigation, dark mode — continue to work.</p>
+  <h3>How large does the index get for a typical docs site?</h3>
+  <p>Roughly 150KB per 1,000 documents at 384 dimensions. A 100-page docs site produces around 15-20MB. A 500-page site produces 75-100MB. Cache the binary aggressively — it only changes when documentation changes, which is typically once per deployment.</p>
+
+  <div class="cta">
+    <strong>Add to your VitePress site:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <section class="related" aria-labelledby="rel-h">
+    <h2 id="rel-h">Related articles</h2>
+    <div class="related-grid">
+      <a class="related-card" href="/blog/add-search-to-nextjs.html">Add Semantic Search to Next.js App Router</a>
+      <a class="related-card" href="/blog/semantic-search-website.html">Add Semantic Search to Any Website</a>
+      <a class="related-card" href="/blog/algolia-alternative-open-source.html">Algolia Alternative: Open Source Options in 2026</a>
+    </div>
+  </section>
+  <nav class="nav"><a href="/blog/">Back to blog index</a><a href="/">Homepage</a></nav>
+  <nav class="site-nav" aria-label="More from altor-vec" style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1)">
+    <p style="font-weight:600;margin:0 0 12px">More from altor-vec</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:14px">
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Frameworks</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/frameworks/vue.html">Vue</a></li><li><a href="/frameworks/react.html">React</a></li><li><a href="/frameworks/nextjs.html">Next.js</a></li><li><a href="/frameworks/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Comparisons</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/vs/algolia.html">vs Algolia</a></li><li><a href="/vs/meilisearch.html">vs Meilisearch</a></li><li><a href="/vs/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Examples</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/examples/document-search.html">Document search</a></li><li><a href="/examples/autocomplete.html">Autocomplete</a></li><li><a href="/examples/">All</a></li></ul></div>
+    </div>
+  </nav>
+</main>
+</body>
+</html>

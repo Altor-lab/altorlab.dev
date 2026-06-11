@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.placename" content="United States" />
+  <title>RAG Without a Server — Complete Browser Implementation in JavaScript</title>
+  <meta name="description" content="Full Retrieval-Augmented Generation running in the browser. altor-vec for retrieval, Transformers.js for embeddings, optional local LLM for generation. Complete code." />
+  <meta name="geo.region" content="US" />
+  <meta name="keywords" content="rag without server, browser rag javascript, client side rag, rag no backend, browser retrieval augmented generation" />
+  <link rel="canonical" href="https://altorlab.dev/blog/rag-without-server.html" />
+  <meta property="og:image" content="https://altorlab.dev/og-image.png">
+  <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/rag-without-server.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="RAG Without a Server — Complete Browser Implementation" />
+  <meta property="og:description" content="Retrieval-Augmented Generation entirely in the browser. altor-vec retrieval + Transformers.js embeddings + local or cloud generation." />
+  <meta property="og:url" content="https://altorlab.dev/blog/rag-without-server.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="RAG Without a Server — Browser JavaScript" />
+  <meta name="twitter:description" content="Complete browser RAG implementation: retrieval, embeddings, generation — no backend required." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080a09;--surface:#0e1210;--surface-raised:#141a17;--border:#1e2823;--text:#edf0ee;--text-secondary:#8b9690;--muted:#556059;--altor:#6ee7b7;--altor-glow:rgba(110,231,183,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.74}
+    .wrap{max-width:880px;margin:0 auto;padding:28px 22px 72px}.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+    a{color:var(--altor);text-decoration:none}h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:22px 0 16px}
+    h2{margin-top:38px;font-size:1.5rem}h3{margin-top:24px;font-size:1.16rem}p,li{color:var(--text-secondary)}.lede{font-size:1.06rem}
+    pre{background:#0d1512;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;color:#c3e88d}code{font-family:'JetBrains Mono',monospace}
+    .box{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .cta{background:var(--altor-glow);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin-top:28px}
+    .nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}
+    .breadcrumbs{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .install{background:var(--surface-raised);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin:22px 0 0}
+    .related{margin-top:34px}.related-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .related-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kicker{text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-size:11px}
+    table{width:100%;border-collapse:collapse;margin:24px 0}
+    th{background:var(--surface-raised);padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);color:var(--text)}
+    td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:14px}
+    tr:last-child td{border-bottom:none}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"RAG Without a Server — Complete Browser Implementation in JavaScript","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/rag-without-server.html","description":"Complete browser RAG implementation using altor-vec for retrieval and Transformers.js for embeddings.","keywords":["rag without server","browser rag","client-side rag","altor-vec","retrieval augmented generation"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"RAG Without a Server — Complete Browser Implementation","url":"https://altorlab.dev/blog/rag-without-server.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can RAG really work without any server?","acceptedAnswer":{"@type":"Answer","text":"The retrieval step — finding relevant chunks from your knowledge base — runs entirely in the browser using altor-vec WASM. Embedding generation also runs locally with Transformers.js. For the generation step you have two options: a small local language model via WebLLM (fully browser-local, no server at all) or an API call to OpenAI or Claude (server for generation only, not for retrieval or your data)."}},{"@type":"Question","name":"What are the memory requirements for browser RAG?","acceptedAnswer":{"@type":"Answer","text":"The retrieval index for 1,000 documents at 384 dimensions is about 1.5MB. The embedding model (all-MiniLM-L6-v2) is 23MB. A small generation model via WebLLM (like Llama 3.2 1B) is 800MB-1GB. Total memory usage for fully local RAG is roughly 1-2GB — fine on desktop, marginal on mobile. If memory is a constraint, use a cloud API for generation and keep only the retrieval local."}},{"@type":"Question","name":"How do I handle questions the knowledge base can't answer?","acceptedAnswer":{"@type":"Answer","text":"Check the similarity scores from retrieval. If the top result's score is below a threshold (typically 0.65-0.70 for cosine similarity), the retrieved chunks are probably not relevant to the question. In that case, return a standard 'I don't have information on that' response rather than passing low-quality context to the generator."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"altor-vec","item":"https://altorlab.dev/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://altorlab.dev/blog/"},{"@type":"ListItem","position":3,"name":"RAG Without a Server","item":"https://altorlab.dev/blog/rag-without-server.html"}]}</script>
+</head>
+<body>
+<main class="wrap">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a class="mono" href="/">Home</a><span>&gt;</span>
+    <a class="mono" href="/blog/">Blog</a><span>&gt;</span>
+    <span>RAG Without a Server — Complete Browser Implementation</span>
+  </nav>
+  <p class="kicker">rag without server javascript</p>
+  <h1>RAG Without a Server — Complete Browser Implementation in JavaScript</h1>
+  <p class="lede">Retrieval-Augmented Generation is usually presented as a server-side architecture: a Python backend calls an embedding API, queries a vector database, and feeds retrieved chunks to an LLM. But the retrieval step — finding relevant chunks from your knowledge base — can run entirely in the browser. This post shows a complete implementation where retrieval and embedding are 100% local, and generation is either local or an optional API call.</p>
+  <div class="install"><strong>Install:</strong> <code>npm install altor-vec @huggingface/transformers</code></div>
+
+  <h2>What "RAG without a server" actually means</h2>
+  <p>RAG has two phases with different requirements:</p>
+  <ol>
+    <li><strong>Retrieval:</strong> given a user query, find the most relevant chunks from your knowledge base. This is a nearest-neighbor search over float vectors. It's computationally cheap and requires no external state — perfect for the browser.</li>
+    <li><strong>Generation:</strong> given retrieved chunks as context, generate a natural language answer. This requires a language model. Running a capable LLM locally in the browser is possible but requires significant memory (700MB+). The alternative is a single API call to OpenAI or Claude — a server call, but only for generation, not for your data.</li>
+  </ol>
+
+  <table>
+    <thead><tr><th>Approach</th><th>Retrieval</th><th>Generation</th><th>Data privacy</th><th>Latency</th></tr></thead>
+    <tbody>
+      <tr><td>Fully local</td><td>Browser (altor-vec)</td><td>Browser (WebLLM)</td><td>Complete — nothing leaves browser</td><td>First query slow (model load); then fast</td></tr>
+      <tr><td>Hybrid (recommended)</td><td>Browser (altor-vec)</td><td>OpenAI/Claude API</td><td>Query + chunks go to API; corpus stays local</td><td>Fast — 0.5ms retrieval + 1-2s generation</td></tr>
+      <tr><td>Traditional server RAG</td><td>Server vector DB</td><td>Server LLM</td><td>Everything on server</td><td>Depends on backend</td></tr>
+    </tbody>
+  </table>
+
+  <p>The hybrid approach is the most practical starting point: your knowledge base never leaves the user's browser, query latency is fast, and you don't need to ship a 700MB model. This guide implements both options.</p>
+
+  <h2>Architecture overview</h2>
+  <pre><code>Knowledge base (markdown/text files)
+  └── Build time: embed each chunk → WasmSearchEngine.from_vectors()
+      └── Write: search-index.bin + metadata.json → /public
+
+Runtime (browser):
+  User question
+  └── 1. Embed question → Float32Array (Transformers.js, 23MB model, local)
+  └── 2. Search index → top-5 chunks (altor-vec, &lt;1ms, local)
+  └── 3. Build prompt: [system] + [retrieved chunks] + [question]
+  └── 4a. Generate locally → WebLLM (no server, needs 700MB+ model)
+       OR
+  └── 4b. POST to OpenAI/Claude API → stream response back
+  └── 5. Stream answer to user
+</code></pre>
+
+  <h2>Step 1: Chunk and index your knowledge base</h2>
+  <p>RAG quality depends heavily on chunking strategy. For documentation, chunk by section (H2/H3). For long articles, chunk by paragraph with 100-word overlap. Each chunk should be self-contained enough to answer a question on its own.</p>
+  <pre><code>// scripts/build-rag-index.mjs
+import fs from 'node:fs/promises';
+import { glob } from 'glob';
+import { pipeline } from '@huggingface/transformers';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+const files = await glob('./docs/**/*.md');
+const vectors = [];
+const chunks = []; // metadata per chunk
+
+for (const file of files) {
+  const text = await fs.readFile(file, 'utf8');
+  const title = text.match(/^#\s+(.+)/m)?.[1] ?? file;
+
+  // Split into sections by H2 headings
+  const sections = text.split(/(?=^##\s)/m).filter(s => s.trim().length > 50);
+
+  for (const section of sections) {
+    const heading = section.match(/^#+\s+(.+)/m)?.[1] ?? title;
+    const body = section.replace(/^#+\s+.+\n/, '').trim();
+    if (!body) continue;
+
+    // For long sections, split into overlapping 500-char chunks
+    const chunkSize = 500;
+    const overlap = 100;
+    for (let i = 0; i &lt; body.length; i += chunkSize - overlap) {
+      const chunk = body.slice(i, i + chunkSize);
+      if (chunk.trim().length &lt; 50) continue;
+
+      const textToEmbed = `${heading}: ${chunk}`;
+      const out = await embed(textToEmbed, { pooling: 'mean', normalize: true });
+      vectors.push(...Array.from(out.data));
+
+      chunks.push({
+        id: chunks.length,
+        title: heading,
+        text: chunk,
+        url: '/' + file.replace('./docs/', '').replace('.md', ''),
+        pageTitle: title,
+      });
+    }
+  }
+}
+
+const engine = WasmSearchEngine.from_vectors(new Float32Array(vectors), 384, 16, 200, 50);
+await fs.writeFile('./public/rag-index.bin', Buffer.from(engine.to_bytes()));
+await fs.writeFile('./public/rag-chunks.json', JSON.stringify(chunks));
+console.log(`Indexed ${chunks.length} chunks from ${files.length} files`);
+</code></pre>
+
+  <h2>Step 2: Build the retrieval module</h2>
+  <pre><code>// lib/retrieval.ts
+import type { WasmSearchEngine } from 'altor-vec';
+
+interface Chunk {
+  id: number;
+  title: string;
+  text: string;
+  url: string;
+  pageTitle: string;
+}
+
+export interface RetrievedChunk extends Chunk {
+  score: number;
+}
+
+let engine: WasmSearchEngine | null = null;
+let chunks: Chunk[] = [];
+let initPromise: Promise&lt;void&gt; | null = null;
+
+export async function initRetrieval(): Promise&lt;void&gt; {
+  if (engine) return;
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    const { default: init, WasmSearchEngine } = await import('altor-vec');
+    await init();
+    const [indexBuf, chunkData] = await Promise.all([
+      fetch('/rag-index.bin').then(r => r.arrayBuffer()),
+      fetch('/rag-chunks.json').then(r => r.json()),
+    ]);
+    engine = new WasmSearchEngine(new Uint8Array(indexBuf));
+    chunks = chunkData;
+  })();
+  return initPromise;
+}
+
+export async function retrieve(queryVector: Float32Array, topK = 5): Promise&lt;RetrievedChunk[]&gt; {
+  await initRetrieval();
+  if (!engine) return [];
+  const hits = JSON.parse(engine.search(queryVector, topK)) as [number, number][];
+  return hits
+    .map(([id, distance]) => ({ ...chunks[id], score: 1 - distance }))
+    .filter(c => c.score &gt; 0.5); // filter low-relevance chunks
+}
+</code></pre>
+
+  <h2>Step 3: Embed the user's query</h2>
+  <pre><code>// lib/embed.ts
+import { pipeline } from '@huggingface/transformers';
+
+type EmbedPipeline = Awaited&lt;ReturnType&lt;typeof pipeline&gt;&gt;;
+let embedder: EmbedPipeline | null = null;
+
+export async function embedQuery(text: string): Promise&lt;Float32Array&gt; {
+  if (!embedder) {
+    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  const out = await embedder(text, { pooling: 'mean', normalize: true });
+  return new Float32Array(out.data as ArrayBuffer);
+}
+</code></pre>
+
+  <h2>Step 4a: Generate with OpenAI API (hybrid approach)</h2>
+  <pre><code>// lib/generate.ts
+import type { RetrievedChunk } from './retrieval';
+
+export async function generateAnswer(
+  question: string,
+  context: RetrievedChunk[],
+  apiKey: string,
+  onToken: (token: string) =&gt; void
+): Promise&lt;void&gt; {
+  if (context.length === 0) {
+    onToken("I don't have relevant information to answer that question.");
+    return;
+  }
+
+  const contextText = context
+    .map(c => `[${c.pageTitle} — ${c.title}]\n${c.text}`)
+    .join('\n\n---\n\n');
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      stream: true,
+      messages: [
+        {
+          role: 'system',
+          content: `You are a helpful assistant. Answer questions using only the provided context. If the context doesn't contain enough information to answer, say so clearly.\n\nContext:\n${contextText}`,
+        },
+        { role: 'user', content: question },
+      ],
+    }),
+  });
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const text = decoder.decode(value);
+    for (const line of text.split('\n')) {
+      if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
+      try {
+        const data = JSON.parse(line.slice(6));
+        const token = data.choices[0]?.delta?.content ?? '';
+        if (token) onToken(token);
+      } catch {}
+    }
+  }
+}
+</code></pre>
+
+  <h2>Step 4b: Fully local generation with WebLLM</h2>
+  <p>For a completely server-free implementation, use <a href="https://github.com/mlc-ai/web-llm" target="_blank" rel="noopener">WebLLM</a> for in-browser generation. The tradeoff is a large model download (700MB+) on first use.</p>
+  <pre><code>import { CreateMLCEngine } from '@mlc-ai/web-llm';
+
+let llmEngine: Awaited&lt;ReturnType&lt;typeof CreateMLCEngine&gt;&gt; | null = null;
+
+export async function generateLocalAnswer(
+  question: string,
+  context: RetrievedChunk[],
+  onToken: (token: string) =&gt; void
+): Promise&lt;void&gt; {
+  if (!llmEngine) {
+    llmEngine = await CreateMLCEngine('Llama-3.2-1B-Instruct-q4f32_1-MLC', {
+      initProgressCallback: (p) =&gt; console.log(p.text),
+    });
+  }
+
+  const contextText = context.map(c => c.text).join('\n\n');
+  const chunks = await llmEngine.chat.completions.create({
+    messages: [
+      { role: 'system', content: `Answer using only this context:\n${contextText}` },
+      { role: 'user', content: question },
+    ],
+    stream: true,
+  });
+
+  for await (const chunk of chunks) {
+    const token = chunk.choices[0]?.delta?.content ?? '';
+    if (token) onToken(token);
+  }
+}
+</code></pre>
+
+  <h2>Step 5: Wire it all together in a React component</h2>
+  <pre><code>'use client';
+import { useState, useEffect } from 'react';
+import { initRetrieval, retrieve } from '@/lib/retrieval';
+import { embedQuery } from '@/lib/embed';
+import { generateAnswer } from '@/lib/generate';
+
+export function RagChat({ apiKey }: { apiKey: string }) {
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
+  const [sources, setSources] = useState&lt;string[]&gt;([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => { initRetrieval(); }, []);
+
+  async function ask() {
+    if (!question.trim() || loading) return;
+    setLoading(true);
+    setAnswer('');
+    setSources([]);
+
+    const queryVec = await embedQuery(question);
+    const chunks = await retrieve(queryVec, 5);
+
+    setSources([...new Set(chunks.map(c => c.url))]);
+
+    await generateAnswer(question, chunks, apiKey, (token) =&gt; {
+      setAnswer(prev =&gt; prev + token);
+    });
+
+    setLoading(false);
+  }
+
+  return (
+    &lt;div&gt;
+      &lt;div style={{ display: 'flex', gap: 8 }}&gt;
+        &lt;input
+          value={question}
+          onChange={e =&gt; setQuestion(e.target.value)}
+          onKeyDown={e =&gt; e.key === 'Enter' && ask()}
+          placeholder="Ask a question..."
+          disabled={loading}
+        /&gt;
+        &lt;button onClick={ask} disabled={loading || !question.trim()}&gt;
+          {loading ? 'Thinking…' : 'Ask'}
+        &lt;/button&gt;
+      &lt;/div&gt;
+      {answer && &lt;div&gt;&lt;p&gt;{answer}&lt;/p&gt;&lt;/div&gt;}
+      {sources.length &gt; 0 && (
+        &lt;div&gt;
+          &lt;p&gt;Sources:&lt;/p&gt;
+          &lt;ul&gt;{sources.map(s =&gt; &lt;li key={s}&gt;&lt;a href={s}&gt;{s}&lt;/a&gt;&lt;/li&gt;)}&lt;/ul&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+  <h2>Handling "I don't know"</h2>
+  <p>The most important quality feature in RAG is knowing when not to answer. If retrieval returns chunks with low similarity scores, the context is probably irrelevant to the question. Pass low-quality context to an LLM and it will hallucinate a confident-sounding answer.</p>
+  <pre><code>// In retrieve() — filter by minimum score
+return hits
+  .map(([id, distance]) => ({ ...chunks[id], score: 1 - distance }))
+  .filter(c => c.score > 0.65); // tune this threshold
+
+// If retrieve() returns [], don't call generateAnswer()
+// Instead show: "I don't have information on that in the current knowledge base"
+</code></pre>
+  <p>A threshold of 0.65 cosine similarity works for most documentation use cases. Tune it by testing with 20-30 representative queries — if you're getting hallucinations, raise the threshold; if you're getting too many "I don't know" responses, lower it.</p>
+
+  <h2>Chunking strategy matters more than the model</h2>
+  <p>The biggest quality lever in RAG is chunking, not the embedding model or the LLM. Chunks that are too long lose precision (the embedding averages too much). Chunks that are too short lose context (the LLM doesn't have enough to generate a good answer).</p>
+  <p>Starting recommendations:</p>
+  <ul>
+    <li>Documentation pages: chunk by H2 section, maximum 500 characters per chunk</li>
+    <li>FAQ pages: one Q&A pair per chunk</li>
+    <li>Long articles: 400-character chunks with 80-character overlap</li>
+    <li>Code-heavy docs: keep code blocks together with their explanation paragraph</li>
+  </ul>
+
+  <h2>FAQ</h2>
+  <h3>Can RAG really work without any server?</h3>
+  <p>The retrieval step runs entirely in the browser using altor-vec WASM. Embedding generation also runs locally with Transformers.js. For generation you can use WebLLM for full local execution, or a cloud API call for just the generation step — your corpus and queries never leave the browser in either case.</p>
+  <h3>What are the memory requirements?</h3>
+  <p>The retrieval index for 1,000 documents at 384 dimensions is about 1.5MB. The embedding model is 23MB. A local generation model via WebLLM is 700MB-1GB. Hybrid approach (local retrieval + cloud generation) uses only 25MB total — practical on any device.</p>
+  <h3>How do I handle questions the knowledge base can't answer?</h3>
+  <p>Filter retrieved chunks by minimum similarity score (0.65 is a good starting point). If no chunks pass the threshold, return a standard "I don't have that information" response rather than passing empty or low-quality context to the generator.</p>
+
+  <div class="cta">
+    <strong>Start with retrieval:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <section class="related" aria-labelledby="rel-h">
+    <h2 id="rel-h">Related articles</h2>
+    <div class="related-grid">
+      <a class="related-card" href="/blog/browser-rag-tutorial.html">Browser-Based RAG: Run RAG Locally</a>
+      <a class="related-card" href="/blog/semantic-search-website.html">Add Semantic Search to Your Website</a>
+      <a class="related-card" href="/examples/rag-retrieval.html">RAG Retrieval — Live Example</a>
+    </div>
+  </section>
+  <nav class="nav"><a href="/blog/">Back to blog index</a><a href="/">Homepage</a></nav>
+  <nav class="site-nav" aria-label="More from altor-vec" style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1)">
+    <p style="font-weight:600;margin:0 0 12px">More from altor-vec</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:14px">
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Examples</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/examples/rag-retrieval.html">RAG retrieval</a></li><li><a href="/examples/document-search.html">Document search</a></li><li><a href="/examples/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Comparisons</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/vs/pinecone.html">vs Pinecone</a></li><li><a href="/vs/chromadb.html">vs ChromaDB</a></li><li><a href="/vs/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Frameworks</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/frameworks/react.html">React</a></li><li><a href="/frameworks/nextjs.html">Next.js</a></li><li><a href="/frameworks/">All</a></li></ul></div>
+    </div>
+  </nav>
+</main>
+</body>
+</html>

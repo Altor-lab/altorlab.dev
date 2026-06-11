@@ -23,6 +23,9 @@
 - [Algolia Alternative: Open Source Search for Developers in 2026](https://altorlab.dev/blog/algolia-alternative-open-source.html)
 - [fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong](https://altorlab.dev/blog/fuse-js-alternative.html)
 - [Add Semantic Search to a Next.js App Router Project](https://altorlab.dev/blog/add-search-to-nextjs.html)
+- [AI-Powered Search for VitePress](https://altorlab.dev/blog/vitepress-search-ai.html)
+- [Add Semantic Search to Docusaurus — Replace Algolia DocSearch](https://altorlab.dev/blog/docusaurus-semantic-search.html)
+- [RAG Without a Server — Complete Browser Implementation](https://altorlab.dev/blog/rag-without-server.html)
 
 ## Comparisons
 - [altor-vec vs Pinecone](https://altorlab.dev/vs/pinecone.html)

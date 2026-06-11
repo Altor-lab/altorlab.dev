@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.placename" content="United States" />
+  <title>Add Semantic Search to Docusaurus — Replace Algolia DocSearch</title>
+  <meta name="description" content="Docusaurus's built-in search is keyword-only. Replace Algolia DocSearch with altor-vec for semantic vector search. Full setup: swizzle, build script, TypeScript plugin." />
+  <meta name="geo.region" content="US" />
+  <meta name="keywords" content="docusaurus search plugin, docusaurus semantic search, replace algolia docsearch, docusaurus ai search, docusaurus search" />
+  <link rel="canonical" href="https://altorlab.dev/blog/docusaurus-semantic-search.html" />
+  <meta property="og:image" content="https://altorlab.dev/og-image.png">
+  <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/docusaurus-semantic-search.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Add Semantic Search to Docusaurus — Replace Algolia DocSearch" />
+  <meta property="og:description" content="Replace Docusaurus keyword search with semantic vector search. Swizzle SearchBar, build index from /build output, TypeScript throughout." />
+  <meta property="og:url" content="https://altorlab.dev/blog/docusaurus-semantic-search.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Semantic Search for Docusaurus" />
+  <meta name="twitter:description" content="Replace Algolia DocSearch with client-side semantic vector search in Docusaurus v3." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080a09;--surface:#0e1210;--surface-raised:#141a17;--border:#1e2823;--text:#edf0ee;--text-secondary:#8b9690;--muted:#556059;--altor:#6ee7b7;--altor-glow:rgba(110,231,183,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.74}
+    .wrap{max-width:880px;margin:0 auto;padding:28px 22px 72px}.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+    a{color:var(--altor);text-decoration:none}h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:22px 0 16px}
+    h2{margin-top:38px;font-size:1.5rem}h3{margin-top:24px;font-size:1.16rem}p,li{color:var(--text-secondary)}.lede{font-size:1.06rem}
+    pre{background:#0d1512;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;color:#c3e88d}code{font-family:'JetBrains Mono',monospace}
+    .box{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .cta{background:var(--altor-glow);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin-top:28px}
+    .nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}
+    .breadcrumbs{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .install{background:var(--surface-raised);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin:22px 0 0}
+    .related{margin-top:34px}.related-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .related-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kicker{text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-size:11px}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Add Semantic Search to Docusaurus — Replace Algolia DocSearch","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/docusaurus-semantic-search.html","description":"Replace Docusaurus keyword search with semantic vector search using altor-vec.","keywords":["docusaurus search","semantic search","algolia docsearch alternative","altor-vec"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Add Semantic Search to Docusaurus","url":"https://altorlab.dev/blog/docusaurus-semantic-search.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does Algolia DocSearch work with private documentation?","acceptedAnswer":{"@type":"Answer","text":"Algolia DocSearch is free only for open-source or publicly accessible documentation. Private docs, intranet docs, or paid-product documentation require a paid Algolia plan starting at around $50/month. altor-vec works on any docs site regardless of whether it's publicly accessible."}},{"@type":"Question","name":"What Docusaurus version does this support?","acceptedAnswer":{"@type":"Answer","text":"The swizzle approach shown here works with Docusaurus v3 and v2. The SearchBar component location and swizzle command are the same across versions. The index build script reads from the /build output directory which hasn't changed significantly between versions."}},{"@type":"Question","name":"Can I keep the default search as a fallback?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can render both the default SearchBar and the custom semantic search in separate UI elements. However, having two search interfaces is confusing for users. Most teams either replace search entirely or add the semantic search as an additional feature with a different trigger key."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"altor-vec","item":"https://altorlab.dev/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://altorlab.dev/blog/"},{"@type":"ListItem","position":3,"name":"Add Semantic Search to Docusaurus","item":"https://altorlab.dev/blog/docusaurus-semantic-search.html"}]}</script>
+</head>
+<body>
+<main class="wrap">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a class="mono" href="/">Home</a><span>&gt;</span>
+    <a class="mono" href="/blog/">Blog</a><span>&gt;</span>
+    <span>Add Semantic Search to Docusaurus — Replace Algolia DocSearch</span>
+  </nav>
+  <p class="kicker">docusaurus search plugin</p>
+  <h1>Add Semantic Search to Docusaurus — Replace Algolia DocSearch</h1>
+  <p class="lede">Docusaurus ships with a local search option (keyword-only, via Lunr) and supports Algolia DocSearch (free only for publicly accessible open-source projects). If your docs are private, internal, or for a paid product, you're paying Algolia or settling for keyword search. This guide shows how to replace both with client-side semantic search using altor-vec — no account required, no per-query cost, and intent-aware results.</p>
+  <div class="install"><strong>Install:</strong> <code>npm install altor-vec @huggingface/transformers tsx</code></div>
+
+  <h2>Why replace Algolia DocSearch</h2>
+  <p>Algolia DocSearch is genuinely convenient. You add three lines to <code>docusaurus.config.ts</code>, Algolia crawls your site, and search works. The catch: it's free only for open-source projects with publicly accessible documentation. If your docs are behind a login, on an internal network, or for a commercial product, you pay Algolia's standard rates — starting around $50/month at modest traffic.</p>
+  <p>Beyond pricing, DocSearch is keyword matching with Algolia's ranking heuristics. A user searching "how to increase throughput" won't find your "performance tuning" page if those words don't overlap. Semantic search closes that gap.</p>
+
+  <h2>How the implementation works</h2>
+  <p>Docusaurus uses a concept called "swizzling" to override theme components. You run <code>docusaurus swizzle</code> to copy a component from the default theme into your <code>src/theme/</code> directory, then modify it. This is the correct way to customize Docusaurus without forking the theme.</p>
+  <p>The search implementation has two parts:</p>
+  <ol>
+    <li><strong>Build script</strong> — reads your compiled <code>/build</code> output, extracts content from HTML, generates embeddings, writes a binary index to <code>/static</code></li>
+    <li><strong>SearchBar override</strong> — replaces Docusaurus's SearchBar component with a React component that loads the altor-vec index and queries it in the browser</li>
+  </ol>
+
+  <h2>Step 1: Swizzle the SearchBar component</h2>
+  <pre><code>npx docusaurus swizzle @docusaurus/theme-classic SearchBar --eject --typescript</code></pre>
+  <p>This creates <code>src/theme/SearchBar/index.tsx</code>. You'll replace its contents with the semantic search implementation below.</p>
+  <div class="box">
+    <p><strong>Why <code>--eject</code> and not <code>--wrap</code>:</strong> Ejecting gives you the full component to replace. Wrapping keeps the original component and adds around it. For replacing search entirely, eject is cleaner. If you want to keep the original search as a fallback, use <code>--wrap</code> instead.</p>
+  </div>
+
+  <h2>Step 2: Write the index build script</h2>
+  <p>Create <code>scripts/build-search-index.mjs</code>. Run this after <code>docusaurus build</code> — it reads the compiled HTML from <code>/build</code>.</p>
+  <pre><code>// scripts/build-search-index.mjs
+import fs from 'node:fs/promises';
+import { glob } from 'glob';
+import { JSDOM } from 'jsdom';
+import { pipeline } from '@huggingface/transformers';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+const htmlFiles = await glob('build/**/*.html');
+const vectors = [];
+const metadata = [];
+
+for (let i = 0; i &lt; htmlFiles.length; i++) {
+  const file = htmlFiles[i];
+  const html = await fs.readFile(file, 'utf8');
+  const dom = new JSDOM(html);
+  const doc = dom.window.document;
+
+  const title = doc.querySelector('article h1')?.textContent?.trim()
+    ?? doc.querySelector('h1')?.textContent?.trim()
+    ?? 'Untitled';
+
+  // Docusaurus puts main content in .theme-doc-markdown or article
+  const main = doc.querySelector('.theme-doc-markdown')
+    ?? doc.querySelector('article')
+    ?? doc.querySelector('main');
+
+  if (!main) continue;
+  main.querySelectorAll('nav, .pagination-nav, .theme-doc-toc-desktop, script, style').forEach(el => el.remove());
+  const text = main.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+  if (!text || text.length &lt; 30) continue;
+
+  const out = await embed(`${title}\n${text.slice(0, 900)}`, { pooling: 'mean', normalize: true });
+  vectors.push(...Array.from(out.data));
+
+  const url = '/' + file.replace('build/', '').replace('index.html', '').replace('.html', '');
+  metadata.push({ id: metadata.length, title, excerpt: text.slice(0, 200), url });
+
+  if (i % 10 === 0) process.stdout.write(`\r${i + 1}/${htmlFiles.length}`);
+}
+
+const engine = WasmSearchEngine.from_vectors(new Float32Array(vectors), 384, 16, 200, 50);
+await fs.writeFile('./static/search-index.bin', Buffer.from(engine.to_bytes()));
+await fs.writeFile('./static/search-metadata.json', JSON.stringify(metadata));
+console.log(`\nDone. Indexed ${metadata.length} pages.`);
+</code></pre>
+
+  <p>Add to <code>package.json</code>:</p>
+  <pre><code>{
+  "scripts": {
+    "build": "docusaurus build",
+    "postbuild": "node scripts/build-search-index.mjs"
+  }
+}</code></pre>
+
+  <h2>Step 3: Replace SearchBar with the semantic search component</h2>
+  <p>Replace the contents of <code>src/theme/SearchBar/index.tsx</code>:</p>
+  <pre><code>import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { WasmSearchEngine } from 'altor-vec';
+
+interface Result { id: number; title: string; excerpt: string; url: string; score: number; }
+
+let engine: WasmSearchEngine | null = null;
+let metadata: Omit&lt;Result, 'score'&gt;[] = [];
+let initPromise: Promise&lt;void&gt; | null = null;
+
+async function initSearch() {
+  if (engine) return;
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    const { default: init, WasmSearchEngine } = await import('altor-vec');
+    await init();
+    const [buf, meta] = await Promise.all([
+      fetch('/search-index.bin').then(r => r.arrayBuffer()),
+      fetch('/search-metadata.json').then(r => r.json()),
+    ]);
+    engine = new WasmSearchEngine(new Uint8Array(buf));
+    metadata = meta;
+  })();
+  return initPromise;
+}
+
+export default function SearchBar(): JSX.Element {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState&lt;Result[]&gt;([]);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef&lt;HTMLInputElement&gt;(null);
+  const timer = useRef&lt;ReturnType&lt;typeof setTimeout&gt;&gt;();
+
+  useEffect(() => { initSearch(); }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setOpen(o => !o); }
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [open]);
+
+  const handleInput = useCallback(async (value: string) => {
+    setQuery(value);
+    clearTimeout(timer.current);
+    if (!value.trim()) { setResults([]); return; }
+    setLoading(true);
+    timer.current = setTimeout(async () => {
+      await initSearch();
+      if (!engine) return;
+      const { pipeline } = await import('@huggingface/transformers');
+      const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+      const out = await embedder(value, { pooling: 'mean', normalize: true });
+      const hits = JSON.parse(engine.search(new Float32Array(out.data as Float32Array), 6)) as [number, number][];
+      setResults(hits.map(([id, dist]) => ({ ...metadata[id], score: 1 - dist })));
+      setLoading(false);
+    }, 200);
+  }, []);
+
+  return (
+    &lt;&gt;
+      &lt;button
+        onClick={() => setOpen(true)}
+        style={{ background: 'none', border: '1px solid var(--ifm-color-emphasis-300)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', color: 'var(--ifm-color-content-secondary)', fontSize: 14 }}
+        aria-label="Search docs (Cmd+K)"
+      &gt;
+        Search ⌘K
+      &lt;/button&gt;
+
+      {open && (
+        &lt;div
+          onClick={e => e.target === e.currentTarget && setOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 80 }}
+        &gt;
+          &lt;div style={{ background: 'var(--ifm-background-color)', border: '1px solid var(--ifm-color-emphasis-300)', borderRadius: 12, width: 'min(640px, 92vw)', overflow: 'hidden' }}&gt;
+            &lt;input
+              ref={inputRef}
+              value={query}
+              onChange={e => handleInput(e.target.value)}
+              placeholder="Search documentation..."
+              style={{ width: '100%', padding: '14px 18px', fontSize: 16, border: 'none', outline: 'none', background: 'transparent', color: 'var(--ifm-color-content)', borderBottom: '1px solid var(--ifm-color-emphasis-200)', boxSizing: 'border-box' }}
+            /&gt;
+            {loading && &lt;p style={{ padding: '12px 18px', margin: 0, color: 'var(--ifm-color-content-secondary)', fontSize: 14 }}&gt;Searching…&lt;/p&gt;}
+            {!loading && query && !results.length && (
+              &lt;p style={{ padding: '12px 18px', margin: 0, color: 'var(--ifm-color-content-secondary)', fontSize: 14 }}&gt;No results for "{query}"&lt;/p&gt;
+            )}
+            &lt;ul style={{ listStyle: 'none', margin: 0, padding: '8px', maxHeight: 380, overflowY: 'auto' }}&gt;
+              {results.map(r => (
+                &lt;li key={r.id}&gt;
+                  &lt;a href={r.url} onClick={() => setOpen(false)} style={{ display: 'block', padding: '10px 12px', borderRadius: 8, textDecoration: 'none' }}&gt;
+                    &lt;strong style={{ display: 'block', color: 'var(--ifm-color-content)', fontSize: 14 }}&gt;{r.title}&lt;/strong&gt;
+                    &lt;span style={{ display: 'block', color: 'var(--ifm-color-content-secondary)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}&gt;{r.excerpt}&lt;/span&gt;
+                  &lt;/a&gt;
+                &lt;/li&gt;
+              ))}
+            &lt;/ul&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/&gt;
+  );
+}
+</code></pre>
+
+  <h2>Step 4: Disable the default search in docusaurus.config.ts</h2>
+  <pre><code>// docusaurus.config.ts
+const config: Config = {
+  // Remove or comment out the algolia or localSearch block:
+  // themeConfig: {
+  //   algolia: { ... },       // remove this
+  // },
+
+  // If you had @docusaurus/plugin-search-local, remove it from plugins too
+  plugins: [
+    // remove '@docusaurus/plugin-search-local' if present
+  ],
+};
+</code></pre>
+
+  <h2>Handling the embedding model size</h2>
+  <p>The <code>Xenova/all-MiniLM-L6-v2</code> model is 23MB. On first search it downloads and caches in the browser. Subsequent searches in the same session are instant. To make this fast for users:</p>
+  <ul>
+    <li>Initialize the engine (but not the embedder) when the page loads — this fetches the 15-20MB index in the background</li>
+    <li>Initialize the embedder only on first query, not on page load</li>
+    <li>Show a loading state for the first query ("Loading search model…") so users know something is happening</li>
+  </ul>
+  <p>For production, you can pre-compute embeddings at build time and store them in the index, then use a lightweight query embedding service instead of a full local model. This trades model download size for a network call per query — worthwhile if your users are on slow connections.</p>
+
+  <h2>Testing locally</h2>
+  <pre><code># Build docs + generate index
+npm run build
+
+# Serve the built output
+npx serve build
+
+# Navigate to http://localhost:3000 and press Cmd+K to test search
+</code></pre>
+  <p>Don't test with <code>docusaurus start</code> (dev mode) — the <code>/build</code> directory doesn't exist in dev mode, so the index build script won't have content to read. Always test search against the production build.</p>
+
+  <h2>FAQ</h2>
+  <h3>Does Algolia DocSearch work with private documentation?</h3>
+  <p>Algolia DocSearch is free only for open-source projects with publicly accessible docs. Private docs — internal tools, commercial products, anything behind a login — require a paid Algolia plan. altor-vec has no such restriction.</p>
+  <h3>What Docusaurus version does this support?</h3>
+  <p>This guide targets Docusaurus v3. The swizzle command and SearchBar component location are the same in v2. The <code>/build</code> output structure is identical between versions, so the index build script works unchanged.</p>
+  <h3>Can I keep the default search as a fallback?</h3>
+  <p>Yes — use <code>--wrap</code> instead of <code>--eject</code> when swizzling, which lets you render both. But two search interfaces in the navbar is a UX problem. A better approach: replace the SearchBar and add a graceful fallback inside the component if the index fails to load.</p>
+
+  <div class="cta">
+    <strong>Get started:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <section class="related" aria-labelledby="rel-h">
+    <h2 id="rel-h">Related articles</h2>
+    <div class="related-grid">
+      <a class="related-card" href="/blog/algolia-alternative-open-source.html">Algolia Alternative: Open Source Search in 2026</a>
+      <a class="related-card" href="/blog/add-search-to-nextjs.html">Add Semantic Search to Next.js</a>
+      <a class="related-card" href="/blog/vitepress-search-ai.html">AI Search for VitePress</a>
+    </div>
+  </section>
+  <nav class="nav"><a href="/blog/">Back to blog index</a><a href="/">Homepage</a></nav>
+  <nav class="site-nav" aria-label="More from altor-vec" style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1)">
+    <p style="font-weight:600;margin:0 0 12px">More from altor-vec</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:14px">
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Frameworks</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/frameworks/react.html">React</a></li><li><a href="/frameworks/nextjs.html">Next.js</a></li><li><a href="/frameworks/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Comparisons</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/vs/algolia.html">vs Algolia</a></li><li><a href="/vs/typesense.html">vs Typesense</a></li><li><a href="/vs/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Examples</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/examples/document-search.html">Document search</a></li><li><a href="/examples/">All</a></li></ul></div>
+    </div>
+  </nav>
+</main>
+</body>
+</html>
