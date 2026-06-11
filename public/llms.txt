@@ -26,6 +26,8 @@
 - [AI-Powered Search for VitePress](https://altorlab.dev/blog/vitepress-search-ai.html)
 - [Add Semantic Search to Docusaurus — Replace Algolia DocSearch](https://altorlab.dev/blog/docusaurus-semantic-search.html)
 - [RAG Without a Server — Complete Browser Implementation](https://altorlab.dev/blog/rag-without-server.html)
+- [WASM Vector Search in JavaScript — How HNSW Runs in the Browser](https://altorlab.dev/blog/wasm-vector-search-javascript.html)
+- [Vector Search in Vanilla JavaScript — No Framework Required](https://altorlab.dev/blog/vector-search-vanilla-javascript.html)
 
 ## Comparisons
 - [altor-vec vs Pinecone](https://altorlab.dev/vs/pinecone.html)

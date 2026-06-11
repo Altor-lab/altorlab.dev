@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.placename" content="United States" />
+  <title>Vector Search in Vanilla JavaScript — No Framework Required</title>
+  <meta name="description" content="Add semantic vector search to any HTML page without React or a framework. Drop-in script tag, complete working example, keyboard navigation, CDN or npm." />
+  <meta name="geo.region" content="US" />
+  <meta name="keywords" content="vector search vanilla javascript, javascript vector search without framework, add semantic search static site, client side search html" />
+  <link rel="canonical" href="https://altorlab.dev/blog/vector-search-vanilla-javascript.html" />
+  <meta property="og:image" content="https://altorlab.dev/og-image.png">
+  <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/vector-search-vanilla-javascript.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Vector Search in Vanilla JavaScript — No Framework Required" />
+  <meta property="og:description" content="Add semantic search to any HTML site with a script tag. No React, no bundler, no backend. Complete working example." />
+  <meta property="og:url" content="https://altorlab.dev/blog/vector-search-vanilla-javascript.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Vector Search in Vanilla JavaScript" />
+  <meta name="twitter:description" content="Add semantic search to any HTML page. No React, no backend. Drop-in script tag." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080a09;--surface:#0e1210;--surface-raised:#141a17;--border:#1e2823;--text:#edf0ee;--text-secondary:#8b9690;--muted:#556059;--altor:#6ee7b7;--altor-glow:rgba(110,231,183,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.74}
+    .wrap{max-width:880px;margin:0 auto;padding:28px 22px 72px}.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+    a{color:var(--altor);text-decoration:none}h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:22px 0 16px}
+    h2{margin-top:38px;font-size:1.5rem}h3{margin-top:24px;font-size:1.16rem}p,li{color:var(--text-secondary)}.lede{font-size:1.06rem}
+    pre{background:#0d1512;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;color:#c3e88d}code{font-family:'JetBrains Mono',monospace}
+    .box{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .cta{background:var(--altor-glow);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin-top:28px}
+    .nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}
+    .breadcrumbs{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .install{background:var(--surface-raised);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin:22px 0 0}
+    .related{margin-top:34px}.related-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .related-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kicker{text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-size:11px}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Vector Search in Vanilla JavaScript — No Framework Required","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/vector-search-vanilla-javascript.html","description":"Add semantic vector search to any HTML page without a framework.","keywords":["vector search vanilla javascript","semantic search","altor-vec","no framework"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Vector Search in Vanilla JavaScript","url":"https://altorlab.dev/blog/vector-search-vanilla-javascript.html","proficiencyLevel":"Beginner","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript developers"},"inLanguage":"en-US"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I use altor-vec without npm or a bundler?","acceptedAnswer":{"@type":"Answer","text":"Yes. altor-vec ships as an ES module and can be imported directly from a CDN using an import map or a dynamic import. You don't need webpack, Vite, or any build tool. The examples in this article work with a plain HTML file served from any static host."}},{"@type":"Question","name":"Does this work with Jekyll, Hugo, or other static site generators?","acceptedAnswer":{"@type":"Answer","text":"Yes. The search widget is plain JavaScript that you drop into any HTML template. For Jekyll, add the script tag to your _includes/head.html. For Hugo, add it to your layouts/partials/head.html. The index build script runs as a post-build step and writes the binary index to your static assets directory."}},{"@type":"Question","name":"How do I handle the embedding model download for users on slow connections?","acceptedAnswer":{"@type":"Answer","text":"Initialize the engine (WASM + index) on page load so it downloads in the background. Initialize the embedding model only when the user opens the search widget. Show a loading indicator on first query. The index is a one-time download and is cached after that."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"altor-vec","item":"https://altorlab.dev/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://altorlab.dev/blog/"},{"@type":"ListItem","position":3,"name":"Vector Search in Vanilla JavaScript","item":"https://altorlab.dev/blog/vector-search-vanilla-javascript.html"}]}</script>
+</head>
+<body>
+<main class="wrap">
+  <nav class="breadcrumbs">
+    <a class="mono" href="/">Home</a><span>&gt;</span>
+    <a class="mono" href="/blog/">Blog</a><span>&gt;</span>
+    <span>Vector Search in Vanilla JavaScript</span>
+  </nav>
+  <p class="kicker">vector search vanilla javascript</p>
+  <h1>Vector Search in Vanilla JavaScript — No Framework Required</h1>
+  <p class="lede">Most vector search tutorials assume you're building a React app. But the majority of sites that would benefit from semantic search are not React apps — they're Jekyll blogs, Hugo documentation sites, Eleventy portfolios, and plain HTML pages. This guide shows how to add altor-vec to any page with vanilla JavaScript and no build step for the search widget itself.</p>
+  <div class="install"><strong>Via npm:</strong> <code>npm install altor-vec</code> &nbsp;|&nbsp; <strong>Via import map:</strong> see below</div>
+
+  <h2>Why vanilla JS matters for search</h2>
+  <p>Static site generators produce plain HTML. Adding a React component to a Jekyll or Hugo site means introducing a build pipeline that wasn't there before. For a search widget, that's disproportionate complexity. altor-vec's WASM module is just a file — you import it, initialize it, and call <code>engine.search()</code>. No JSX, no hooks, no component lifecycle.</p>
+  <p>The pattern: your build step generates the binary index as a static file. A <code>&lt;script type="module"&gt;</code> tag on your page loads the index and the WASM, handles user input, and renders results. That's it.</p>
+
+  <h2>Using altor-vec without npm — import map approach</h2>
+  <p>If you don't have a bundler, you can import altor-vec directly from a CDN using an import map in your HTML:</p>
+  <pre><code>&lt;!-- In your &lt;head&gt; --&gt;
+&lt;script type="importmap"&gt;
+{
+  "imports": {
+    "altor-vec": "https://cdn.jsdelivr.net/npm/altor-vec/dist/index.js"
+  }
+}
+&lt;/script&gt;
+
+&lt;script type="module"&gt;
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init('https://cdn.jsdelivr.net/npm/altor-vec/dist/altor_vec_wasm_bg.wasm');
+// engine ready
+&lt;/script&gt;
+</code></pre>
+  <div class="box">
+    <p><strong>Note:</strong> When using a CDN import, pass the WASM file URL explicitly to <code>init()</code>. When using npm + a bundler, <code>init()</code> can resolve the WASM file automatically. For plain HTML, always pass the URL.</p>
+  </div>
+
+  <h2>Build the index (one-time, at site build time)</h2>
+  <p>This runs in Node, not in the browser. Add it to your site's build script. Replace the content extraction with whatever fits your site structure.</p>
+  <pre><code>// scripts/build-search.mjs
+import fs from 'node:fs/promises';
+import { glob } from 'glob';
+import { pipeline } from '@huggingface/transformers';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+// Adjust glob to match your site's content directory
+const files = await glob('./_site/**/*.html');
+const vectors = [];
+const metadata = [];
+
+for (const file of files) {
+  const html = await fs.readFile(file, 'utf8');
+  // Extract text content (simplified — use a proper HTML parser for production)
+  const text = html.replace(/&lt;[^>]+&gt;/g, ' ').replace(/\s+/g, ' ').trim();
+  const title = html.match(/&lt;title&gt;([^&lt;]+)&lt;\/title&gt;/)?.[1] ?? file;
+  if (text.length &lt; 50) continue;
+
+  const out = await embed(`${title}\n${text.slice(0, 800)}`, { pooling: 'mean', normalize: true });
+  vectors.push(...Array.from(out.data));
+
+  const url = '/' + file.replace('./_site/', '').replace('index.html', '');
+  metadata.push({ id: metadata.length, title, excerpt: text.slice(0, 180), url });
+}
+
+const engine = WasmSearchEngine.from_vectors(new Float32Array(vectors), 384, 16, 200, 50);
+await fs.writeFile('./_site/search-index.bin', Buffer.from(engine.to_bytes()));
+await fs.writeFile('./_site/search-metadata.json', JSON.stringify(metadata));
+console.log(`Indexed ${metadata.length} pages`);
+</code></pre>
+
+  <h2>The complete search widget — drop into any HTML page</h2>
+  <p>Add this block to any page where you want search. It creates its own DOM elements and handles everything independently.</p>
+  <pre><code>&lt;!-- Search trigger button --&gt;
+&lt;button id="search-trigger" aria-label="Search (press / to open)"&gt;
+  Search
+&lt;/button&gt;
+
+&lt;!-- Search overlay (hidden by default) --&gt;
+&lt;div id="search-overlay" role="dialog" aria-modal="true" aria-label="Search" hidden&gt;
+  &lt;div id="search-modal"&gt;
+    &lt;input
+      id="search-input"
+      type="search"
+      placeholder="Search..."
+      autocomplete="off"
+      aria-label="Search query"
+    /&gt;
+    &lt;div id="search-results" role="listbox"&gt;&lt;/div&gt;
+    &lt;p id="search-status"&gt;&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;style&gt;
+  #search-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 9999; display: flex; align-items: flex-start; justify-content: center; padding-top: 80px; }
+  #search-modal { background: #fff; border-radius: 12px; width: min(600px, 94vw); overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.3); }
+  #search-input { width: 100%; padding: 16px 18px; font-size: 16px; border: none; outline: none; border-bottom: 1px solid #e5e7eb; box-sizing: border-box; }
+  #search-results { list-style: none; margin: 0; padding: 8px; max-height: 380px; overflow-y: auto; }
+  #search-results a { display: block; padding: 10px 12px; border-radius: 8px; text-decoration: none; color: inherit; }
+  #search-results a:hover, #search-results a:focus { background: #f3f4f6; }
+  #search-results strong { display: block; font-size: 14px; color: #111827; margin-bottom: 2px; }
+  #search-results span { display: block; font-size: 13px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #search-status { padding: 10px 18px; color: #9ca3af; font-size: 14px; margin: 0; }
+&lt;/style&gt;
+
+&lt;script type="importmap"&gt;
+{ "imports": { "altor-vec": "https://cdn.jsdelivr.net/npm/altor-vec@latest/dist/index.js" } }
+&lt;/script&gt;
+
+&lt;script type="module"&gt;
+import init, { WasmSearchEngine } from 'altor-vec';
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js';
+
+const WASM_URL = 'https://cdn.jsdelivr.net/npm/altor-vec@latest/dist/altor_vec_wasm_bg.wasm';
+const INDEX_URL = '/search-index.bin';
+const META_URL  = '/search-metadata.json';
+
+let engine, metadata, embedder;
+let debounceTimer;
+
+// Initialize engine in background
+async function initEngine() {
+  if (engine) return;
+  await init(WASM_URL);
+  const [buf, meta] = await Promise.all([
+    fetch(INDEX_URL).then(r => r.arrayBuffer()),
+    fetch(META_URL).then(r => r.json()),
+  ]);
+  engine = new WasmSearchEngine(new Uint8Array(buf));
+  metadata = meta;
+}
+
+async function initEmbedder() {
+  if (embedder) return;
+  setStatus('Loading search model…');
+  embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  setStatus('');
+}
+
+async function runSearch(query) {
+  if (!query.trim()) { clearResults(); return; }
+  await initEmbedder();
+  const out = await embedder(query, { pooling: 'mean', normalize: true });
+  const hits = JSON.parse(engine.search(new Float32Array(out.data), 6));
+  renderResults(hits.map(([id, dist]) => ({ ...metadata[id], score: 1 - dist })));
+}
+
+function renderResults(results) {
+  const container = document.getElementById('search-results');
+  if (!results.length) { container.innerHTML = ''; setStatus('No results.'); return; }
+  setStatus('');
+  container.innerHTML = results.map(r => `
+    &lt;a href="${r.url}" role="option"&gt;
+      &lt;strong&gt;${escapeHtml(r.title)}&lt;/strong&gt;
+      &lt;span&gt;${escapeHtml(r.excerpt)}&lt;/span&gt;
+    &lt;/a&gt;
+  `).join('');
+}
+
+function clearResults() { document.getElementById('search-results').innerHTML = ''; setStatus(''); }
+function setStatus(msg) { document.getElementById('search-status').textContent = msg; }
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/&lt;/g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function openSearch() {
+  document.getElementById('search-overlay').hidden = false;
+  document.getElementById('search-input').focus();
+  initEngine(); // start loading in background
+}
+
+function closeSearch() {
+  document.getElementById('search-overlay').hidden = true;
+  clearResults();
+  document.getElementById('search-input').value = '';
+}
+
+// Event listeners
+document.getElementById('search-trigger').addEventListener('click', openSearch);
+document.getElementById('search-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('search-overlay')) closeSearch();
+});
+document.getElementById('search-input').addEventListener('input', e => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => runSearch(e.target.value), 220);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && !['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)) {
+    e.preventDefault(); openSearch();
+  }
+  if (e.key === 'Escape') closeSearch();
+});
+
+// Keyboard navigation through results
+document.getElementById('search-results').addEventListener('keydown', e => {
+  const links = [...document.querySelectorAll('#search-results a')];
+  const idx = links.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); links[idx + 1]?.focus(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); (idx &gt; 0 ? links[idx - 1] : document.getElementById('search-input'))?.focus(); }
+});
+&lt;/script&gt;
+</code></pre>
+
+  <h2>For Jekyll sites</h2>
+  <p>Add the search widget to <code>_includes/search.html</code> and include it in your layout:</p>
+  <pre><code># _layouts/default.html
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;...&lt;/head&gt;
+&lt;body&gt;
+  {% include search.html %}
+  {{ content }}
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+  <p>For the build step, add to your <code>Makefile</code> or <code>Rakefile</code>:</p>
+  <pre><code>build:
+  bundle exec jekyll build
+  node scripts/build-search.mjs
+</code></pre>
+
+  <h2>For Hugo sites</h2>
+  <p>Add the search widget to <code>layouts/partials/search.html</code>, include it in your base template, and configure Hugo to run the index build post-process:</p>
+  <pre><code># In config.toml, add a postProcess hook (Hugo 0.125+)
+[build]
+  [build.hooks]
+    postProcess = "node scripts/build-search.mjs"
+</code></pre>
+
+  <h2>Debouncing without lodash</h2>
+  <p>The example above uses a manual <code>setTimeout</code> debounce. 220ms is a good default — fast enough to feel responsive, slow enough to avoid firing on every keystroke. You don't need lodash's <code>debounce</code> for this use case:</p>
+  <pre><code>let debounceTimer;
+input.addEventListener('input', (e) => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => runSearch(e.target.value), 220);
+});
+</code></pre>
+
+  <h2>FAQ</h2>
+  <h3>Can I use altor-vec without npm or a bundler?</h3>
+  <p>Yes. Import directly from a CDN using an import map or a dynamic <code>import()</code> call. Pass the WASM file URL explicitly to <code>init()</code>. The examples in this article work with a plain HTML file served from any static host.</p>
+  <h3>Does this work with Jekyll, Hugo, or other static site generators?</h3>
+  <p>Yes. The widget is plain JavaScript that you add to any HTML template. The index build script runs as a post-build step and writes the binary to your static assets directory. No changes to your generator's core configuration are needed.</p>
+  <h3>How do I handle slow connections?</h3>
+  <p>Start loading the engine (WASM + index) on page load — this downloads in the background. Initialize the embedding model only when the user opens the search widget. Show a "Loading search model…" status on first query. After the first load, everything is cached.</p>
+
+  <div class="cta">
+    <strong>Try it:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">GitHub</a>
+  </div>
+  <section class="related" aria-labelledby="rel-h">
+    <h2 id="rel-h">Related articles</h2>
+    <div class="related-grid">
+      <a class="related-card" href="/blog/semantic-search-website.html">Add Semantic Search to Your Website</a>
+      <a class="related-card" href="/blog/algolia-alternative-open-source.html">Algolia Alternative: Open Source Search in 2026</a>
+      <a class="related-card" href="/frameworks/vanilla-js.html">altor-vec with Vanilla JS — framework guide</a>
+    </div>
+  </section>
+  <nav class="nav"><a href="/blog/">Back to blog index</a><a href="/">Homepage</a></nav>
+  <nav class="site-nav" aria-label="More from altor-vec" style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1)">
+    <p style="font-weight:600;margin:0 0 12px">More from altor-vec</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:14px">
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Frameworks</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/frameworks/vanilla-js.html">Vanilla JS</a></li><li><a href="/frameworks/react.html">React</a></li><li><a href="/frameworks/vue.html">Vue</a></li><li><a href="/frameworks/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Comparisons</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/vs/algolia.html">vs Algolia</a></li><li><a href="/vs/meilisearch.html">vs Meilisearch</a></li><li><a href="/vs/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Examples</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/examples/document-search.html">Document search</a></li><li><a href="/examples/autocomplete.html">Autocomplete</a></li><li><a href="/examples/">All</a></li></ul></div>
+    </div>
+  </nav>
+</main>
+</body>
+</html>
