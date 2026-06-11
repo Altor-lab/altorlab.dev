@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.placename" content="United States" />
+  <title>fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong</title>
+  <meta name="description" content="fuse.js fuzzy matching misses semantic intent. Learn when to replace it with altor-vec vector search, when to keep fuse.js, and how to run both together." />
+  <meta name="geo.region" content="US" />
+  <meta name="keywords" content="fuse.js alternative, replace fuse js, fuse js semantic search, javascript search library alternative" />
+  <link rel="canonical" href="https://altorlab.dev/blog/fuse-js-alternative.html" />
+  <meta property="og:image" content="https://altorlab.dev/og-image.png">
+  <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/fuse-js-alternative.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong" />
+  <meta property="og:description" content="fuse.js fuzzy matching misses semantic intent. When to replace it with vector search, when to keep it, and how to combine both." />
+  <meta property="og:url" content="https://altorlab.dev/blog/fuse-js-alternative.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="fuse.js Alternative: Add Semantic Search" />
+  <meta name="twitter:description" content="When fuse.js fuzzy matching isn't enough and how to replace or augment it with vector search." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080a09;--surface:#0e1210;--surface-raised:#141a17;--border:#1e2823;--text:#edf0ee;--text-secondary:#8b9690;--muted:#556059;--altor:#6ee7b7;--altor-glow:rgba(110,231,183,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.74}
+    .wrap{max-width:880px;margin:0 auto;padding:28px 22px 72px}.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+    a{color:var(--altor);text-decoration:none}h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:22px 0 16px}
+    h2{margin-top:38px;font-size:1.5rem}h3{margin-top:24px;font-size:1.16rem}p,li{color:var(--text-secondary)}.lede{font-size:1.06rem}
+    pre{background:#0d1512;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;color:#c3e88d}code{font-family:'JetBrains Mono',monospace}
+    .box{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .cta{background:var(--altor-glow);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin-top:28px}
+    .nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}
+    .breadcrumbs{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .install{background:var(--surface-raised);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin:22px 0 0}
+    .related{margin-top:34px}.related-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .related-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kicker{text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-size:11px}
+    table{width:100%;border-collapse:collapse;margin:24px 0}
+    th{background:var(--surface-raised);padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);color:var(--text)}
+    td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:14px}
+    tr:last-child td{border-bottom:none}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/fuse-js-alternative.html","description":"When to replace fuse.js with vector search and when to keep it.","keywords":["fuse.js alternative","javascript search","vector search","altor-vec","semantic search"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong","url":"https://altorlab.dev/blog/fuse-js-alternative.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is altor-vec faster than fuse.js?","acceptedAnswer":{"@type":"Answer","text":"For query execution, altor-vec is faster on larger datasets — under 1ms p95 at 10,000 vectors versus fuse.js which is O(n) and slows linearly. For tiny datasets under 500 items, fuse.js is faster because there is no WASM initialization overhead. The tradeoff is query speed versus setup cost."}},{"@type":"Question","name":"Can I use fuse.js and altor-vec together?","acceptedAnswer":{"@type":"Answer","text":"Yes, and this is often the right approach. Use fuse.js for short string matching where character accuracy matters (names, codes, IDs) and altor-vec for semantic search over paragraph-length content. Run both in parallel and merge results by source type."}},{"@type":"Question","name":"What is the minimum dataset size where altor-vec makes sense?","acceptedAnswer":{"@type":"Answer","text":"Practically, altor-vec starts making sense at around 200-500 documents of paragraph length or more. Below that threshold, fuse.js is simpler and the relevance difference is marginal. The WASM bundle is 54KB, so for tiny datasets the overhead is not justified."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"altor-vec","item":"https://altorlab.dev/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://altorlab.dev/blog/"},{"@type":"ListItem","position":3,"name":"fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong","item":"https://altorlab.dev/blog/fuse-js-alternative.html"}]}</script>
+</head>
+<body>
+<main class="wrap">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a class="mono" href="/">Home</a><span>&gt;</span>
+    <a class="mono" href="/blog/">Blog</a><span>&gt;</span>
+    <span>fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong</span>
+  </nav>
+  <p class="kicker">fuse.js alternative</p>
+  <h1>fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong</h1>
+  <p class="lede">fuse.js is the most popular client-side search library at 10.5 million weekly npm downloads, and it earns that usage for short string matching. But fuzzy character matching doesn't understand meaning. A user searching "inexpensive vector database" gets zero results when your content says "cost-efficient ANN retrieval" — the character overlap is too low regardless of your threshold setting. This post covers when to replace fuse.js, when to keep it, and how to run both together.</p>
+
+  <h2>What fuse.js actually does</h2>
+  <p>fuse.js implements the Bitap algorithm for approximate string matching. Given a query and a set of strings, it measures how many character insertions, deletions, and substitutions separate the query from each candidate. Results are scored by edit distance — closer character sequences score higher.</p>
+  <p>This works well for a specific class of problems: you have a list of items with short names or codes, and users might mistype or use partial terms. Autocomplete for city names, searching a product catalog by SKU, filtering a list of users by name — these are fuse.js's domain.</p>
+  <p>Where it breaks down is natural language. Characters don't encode meaning. "cheap" and "affordable" share almost no characters but mean the same thing. "how to install" and "installation guide" describe identical intent but score near zero similarity in fuse.js regardless of configuration.</p>
+
+  <h2>The concrete failure mode</h2>
+  <p>Here's the same search query against a documentation site, run through fuse.js and altor-vec:</p>
+  <pre><code>// Query: "how do I reduce memory usage"
+// Document: "Optimizing heap allocation for large HNSW indexes"
+
+// fuse.js result: score 0.0 (no character overlap)
+// altor-vec result: cosine similarity 0.87 (semantic match)
+
+// Query: "search without internet"
+// Document: "Offline-first retrieval with service workers"
+
+// fuse.js result: score 0.1 (only "search" overlaps loosely)
+// altor-vec result: cosine similarity 0.91 (semantic match)
+</code></pre>
+  <p>The fuse.js threshold you'd need to catch these ("reduce memory" ↔ "optimizing heap allocation") would also produce so many false positives that the results become noise.</p>
+
+  <h2>When fuse.js is actually the right choice</h2>
+  <p>fuse.js isn't wrong — it's solving a different problem. Keep it when:</p>
+
+  <h3>Short string matching where typos matter</h3>
+  <p>User types "Johnsn" and should match "Johnson." User types "javascrpt" and should match "JavaScript." This is fuse.js's home territory. Vector search doesn't help here because typos don't affect semantic meaning but do affect character distance — and character distance is exactly what you want to measure.</p>
+
+  <h3>Exact identifier search</h3>
+  <p>Product codes (SKU-4821), error codes (E_TIMEOUT), route names (/api/v2/users). Users expect an exact or near-exact match. Semantic search would surface unrelated results that happen to be "conceptually similar" to an error code, which is unhelpful.</p>
+
+  <h3>Datasets under 500 items</h3>
+  <p>fuse.js is 5KB. altor-vec is 54KB WASM plus your index file. For a dropdown that filters 50 team members, the overhead of vector search isn't justified. The relevance difference is also minimal — at small scale and with short strings, fuse.js works well enough.</p>
+
+  <div class="box">
+    <p><strong>Rule of thumb:</strong> if your users type exact terms and your items are short strings, use fuse.js. If your users type questions and your items are paragraphs, use vector search.</p>
+  </div>
+
+  <h2>When to replace fuse.js with altor-vec</h2>
+  <p>The switch is worth making when your search targets paragraph-length content and users phrase queries naturally rather than typing exact keywords.</p>
+
+  <h3>Documentation search</h3>
+  <p>Users ask "how do I configure rate limiting" and your docs say "request throttling configuration." fuse.js returns nothing. altor-vec returns the correct page because throttling and rate limiting share the same semantic space.</p>
+
+  <h3>Help center and support content</h3>
+  <p>Support articles use formal language. Users describe their problem in their own words. "My bill went up" should match "unexpected charges" and "pricing change." The vocabulary gap between user language and content language is a core problem that only semantic search solves.</p>
+
+  <h3>Blog and article search</h3>
+  <p>Technical articles use precise terminology. Users may not know the exact term. "fast approximate search" should match "HNSW algorithm" because that's what fast approximate vector search is. Character matching won't bridge that gap.</p>
+
+  <h3>Multilingual user bases</h3>
+  <p>If your users search in Spanish, French, or Hindi and your content is in English, multilingual embedding models (like <code>paraphrase-multilingual-MiniLM-L12-v2</code>) produce vectors in a shared space. A Spanish query can match an English document because the vectors are close regardless of language. fuse.js has no equivalent capability.</p>
+
+  <h2>Side-by-side code comparison</h2>
+  <pre><code>// fuse.js — fuzzy matching
+import Fuse from 'fuse.js';
+
+const docs = [
+  { id: 1, title: 'Optimizing heap allocation', body: 'Large HNSW indexes...' },
+  { id: 2, title: 'Service worker caching', body: 'Offline-first retrieval...' },
+];
+
+const fuse = new Fuse(docs, {
+  keys: ['title', 'body'],
+  threshold: 0.4,
+  includeScore: true,
+});
+
+const results = fuse.search('reduce memory usage');
+// Returns [] — no character overlap with "heap allocation"
+</code></pre>
+  <pre><code>// altor-vec — vector search (after index built offline)
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const indexBuf = await fetch('/search-index.bin').then(r => r.arrayBuffer());
+const metadata = await fetch('/search-metadata.json').then(r => r.json());
+const engine = new WasmSearchEngine(new Uint8Array(indexBuf));
+
+// queryVec comes from your embedding model
+const hits = JSON.parse(engine.search(new Float32Array(queryVec), 5));
+const results = hits.map(([id, dist]) => ({ ...metadata[id], score: 1 - dist }));
+// Returns [{ title: 'Optimizing heap allocation', score: 0.87 }]
+</code></pre>
+
+  <h2>Migration from fuse.js to altor-vec</h2>
+
+  <h3>Step 1: Install</h3>
+  <pre><code>npm install altor-vec @huggingface/transformers</code></pre>
+
+  <h3>Step 2: Build the index offline</h3>
+  <p>Create a Node script that reads your content and generates a binary index. Run it as a build step.</p>
+  <pre><code>// scripts/build-index.mjs
+import fs from 'node:fs/promises';
+import { pipeline } from '@huggingface/transformers';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+// Replace with however you load your content
+const docs = JSON.parse(await fs.readFile('./src/data/docs.json', 'utf8'));
+
+const vectors = [];
+for (const doc of docs) {
+  const out = await embed(doc.title + '\n' + doc.body, {
+    pooling: 'mean',
+    normalize: true,
+  });
+  vectors.push(...Array.from(out.data));
+}
+
+const dim = 384;
+const engine = WasmSearchEngine.from_vectors(new Float32Array(vectors), dim, 16, 200, 50);
+await fs.writeFile('./public/search-index.bin', Buffer.from(engine.to_bytes()));
+await fs.writeFile('./public/search-metadata.json', JSON.stringify(docs.map(d => ({
+  id: d.id, title: d.title, excerpt: d.body.slice(0, 200), url: d.url
+}))));
+</code></pre>
+
+  <h3>Step 3: Replace the search call in your component</h3>
+  <pre><code>// Before: fuse.js
+const results = fuse.search(query).map(r => r.item);
+
+// After: altor-vec
+async function search(query) {
+  const embedding = await embed(query, { pooling: 'mean', normalize: true });
+  const hits = JSON.parse(engine.search(new Float32Array(embedding.data), 5));
+  return hits.map(([id, dist]) => ({ ...metadata[id], score: 1 - dist }));
+}
+</code></pre>
+
+  <h2>Hybrid approach: run both</h2>
+  <p>The cleanest solution for many apps is keeping fuse.js for short string / identifier matching and adding altor-vec for semantic content search. Run both and show results from each source with a label:</p>
+  <pre><code>async function hybridSearch(query) {
+  // Run in parallel
+  const [exactHits, semanticHits] = await Promise.all([
+    Promise.resolve(fuse.search(query, { limit: 3 }).map(r => ({
+      ...r.item,
+      source: 'exact',
+    }))),
+    search(query).then(hits => hits.map(h => ({ ...h, source: 'semantic' }))),
+  ]);
+
+  // Deduplicate by id, prefer exact matches
+  const seen = new Set();
+  const merged = [];
+  for (const hit of [...exactHits, ...semanticHits]) {
+    if (!seen.has(hit.id)) {
+      seen.add(hit.id);
+      merged.push(hit);
+    }
+  }
+  return merged.slice(0, 8);
+}
+</code></pre>
+  <p>This gives users exact match behavior (typing "SKU-4821" returns that exact item) alongside semantic behavior (typing "how do I configure billing" returns relevant docs).</p>
+
+  <h2>Bundle size and performance reality</h2>
+  <table>
+    <thead><tr><th>Library</th><th>Bundle (gzipped)</th><th>Index size (1K docs)</th><th>Query latency (1K docs)</th><th>Semantic search</th></tr></thead>
+    <tbody>
+      <tr><td>fuse.js</td><td>5KB</td><td>None (in-memory)</td><td>&lt;1ms</td><td>No</td></tr>
+      <tr><td>altor-vec</td><td>54KB WASM</td><td>~1.5MB (384d)</td><td>&lt;0.5ms</td><td>Yes</td></tr>
+      <tr><td>MiniSearch</td><td>22KB</td><td>~0.5MB</td><td>&lt;1ms</td><td>No</td></tr>
+    </tbody>
+  </table>
+  <p>The index file is the real cost of altor-vec, not the WASM. At 1,000 documents with 384-dimension embeddings, expect roughly 1.5MB. Cache it aggressively with a long-lived cache header and it downloads once per user session.</p>
+
+  <h2>FAQ</h2>
+  <h3>Is altor-vec faster than fuse.js?</h3>
+  <p>For query execution on datasets over 1,000 items, yes. altor-vec HNSW lookup is sub-millisecond regardless of index size. fuse.js is O(n) and adds latency as your dataset grows. For tiny datasets under 500 items, fuse.js is effectively instant and the WASM initialization overhead tips the balance.</p>
+  <h3>Can I use fuse.js and altor-vec together?</h3>
+  <p>Yes. Run fuse.js for short string / identifier matching and altor-vec for semantic content search. Merge results in your component with deduplication. This is often the right default for product apps that have both catalogs (fuse.js) and documentation (altor-vec).</p>
+  <h3>What is the minimum dataset size where altor-vec makes sense?</h3>
+  <p>Around 200-500 paragraph-length documents. Below that threshold, fuse.js with a generous threshold captures enough relevant results that the added complexity of vector search isn't justified. The clearest signal to switch: your users are typing natural language queries and getting zero results.</p>
+
+  <div class="cta">
+    <strong>Add semantic search:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">GitHub</a>
+  </div>
+
+  <section class="related" aria-labelledby="rel-h">
+    <h2 id="rel-h">Related articles</h2>
+    <div class="related-grid">
+      <a class="related-card" href="/blog/semantic-search-website.html">Add Semantic Search to Your Website in 5 Minutes</a>
+      <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without a Backend</a>
+      <a class="related-card" href="/blog/algolia-alternative-open-source.html">Algolia Alternative: Open Source Search in 2026</a>
+    </div>
+  </section>
+  <nav class="nav" aria-label="Article navigation">
+    <a href="/blog/">Back to blog index</a>
+    <a href="/">Homepage</a>
+  </nav>
+  <nav class="site-nav" aria-label="More from altor-vec" style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1)">
+    <p style="font-weight:600;margin:0 0 12px">More from altor-vec</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:14px">
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Examples</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/examples/document-search.html">Document search</a></li><li><a href="/examples/autocomplete.html">Autocomplete</a></li><li><a href="/examples/">All examples</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Comparisons</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/vs/algolia.html">vs Algolia</a></li><li><a href="/vs/pinecone.html">vs Pinecone</a></li><li><a href="/vs/">All comparisons</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Frameworks</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/frameworks/react.html">React</a></li><li><a href="/frameworks/nextjs.html">Next.js</a></li><li><a href="/frameworks/">All</a></li></ul></div>
+    </div>
+  </nav>
+</main>
+</body>
+</html>

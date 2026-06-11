@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.placename" content="United States" />
+  <title>Add Semantic Search to a Next.js App Router Project — altor-vec Guide</title>
+  <meta name="description" content="Step-by-step guide to client-side semantic search in Next.js App Router. Build index at deploy time, serve from /public, integrate in a Client Component with TypeScript." />
+  <meta name="geo.region" content="US" />
+  <meta name="keywords" content="add semantic search nextjs, next.js search, nextjs app router search, vector search nextjs, add search to next.js" />
+  <link rel="canonical" href="https://altorlab.dev/blog/add-search-to-nextjs.html" />
+  <meta property="og:image" content="https://altorlab.dev/og-image.png">
+  <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/add-search-to-nextjs.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Add Semantic Search to a Next.js App Router Project" />
+  <meta property="og:description" content="Client-side semantic search for Next.js using altor-vec. Build index at deploy, serve static, search in browser with no per-query cost." />
+  <meta property="og:url" content="https://altorlab.dev/blog/add-search-to-nextjs.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Add Semantic Search to Next.js App Router" />
+  <meta name="twitter:description" content="Client-side HNSW search for Next.js. No Algolia, no per-query costs, TypeScript throughout." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080a09;--surface:#0e1210;--surface-raised:#141a17;--border:#1e2823;--text:#edf0ee;--text-secondary:#8b9690;--muted:#556059;--altor:#6ee7b7;--altor-glow:rgba(110,231,183,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.74}
+    .wrap{max-width:880px;margin:0 auto;padding:28px 22px 72px}.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+    a{color:var(--altor);text-decoration:none}h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:22px 0 16px}
+    h2{margin-top:38px;font-size:1.5rem}h3{margin-top:24px;font-size:1.16rem}p,li{color:var(--text-secondary)}.lede{font-size:1.06rem}
+    pre{background:#0d1512;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;color:#c3e88d}code{font-family:'JetBrains Mono',monospace}
+    .box{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .cta{background:var(--altor-glow);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin-top:28px}
+    .nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}
+    .breadcrumbs{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .install{background:var(--surface-raised);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin:22px 0 0}
+    .related{margin-top:34px}.related-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .related-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kicker{text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-size:11px}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Add Semantic Search to a Next.js App Router Project","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/add-search-to-nextjs.html","description":"Step-by-step client-side semantic search for Next.js App Router using altor-vec.","keywords":["nextjs search","semantic search","altor-vec","app router","vector search"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Add Semantic Search to a Next.js App Router Project","url":"https://altorlab.dev/blog/add-search-to-nextjs.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Does altor-vec work with Next.js SSR?","acceptedAnswer":{"@type":"Answer","text":"The WASM module must run client-side. In App Router, put all altor-vec code inside a 'use client' component and use dynamic import with ssr: false if needed. The index files are served from /public and fetched at runtime. Nothing in the search flow runs on the server."}},{"@type":"Question","name":"How do I rebuild the search index when content changes?","acceptedAnswer":{"@type":"Answer","text":"Add a postbuild script to package.json that runs your index build script after next build completes. In CI/CD pipelines like Vercel or GitHub Actions, this runs automatically on every deployment. The index files land in /public and are included in the build output."}},{"@type":"Question","name":"Can I deploy this to Vercel?","acceptedAnswer":{"@type":"Answer","text":"Yes. The index files are static assets served from the /public directory. Vercel's edge network serves them efficiently. WASM runs in the user's browser. No serverless functions are required for search. The postbuild script runs during Vercel's build step."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"altor-vec","item":"https://altorlab.dev/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://altorlab.dev/blog/"},{"@type":"ListItem","position":3,"name":"Add Semantic Search to a Next.js App Router Project","item":"https://altorlab.dev/blog/add-search-to-nextjs.html"}]}</script>
+</head>
+<body>
+<main class="wrap">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a class="mono" href="/">Home</a><span>&gt;</span>
+    <a class="mono" href="/blog/">Blog</a><span>&gt;</span>
+    <span>Add Semantic Search to a Next.js App Router Project</span>
+  </nav>
+  <p class="kicker">add semantic search nextjs</p>
+  <h1>Add Semantic Search to a Next.js App Router Project</h1>
+  <p class="lede">Next.js developers reach for Algolia because setup is fast — paste a key, call a hook, done. Then the bill arrives. At 500,000 monthly searches with 50,000 records, Algolia Grow costs around $245/month. altor-vec eliminates the backend entirely: build the index at deploy time, serve it from <code>/public</code>, and run all search in the user's browser with no per-query cost and no network roundtrip.</p>
+  <div class="install"><strong>Install:</strong> <code>npm install altor-vec @huggingface/transformers tsx</code></div>
+
+  <h2>How the architecture works</h2>
+  <p>The pattern has three phases that map to different parts of your Next.js project:</p>
+  <ol>
+    <li><strong>Build time:</strong> a Node script reads your content, generates float vector embeddings, and writes two files — <code>search-index.bin</code> and <code>search-metadata.json</code> — to your <code>/public</code> directory</li>
+    <li><strong>Deploy:</strong> Next.js copies <code>/public</code> to the CDN. Both files are served as static assets with no compute cost</li>
+    <li><strong>Runtime:</strong> a Client Component fetches both files once, loads the WASM engine, and handles all search queries locally with no network roundtrip</li>
+  </ol>
+  <div class="box">
+    <p><strong>WASM in App Router:</strong> altor-vec's WASM module cannot initialize during server rendering. All code that calls <code>init()</code>, <code>new WasmSearchEngine()</code>, or <code>engine.search()</code> must be inside a <code>'use client'</code> component and run in a <code>useEffect</code> or after user interaction.</p>
+  </div>
+
+  <h2>Step 1: Write the index build script</h2>
+  <p>Create <code>scripts/build-search-index.ts</code>. This script runs at build time in Node — not in the browser — so you can use the file system and any Node packages.</p>
+  <pre><code>// scripts/build-search-index.ts
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { glob } from 'glob';
+import { pipeline } from '@huggingface/transformers';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+interface DocMetadata {
+  id: number;
+  title: string;
+  excerpt: string;
+  url: string;
+  section?: string;
+}
+
+async function buildIndex() {
+  await init();
+  const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+  // Adjust this glob to match your content structure
+  const mdFiles = await glob('content/**/*.mdx', { cwd: process.cwd() });
+  const vectors: number[] = [];
+  const metadata: DocMetadata[] = [];
+
+  for (let i = 0; i &lt; mdFiles.length; i++) {
+    const filePath = mdFiles[i];
+    const raw = await fs.readFile(filePath, 'utf8');
+
+    // Strip frontmatter and extract title
+    const frontmatterMatch = raw.match(/^---\n([\s\S]*?)\n---/);
+    const title = frontmatterMatch
+      ? (frontmatterMatch[1].match(/title:\s*["']?(.+?)["']?\n/) ?? [])[1] ?? path.basename(filePath, '.mdx')
+      : path.basename(filePath, '.mdx');
+
+    const body = raw.replace(/^---[\s\S]*?---\n/, '').replace(/#{1,6}\s/g, '');
+    const textToEmbed = `${title}\n${body.slice(0, 800)}`;
+
+    const out = await embed(textToEmbed, { pooling: 'mean', normalize: true });
+    vectors.push(...Array.from(out.data as Float32Array));
+
+    metadata.push({
+      id: i,
+      title,
+      excerpt: body.slice(0, 200).trim(),
+      url: '/' + filePath.replace(/\.mdx?$/, '').replace(/^content\//, ''),
+    });
+
+    if (i % 10 === 0) process.stdout.write(`\rIndexing ${i + 1}/${mdFiles.length}...`);
+  }
+
+  const dim = 384;
+  const flat = new Float32Array(vectors);
+  const engine = WasmSearchEngine.from_vectors(flat, dim, 16, 200, 50);
+
+  await fs.mkdir('./public', { recursive: true });
+  await fs.writeFile('./public/search-index.bin', Buffer.from(engine.to_bytes()));
+  await fs.writeFile('./public/search-metadata.json', JSON.stringify(metadata));
+
+  console.log(`\nIndexed ${metadata.length} documents`);
+}
+
+buildIndex().catch(console.error);
+</code></pre>
+
+  <h2>Step 2: Hook it into the build pipeline</h2>
+  <pre><code>// package.json
+{
+  "scripts": {
+    "build": "next build",
+    "postbuild": "tsx scripts/build-search-index.ts"
+  }
+}
+</code></pre>
+  <p>The <code>postbuild</code> hook runs automatically after <code>next build</code> completes — both locally and in Vercel's build environment. The two output files land in <code>/public</code> and are included in the deployment.</p>
+  <p>For faster local development, add a dedicated command so you don't rebuild the index on every <code>next dev</code> restart:</p>
+  <pre><code>// package.json
+{
+  "scripts": {
+    "build:search": "tsx scripts/build-search-index.ts",
+    "dev": "next dev",
+    "build": "next build",
+    "postbuild": "npm run build:search"
+  }
+}
+</code></pre>
+
+  <h2>Step 3: Create the search engine module</h2>
+  <p>Create <code>lib/search.ts</code> to encapsulate initialization and querying. This module is imported only from Client Components.</p>
+  <pre><code>// lib/search.ts
+'use client';
+
+import type { WasmSearchEngine } from 'altor-vec';
+
+export interface SearchResult {
+  id: number;
+  title: string;
+  excerpt: string;
+  url: string;
+  score: number;
+}
+
+let engine: WasmSearchEngine | null = null;
+let metadata: Omit&lt;SearchResult, 'score'&gt;[] = [];
+let initPromise: Promise&lt;void&gt; | null = null;
+
+export async function initSearch(): Promise&lt;void&gt; {
+  if (engine) return;
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    const { default: init, WasmSearchEngine } = await import('altor-vec');
+    await init();
+
+    const [indexBuf, meta] = await Promise.all([
+      fetch('/search-index.bin').then(r => r.arrayBuffer()),
+      fetch('/search-metadata.json').then(r => r.json()),
+    ]);
+
+    engine = new WasmSearchEngine(new Uint8Array(indexBuf));
+    metadata = meta;
+  })();
+
+  return initPromise;
+}
+
+export async function search(query: string, topK = 6): Promise&lt;SearchResult[]&gt; {
+  await initSearch();
+  if (!engine || !query.trim()) return [];
+
+  // Embed query using the same model as the index build
+  const { pipeline } = await import('@huggingface/transformers');
+  const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  const out = await embedder(query, { pooling: 'mean', normalize: true });
+  const vec = new Float32Array(out.data as Float32Array);
+
+  const hits = JSON.parse(engine.search(vec, topK)) as [number, number][];
+  return hits.map(([id, distance]) => ({
+    ...metadata[id],
+    score: 1 - distance,
+  }));
+}
+</code></pre>
+
+  <h2>Step 4: Build the SearchModal component</h2>
+  <pre><code>// components/SearchModal.tsx
+'use client';
+
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { initSearch, search, type SearchResult } from '@/lib/search';
+
+export function SearchModal() {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState&lt;SearchResult[]&gt;([]);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef&lt;HTMLInputElement&gt;(null);
+  const debounceRef = useRef&lt;ReturnType&lt;typeof setTimeout&gt;&gt;();
+
+  // Preload search engine on mount
+  useEffect(() => { initSearch(); }, []);
+
+  // Keyboard shortcut: Cmd+K / Ctrl+K
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setOpen(o => !o);
+      }
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [open]);
+
+  const handleQuery = useCallback((value: string) => {
+    setQuery(value);
+    clearTimeout(debounceRef.current);
+    if (!value.trim()) { setResults([]); return; }
+    setLoading(true);
+    debounceRef.current = setTimeout(async () => {
+      const hits = await search(value);
+      setResults(hits);
+      setLoading(false);
+    }, 200);
+  }, []);
+
+  if (!open) {
+    return (
+      &lt;button
+        onClick={() =&gt; setOpen(true)}
+        className="search-trigger"
+        aria-label="Open search (Cmd+K)"
+      &gt;
+        Search ⌘K
+      &lt;/button&gt;
+    );
+  }
+
+  return (
+    &lt;div className="search-overlay" onClick={(e) =&gt; e.target === e.currentTarget && setOpen(false)}&gt;
+      &lt;div className="search-modal"&gt;
+        &lt;input
+          ref={inputRef}
+          value={query}
+          onChange={e =&gt; handleQuery(e.target.value)}
+          placeholder="Search documentation..."
+          className="search-input"
+        /&gt;
+        {loading && &lt;p className="search-hint"&gt;Searching…&lt;/p&gt;}
+        {!loading && results.length === 0 && query && (
+          &lt;p className="search-hint"&gt;No results for "{query}"&lt;/p&gt;
+        )}
+        &lt;ul className="search-results"&gt;
+          {results.map(r =&gt; (
+            &lt;li key={r.id}&gt;
+              &lt;a href={r.url} onClick={() =&gt; setOpen(false)}&gt;
+                &lt;strong&gt;{r.title}&lt;/strong&gt;
+                &lt;span&gt;{r.excerpt}&lt;/span&gt;
+              &lt;/a&gt;
+            &lt;/li&gt;
+          ))}
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+
+  <h2>Step 5: Add SearchModal to your layout</h2>
+  <pre><code>// app/layout.tsx
+import { SearchModal } from '@/components/SearchModal';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    &lt;html lang="en"&gt;
+      &lt;body&gt;
+        &lt;header&gt;
+          &lt;nav&gt;{/* your nav */}&lt;/nav&gt;
+          &lt;SearchModal /&gt;
+        &lt;/header&gt;
+        {children}
+      &lt;/body&gt;
+    &lt;/html&gt;
+  );
+}
+</code></pre>
+
+  <h2>Next.js-specific pitfalls</h2>
+
+  <h3>WASM cannot run in Server Components</h3>
+  <p>Any file that imports from <code>altor-vec</code> must be a Client Component (<code>'use client'</code> at the top). If you import it in a Server Component or in shared utility code that gets bundled for the server, you'll see a <code>WebAssembly is not defined</code> error. Keep all altor-vec code in client-only files.</p>
+
+  <h3>Dynamic import for embedding model</h3>
+  <p>The <code>@huggingface/transformers</code> pipeline loads a ~23MB model file on first call. To avoid blocking the initial page load, initialize it lazily — only when the user opens the search modal or types their first query. The code in <code>lib/search.ts</code> above handles this correctly via the <code>initPromise</code> pattern.</p>
+
+  <h3>Turbopack compatibility</h3>
+  <p>As of Next.js 15, Turbopack handles WASM imports differently from webpack. If you see WASM loading errors with <code>next dev --turbo</code>, fall back to <code>next dev</code> (without Turbopack) for local development while this stabilizes. Production builds use webpack and work correctly.</p>
+
+  <h3>Index file cache headers</h3>
+  <p>Add long-lived cache headers for the index files in <code>next.config.ts</code>. The files change only when content changes, so cache them aggressively:</p>
+  <pre><code>// next.config.ts
+const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/search-:file*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=3600' },
+        ],
+      },
+    ];
+  },
+};
+export default nextConfig;
+</code></pre>
+
+  <h2>Moving embeddings to a Web Worker</h2>
+  <p>Generating an embedding from a query string takes 20-100ms depending on device. This runs on the main thread by default, which can cause visible input lag. Move it to a Web Worker:</p>
+  <pre><code>// public/embed-worker.js
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js';
+
+let embedder;
+
+self.onmessage = async ({ data: { query, id } }) => {
+  if (!embedder) {
+    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  const out = await embedder(query, { pooling: 'mean', normalize: true });
+  self.postMessage({ id, vector: Array.from(out.data) });
+};
+</code></pre>
+  <pre><code>// In your search component
+const workerRef = useRef&lt;Worker&gt;();
+
+useEffect(() => {
+  workerRef.current = new Worker('/embed-worker.js', { type: 'module' });
+  workerRef.current.onmessage = ({ data: { vector } }) => {
+    const hits = JSON.parse(engine.search(new Float32Array(vector), 6));
+    setResults(hits.map(([id, dist]) => ({ ...metadata[id], score: 1 - dist })));
+    setLoading(false);
+  };
+  return () => workerRef.current?.terminate();
+}, []);
+
+function handleQuery(query: string) {
+  setLoading(true);
+  workerRef.current?.postMessage({ query, id: Date.now() });
+}
+</code></pre>
+
+  <h2>FAQ</h2>
+  <h3>Does altor-vec work with Next.js SSR?</h3>
+  <p>The WASM module runs client-side only. Place all altor-vec code in <code>'use client'</code> components. The search index files are static assets fetched at runtime. Nothing runs on the server, which means search works on any Next.js deployment including static export (<code>next export</code>).</p>
+  <h3>How do I rebuild the index when content changes?</h3>
+  <p>The <code>postbuild</code> script in <code>package.json</code> runs automatically after <code>next build</code>. In CI pipelines (Vercel, GitHub Actions), this runs on every deployment. For local development, run <code>npm run build:search</code> manually when content changes significantly.</p>
+  <h3>Can I deploy this to Vercel?</h3>
+  <p>Yes. The index files are static assets in <code>/public</code>. Vercel's CDN serves them. WASM runs in the user's browser. The <code>postbuild</code> script runs during Vercel's build process. No serverless functions are involved in search queries.</p>
+
+  <div class="cta">
+    <strong>Add to your Next.js project:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">GitHub</a>
+  </div>
+
+  <section class="related" aria-labelledby="rel-h">
+    <h2 id="rel-h">Related articles</h2>
+    <div class="related-grid">
+      <a class="related-card" href="/blog/vector-search-react.html">Vector Search in React: Complete Tutorial</a>
+      <a class="related-card" href="/blog/semantic-search-website.html">Add Semantic Search in 5 Minutes</a>
+      <a class="related-card" href="/frameworks/nextjs.html">altor-vec with Next.js — framework guide</a>
+    </div>
+  </section>
+  <nav class="nav" aria-label="Article navigation">
+    <a href="/blog/">Back to blog index</a>
+    <a href="/">Homepage</a>
+  </nav>
+  <nav class="site-nav" aria-label="More from altor-vec" style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1)">
+    <p style="font-weight:600;margin:0 0 12px">More from altor-vec</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:14px">
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Frameworks</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/frameworks/nextjs.html">Next.js</a></li><li><a href="/frameworks/react.html">React</a></li><li><a href="/frameworks/vue.html">Vue</a></li><li><a href="/frameworks/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Examples</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/examples/document-search.html">Document search</a></li><li><a href="/examples/autocomplete.html">Autocomplete</a></li><li><a href="/examples/">All</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Comparisons</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/vs/algolia.html">vs Algolia</a></li><li><a href="/vs/pinecone.html">vs Pinecone</a></li><li><a href="/vs/">All</a></li></ul></div>
+    </div>
+  </nav>
+</main>
+</body>
+</html>

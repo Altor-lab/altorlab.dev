@@ -20,6 +20,9 @@
 - [Offline-First Search](https://altorlab.dev/blog/offline-first-search.html)
 - [Embedding-Based Autocomplete](https://altorlab.dev/blog/embedding-autocomplete-browser.html)
 - [Cosine vs Euclidean Distance in JavaScript](https://altorlab.dev/blog/cosine-similarity-vs-euclidean-distance-javascript.html)
+- [Algolia Alternative: Open Source Search for Developers in 2026](https://altorlab.dev/blog/algolia-alternative-open-source.html)
+- [fuse.js Alternative: Semantic Search for What fuse.js Gets Wrong](https://altorlab.dev/blog/fuse-js-alternative.html)
+- [Add Semantic Search to a Next.js App Router Project](https://altorlab.dev/blog/add-search-to-nextjs.html)
 
 ## Comparisons
 - [altor-vec vs Pinecone](https://altorlab.dev/vs/pinecone.html)

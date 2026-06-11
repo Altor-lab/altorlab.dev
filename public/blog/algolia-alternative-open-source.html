@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.placename" content="United States" />
+  <title>Algolia Alternative: Open Source Search for JavaScript Developers (2026)</title>
+  <meta name="description" content="Six Algolia alternatives compared honestly: Typesense, Meilisearch, Orama, Pagefind, Fuse.js, and altor-vec. Real pricing, self-host complexity, and semantic search support." />
+  <meta name="geo.region" content="US" />
+  <meta name="keywords" content="algolia alternative, algolia alternative open source, algolia alternative free, algolia alternatives 2026, site search javascript" />
+  <link rel="canonical" href="https://altorlab.dev/blog/algolia-alternative-open-source.html" />
+  <meta property="og:image" content="https://altorlab.dev/og-image.png">
+  <link rel="alternate" hreflang="en-us" href="https://altorlab.dev/blog/algolia-alternative-open-source.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Algolia Alternative: Open Source Search for Developers in 2026" />
+  <meta property="og:description" content="Six Algolia alternatives compared: Typesense, Meilisearch, Orama, Pagefind, Fuse.js, altor-vec. Real pricing and honest tradeoffs." />
+  <meta property="og:url" content="https://altorlab.dev/blog/algolia-alternative-open-source.html" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Algolia Alternative: Open Source Search in 2026" />
+  <meta name="twitter:description" content="Six alternatives compared with real pricing. Typesense, Meilisearch, Orama, Pagefind, Fuse.js, altor-vec." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root{--bg:#080a09;--surface:#0e1210;--surface-raised:#141a17;--border:#1e2823;--text:#edf0ee;--text-secondary:#8b9690;--muted:#556059;--altor:#6ee7b7;--altor-glow:rgba(110,231,183,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',system-ui,sans-serif;line-height:1.74}
+    .wrap{max-width:880px;margin:0 auto;padding:28px 22px 72px}.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+    a{color:var(--altor);text-decoration:none}h1{font-family:'Instrument Serif',serif;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;margin:22px 0 16px}
+    h2{margin-top:38px;font-size:1.5rem}h3{margin-top:24px;font-size:1.16rem}p,li{color:var(--text-secondary)}.lede{font-size:1.06rem}
+    pre{background:#0d1512;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;color:#c3e88d}code{font-family:'JetBrains Mono',monospace}
+    .box{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .cta{background:var(--altor-glow);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin-top:28px}
+    .nav{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px;font-size:14px}
+    .breadcrumbs{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+    .install{background:var(--surface-raised);border:1px solid rgba(110,231,183,.2);border-radius:12px;padding:14px;margin:22px 0 0}
+    .related{margin-top:34px}.related-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+    .related-card{background:var(--surface-raised);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .kicker{text-transform:uppercase;letter-spacing:.16em;color:var(--muted);font-size:11px}
+    table{width:100%;border-collapse:collapse;margin:24px 0}
+    th{background:var(--surface-raised);padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);color:var(--text)}
+    td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:14px}
+    tr:last-child td{border-bottom:none}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Algolia Alternative: Open Source Search Options for Developers in 2026","author":{"@type":"Organization","name":"AltorLab"},"publisher":{"@type":"Organization","name":"AltorLab"},"mainEntityOfPage":"https://altorlab.dev/blog/algolia-alternative-open-source.html","description":"Six Algolia alternatives compared honestly with real pricing and tradeoffs.","keywords":["algolia alternative","open source search","typesense","meilisearch","altor-vec"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Algolia Alternative: Open Source Search Options for Developers in 2026","url":"https://altorlab.dev/blog/algolia-alternative-open-source.html","proficiencyLevel":"Intermediate","about":{"@type":"SoftwareApplication","name":"altor-vec"},"audience":{"@type":"Audience","audienceType":"JavaScript and TypeScript developers"},"inLanguage":"en-US"}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is the best free Algolia alternative?","acceptedAnswer":{"@type":"Answer","text":"It depends on your use case. For self-hosted search with a server, Meilisearch (open source, cloud from $20/mo) or Typesense are the strongest options. For static sites or client-side-only search with no backend, altor-vec (free, MIT licensed) provides semantic search that runs entirely in the browser with zero per-query cost."}},{"@type":"Question","name":"Does altor-vec support real-time indexing like Algolia?","acceptedAnswer":{"@type":"Answer","text":"No. altor-vec builds a static index at deploy time via a build script. It is designed for content that updates on deployment cycles — documentation, blogs, help centers. For continuously updating indexes you need Typesense or Meilisearch."}},{"@type":"Question","name":"How does altor-vec compare to Algolia InstantSearch in bundle size?","acceptedAnswer":{"@type":"Answer","text":"altor-vec is 54KB gzipped. Algolia InstantSearch.js is approximately 100-150KB gzipped before UI widgets. For documentation and static content, altor-vec adds less weight while providing semantic retrieval that Algolia only offers on higher-tier plans."}}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"altor-vec","item":"https://altorlab.dev/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://altorlab.dev/blog/"},{"@type":"ListItem","position":3,"name":"Algolia Alternative: Open Source Search Options for Developers in 2026","item":"https://altorlab.dev/blog/algolia-alternative-open-source.html"}]}</script>
+</head>
+<body>
+<main class="wrap">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a class="mono" href="/">Home</a><span>&gt;</span>
+    <a class="mono" href="/blog/">Blog</a><span>&gt;</span>
+    <span>Algolia Alternative: Open Source Search Options for Developers in 2026</span>
+  </nav>
+  <p class="kicker">algolia alternative open source</p>
+  <h1>Algolia Alternative: Open Source Search Options for Developers in 2026</h1>
+  <p class="lede">Algolia's pricing is structured around search requests and records. At 100,000 searches per month with 50,000 records, you're looking at $50-$200/month depending on the plan tier. That's before overages. If a campaign drives a traffic spike, your bill moves unpredictably. The alternatives below give you the same — or better — search quality without per-request billing.</p>
+
+  <h2>Why developers leave Algolia</h2>
+  <p>The core complaint isn't the product — Algolia's relevance engine is genuinely good. The complaint is the pricing model. At $0.50 per 1,000 additional search requests (Grow plan) or $1.75 per 1,000 (Grow Plus), costs scale directly with traffic. A documentation site getting 500,000 monthly searches pays $250-$875/month for search alone. That's a meaningful line item for something users consider table stakes.</p>
+  <p>The second complaint is overages. Algolia's pricing page states that exceeding committed usage incurs overage charges, but the overage rate isn't presented clearly until you exceed your tier. Developers who've been surprised by a $400 bill after a Hacker News front page hit are the loudest advocates for the alternatives below.</p>
+  <div class="box">
+    <p><strong>Cost reference:</strong> Algolia Grow includes 10,000 search requests/month free. Beyond that: $0.50/1K (Grow) or $1.75/1K (Grow Plus). A site with 200,000 monthly searches costs $95-$332/month on Grow or Grow Plus respectively.</p>
+  </div>
+
+  <h2>The six alternatives at a glance</h2>
+  <table>
+    <thead>
+      <tr><th>Tool</th><th>Pricing</th><th>Self-host</th><th>Semantic search</th><th>Best for</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Typesense</strong></td><td>OSS free; cloud ~$43/mo</td><td>Easy (single binary)</td><td>Yes (ML models)</td><td>Server-side, real-time updates</td></tr>
+      <tr><td><strong>Meilisearch</strong></td><td>OSS free; cloud $20/mo</td><td>Easy (single binary)</td><td>Yes (hybrid)</td><td>Server-side, developer-friendly</td></tr>
+      <tr><td><strong>Orama</strong></td><td>OSS free; cloud enterprise</td><td>JavaScript, no binary</td><td>Yes (vector)</td><td>JavaScript-native, edge deployment</td></tr>
+      <tr><td><strong>Pagefind</strong></td><td>Free, open source</td><td>No server needed</td><td>No (full-text only)</td><td>Static sites, keyword search</td></tr>
+      <tr><td><strong>Fuse.js</strong></td><td>Free, open source</td><td>No server needed</td><td>No (fuzzy matching)</td><td>Small in-memory datasets</td></tr>
+      <tr><td><strong>altor-vec</strong></td><td>Free, MIT licensed</td><td>No server needed</td><td>Yes (HNSW in browser)</td><td>Static sites, semantic search, privacy</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Typesense</h2>
+  <p>Typesense is the closest direct Algolia replacement for teams that need a self-managed search server. It's a single Go binary with no external dependencies — you run it, point your indexing script at it, and query it. The API surface is intentionally similar to Algolia's, which makes migration straightforward.</p>
+  <p>Typesense Cloud starts at roughly $43/month for the smallest instance (shared, 0.5 vCPU, 512MB RAM). At that tier you're paying per hour of compute, not per query — which immediately removes the overage anxiety. The self-hosted version is free indefinitely with no license restrictions.</p>
+  <p>For semantic search, Typesense supports embedding generation via built-in ML models or external providers (OpenAI, Cohere). The caveat: built-in ML embedding at index time can be slow — a few thousand records can take several minutes. For large corpora, pre-generating embeddings and sending them as vectors is faster.</p>
+  <p><strong>Honest limitation:</strong> Typesense requires a running server. That's a reasonable operational cost for most teams, but it's not zero. You need to handle availability, upgrades, and backups.</p>
+
+  <h2>Meilisearch</h2>
+  <p>Meilisearch positions itself as "the search engine you can understand" — the relevance model is transparent and tweakable. Like Typesense, it's a single binary with an HTTP API. The developer experience is excellent: the dashboard is clean, the indexing API is simple, and the documentation is among the best in this space.</p>
+  <p>Meilisearch Cloud starts at $20/month — cheaper than Typesense Cloud and significantly cheaper than Algolia at any meaningful traffic volume. The self-hosted version is free. Hybrid search (keyword + vector) is supported, with the tradeoff that you supply pre-generated embeddings rather than Meilisearch computing them.</p>
+  <p><strong>Honest limitation:</strong> Meilisearch's relevance tuning options are more limited than Algolia's. If you need fine-grained merchandising rules, custom ranking formulas, or AI-driven re-ranking, Algolia still has an edge. For standard search-over-documents use cases, Meilisearch is excellent.</p>
+
+  <h2>Orama</h2>
+  <p>Orama (<code>@orama/orama</code> on npm) is a JavaScript-native search engine — it runs in the browser, in Node.js, on Cloudflare Workers, and on any JS runtime. Unlike the server-based options above, you import it as a library and it manages an in-memory index. 3 million npm downloads per month indicates real adoption.</p>
+  <p>Orama supports vector search via its <code>@orama/plugin-embeddings</code> package, which can call external embedding APIs or use a local model. The cloud offering (Orama Cloud) is enterprise-priced with no public tier list — you contact sales.</p>
+  <p><strong>Honest limitation:</strong> For large corpora, keeping the full index in JavaScript memory gets expensive. Orama is best suited for bounded datasets — a few thousand documents at most before you hit browser memory constraints. For anything larger, you need a server or a static index approach.</p>
+
+  <h2>Pagefind</h2>
+  <p>Pagefind takes a fundamentally different approach: it runs a crawler against your built HTML output, chunks the content, and generates a static index that loads incrementally in the browser. The browser only downloads the chunks relevant to the current query, which keeps initial payload small even for large sites.</p>
+  <p>Pagefind powers search on MDN, the Godot documentation, and thousands of static sites. It's genuinely excellent at what it does — fast, accurate keyword search with zero server requirements. The npm package installs a CLI that you run as a postbuild step.</p>
+  <p><strong>Honest limitation:</strong> Pagefind is full-text keyword search. A query like "how to improve recall at k" won't match a page that talks about "increasing top-k precision" — the words don't overlap. If your users phrase queries differently from your content's exact wording, Pagefind will miss results that a semantic search engine would catch.</p>
+
+  <h2>Fuse.js</h2>
+  <p>Fuse.js is a fuzzy string matching library — it finds approximate matches based on character overlap. With 10.5 million weekly npm downloads, it's the default choice for developers adding basic search to small datasets. You initialize it with an array of objects, define which keys to search, and call <code>fuse.search(query)</code>.</p>
+  <p>For small, bounded datasets where users type exact terms — names, product codes, city names — Fuse.js is a reasonable choice. It adds 5KB to your bundle and has zero configuration overhead.</p>
+  <p><strong>Honest limitation:</strong> Fuse.js doesn't understand meaning. Searching "inexpensive" won't match "affordable" or "budget-friendly" because the character overlap is minimal. For natural language queries over paragraph-length content, Fuse.js produces poor results regardless of threshold tuning.</p>
+
+  <h2>altor-vec</h2>
+  <p>altor-vec is a Rust-compiled WASM library that runs HNSW (Hierarchical Navigable Small World) vector search entirely in the browser. You build a float vector index offline, ship it as a static file, load it in the browser, and query it with no network roundtrip and no server.</p>
+  <p>The library is 54KB gzipped. Query latency at 10,000 vectors (384 dimensions) is under 1ms p95 on a modern laptop. Because retrieval is local, latency doesn't depend on network conditions.</p>
+  <p>The indexing workflow: at build time, run a Node script that reads your content, generates embeddings (using Transformers.js locally or an embedding API), and writes a binary index file to your <code>/public</code> directory. At runtime, the browser loads that file once and searches it on every query.</p>
+  <div class="install"><strong>Install:</strong> <code>npm install altor-vec</code></div>
+
+  <h3>When altor-vec is the right choice</h3>
+  <ul>
+    <li><strong>Static content:</strong> documentation, blogs, help centers — content that changes on deploy cycles, not continuously</li>
+    <li><strong>Privacy requirements:</strong> search queries and corpus never leave the user's browser — no DPA needed, no data egress</li>
+    <li><strong>Zero per-query cost:</strong> traffic spikes don't affect your bill because there's no server to call</li>
+    <li><strong>Offline support:</strong> works in service workers and PWAs after the initial index load</li>
+  </ul>
+
+  <h3>When altor-vec is not the right choice</h3>
+  <ul>
+    <li>Real-time indexing: if your content updates every few minutes, you need a server-side solution</li>
+    <li>Access-controlled content: if different users should see different results, a server that enforces permissions is necessary</li>
+    <li>Very large corpora: 100,000+ documents with 768-dimension embeddings produces a ~600MB index file — not practical for browser delivery</li>
+  </ul>
+
+  <h2>Migration from Algolia to altor-vec</h2>
+  <p>For a documentation or blog site, the migration is straightforward. The key shift is moving from Algolia's push-based indexing (you call their API when content changes) to a pull-based build step (you run a script at deploy time).</p>
+  <pre><code>// scripts/build-index.mjs
+import fs from 'node:fs/promises';
+import { glob } from 'glob';
+import { pipeline } from '@huggingface/transformers';
+import init, { WasmSearchEngine } from 'altor-vec';
+
+await init();
+
+const embed = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+const files = await glob('./content/**/*.md');
+const vectors = [];
+const metadata = [];
+
+for (const file of files) {
+  const text = await fs.readFile(file, 'utf8');
+  const title = text.split('\n')[0].replace(/^#+\s*/, '');
+  const body = text.slice(0, 1000); // first 1000 chars as excerpt
+  const out = await embed(title + '\n' + body, { pooling: 'mean', normalize: true });
+  vectors.push(...Array.from(out.data));
+  metadata.push({ file, title, excerpt: body.slice(0, 200) });
+}
+
+const dim = 384;
+const flat = new Float32Array(vectors);
+const engine = WasmSearchEngine.from_vectors(flat, dim, 16, 200, 50);
+
+await fs.writeFile('./public/search-index.bin', Buffer.from(engine.to_bytes()));
+await fs.writeFile('./public/search-metadata.json', JSON.stringify(metadata));
+console.log(`Indexed ${metadata.length} documents`);
+</code></pre>
+  <p>Add this to your build pipeline:</p>
+  <pre><code>// package.json
+{
+  "scripts": {
+    "build": "your-static-site-build-command",
+    "postbuild": "node scripts/build-index.mjs"
+  }
+}
+</code></pre>
+  <p>On the frontend, replace your Algolia search component with a fetch + WASM call:</p>
+  <pre><code>import init, { WasmSearchEngine } from 'altor-vec';
+import { pipeline } from '@huggingface/transformers';
+
+let engine, metadata, embedder;
+
+async function initSearch() {
+  await init();
+  const [indexBuf, meta] = await Promise.all([
+    fetch('/search-index.bin').then(r => r.arrayBuffer()),
+    fetch('/search-metadata.json').then(r => r.json()),
+  ]);
+  engine = new WasmSearchEngine(new Uint8Array(indexBuf));
+  metadata = meta;
+  embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+}
+
+async function search(query, topK = 5) {
+  const out = await embedder(query, { pooling: 'mean', normalize: true });
+  const hits = JSON.parse(engine.search(new Float32Array(out.data), topK));
+  return hits.map(([id, distance]) => ({
+    ...metadata[id],
+    score: 1 - distance,
+  }));
+}
+</code></pre>
+
+  <h2>Choosing the right alternative</h2>
+  <p>The decision mostly comes down to two questions: do you have a server, and does your content update continuously?</p>
+  <p>If you already run backend infrastructure and your content changes frequently, <strong>Meilisearch</strong> (self-hosted) or <strong>Typesense</strong> (cloud) are the practical choices. Both have flat-rate pricing, good relevance out of the box, and straightforward migration paths from Algolia.</p>
+  <p>If you're running a static site — a documentation portal, a technical blog, a marketing site — and your content updates on deploy cycles, <strong>altor-vec</strong> or <strong>Pagefind</strong> are worth considering seriously. Pagefind for keyword accuracy on exact terminology; altor-vec for natural language queries and semantic intent matching.</p>
+  <p>If your dataset is small enough to fit in memory and users type exact terms, <strong>Fuse.js</strong> might already be sufficient — don't add complexity without measuring whether you actually have a relevance problem first.</p>
+
+  <h2>FAQ</h2>
+  <h3>What is the best free Algolia alternative?</h3>
+  <p>For self-hosted search with a server: Meilisearch or Typesense. Both are fully open source with no search volume limits. For static sites with no server: altor-vec (semantic) or Pagefind (keyword). All four are MIT or Apache licensed with no usage-based pricing.</p>
+  <h3>Does altor-vec support real-time indexing?</h3>
+  <p>No. altor-vec builds a static binary index at deploy time. It suits content that updates on build/deploy cycles — documentation, blogs, product catalogs that update weekly. For search over user-generated content or continuously changing data, use a server-side solution.</p>
+  <h3>How does altor-vec bundle size compare to Algolia InstantSearch?</h3>
+  <p>altor-vec WASM is 54KB gzipped. Algolia's InstantSearch.js core is approximately 100-150KB gzipped before any UI widgets. The index file itself is separate — for 10,000 documents at 384 dimensions it's roughly 15MB, which you load once and cache aggressively.</p>
+
+  <div class="cta">
+    <strong>Try client-side semantic search:</strong> <span class="mono">npm install altor-vec</span> · <a href="https://github.com/Altor-lab/altor-vec" target="_blank" rel="noopener">GitHub</a>
+  </div>
+
+  <section class="related" aria-labelledby="rel-h">
+    <h2 id="rel-h">Related articles</h2>
+    <div class="related-grid">
+      <a class="related-card" href="/vs/algolia.html">altor-vec vs Algolia — detailed comparison</a>
+      <a class="related-card" href="/blog/semantic-search-website.html">Add Semantic Search to Your Website in 5 Minutes</a>
+      <a class="related-card" href="/blog/vector-search-without-backend.html">Vector Search Without a Backend</a>
+    </div>
+  </section>
+  <nav class="nav" aria-label="Article navigation">
+    <a href="/blog/">Back to blog index</a>
+    <a href="/">Homepage</a>
+  </nav>
+  <nav class="site-nav" aria-label="More from altor-vec" style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1)">
+    <p style="font-weight:600;margin:0 0 12px">More from altor-vec</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;font-size:14px">
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Comparisons</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/vs/algolia.html">vs Algolia</a></li><li><a href="/vs/typesense.html">vs Typesense</a></li><li><a href="/vs/meilisearch.html">vs Meilisearch</a></li><li><a href="/vs/">All comparisons</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Examples</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/examples/document-search.html">Document search</a></li><li><a href="/examples/autocomplete.html">Autocomplete</a></li><li><a href="/examples/">All examples</a></li></ul></div>
+      <div><p style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin:0 0 6px">Frameworks</p><ul style="margin:0;padding:0 0 0 14px;line-height:2"><li><a href="/frameworks/react.html">React</a></li><li><a href="/frameworks/nextjs.html">Next.js</a></li><li><a href="/frameworks/vue.html">Vue</a></li><li><a href="/frameworks/">All frameworks</a></li></ul></div>
+    </div>
+  </nav>
+</main>
+</body>
+</html>
